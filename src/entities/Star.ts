@@ -2,7 +2,7 @@ import { clamp } from "../core/Utils";
 import Vec2 from "../core/Vec2";
 import Canvas from "../systems/Canvas";
 import Galaxy from "../systems/Galaxy";
-import BlackHole from "./Blackhole";
+import BlackHole from "./BlackHole";
 
 export default class Star {
   static kGravity = 5000;

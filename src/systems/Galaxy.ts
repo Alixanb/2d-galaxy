@@ -1,4 +1,4 @@
-import BlackHole from "../entities/Blackhole";
+import BlackHole from "../entities/BlackHole";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
 import Canvas from "./Canvas";

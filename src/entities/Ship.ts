@@ -5,11 +5,6 @@ import Galaxy from "../systems/Galaxy";
 import BlackHole from "./BlackHole";
 import Star from "./Star";
 
-type PathElement = {
-  pos: Vec2;
-  color: Color;
-};
-
 export type ShipStatus = "idle" | "thrusting";
 export type SpriteStatusKey<T> = {
   [key in ShipStatus]: T;

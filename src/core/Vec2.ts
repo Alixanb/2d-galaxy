@@ -1,3 +1,5 @@
+import { clamp } from "./Utils";
+
 export default class Vec2 {
   x: number;
   y: number;
@@ -47,5 +49,22 @@ export default class Vec2 {
     const len = this.length();
     if (len === 0) return new Vec2(0, 0);
     return new Vec2(this.x / len, this.y / len);
+  }
+
+  clamp(min: number, max: number): Vec2;
+  clamp(min: Vec2, max: Vec2): Vec2;
+
+  clamp(min: number | Vec2, max: number | Vec2): Vec2 {
+    const minVec = typeof min === "number" ? new Vec2(min, min) : min;
+    const maxVec = typeof max === "number" ? new Vec2(max, max) : max;
+
+    return new Vec2(
+      clamp(this.x, minVec.x, maxVec.x),
+      clamp(this.y, minVec.y, maxVec.y)
+    );
+  }
+
+  clone() {
+    return new Vec2(this.x, this.y);
   }
 }

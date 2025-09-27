@@ -42,7 +42,7 @@ export default class Galaxy {
 
   update(dt: number) {
     if (this.ship) {
-      this.ship.update(this.blackholes, dt);
+      this.ship.update(dt);
     }
 
     this.stars = this.stars.filter((star) => !star.shouldDestroy);
@@ -69,6 +69,6 @@ export default class Galaxy {
 
     this.stars.forEach((s) => s.draw(this.canvas));
     this.blackholes.forEach((b) => b.draw(this.canvas));
-    if (this.ship) this.ship.draw(this.canvas, this.blackholes[0].pos);
+    if (this.ship) this.ship.draw(this.canvas);
   }
 }

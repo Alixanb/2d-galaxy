@@ -35,11 +35,16 @@ const infoManager = new ToolManager("#info", [
 ]);
 
 // WORLD
-const gargantua = new BlackHole(new Vec2(0, 0), 10);
-// const gargantua2 = new BlackHole(new Vec2(0.5, 0), 50)
+const gargantua = new BlackHole(new Vec2(-0.5, 0), 10);
+const gargantua2 = new BlackHole(new Vec2(0.5, 0), 10);
 let discovery: Ship | null = null;
 const canvas = new Canvas("#app");
-const galaxy = new Galaxy(canvas, [gargantua], discovery ?? undefined, 10000);
+const galaxy = new Galaxy(
+  canvas,
+  [gargantua, gargantua2],
+  discovery ?? undefined,
+  10000
+);
 
 let SIMULATION_SPEED = 1;
 let lastTime = 0;
@@ -86,7 +91,9 @@ Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
       new Vec2(0.8, 0.8),
       spriteThrusterOff,
       spriteThrusterOn,
-      30
+      30,
+      true,
+      [gargantua, gargantua2]
     );
   })
   .catch((err) => {

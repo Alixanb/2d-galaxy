@@ -1,5 +1,4 @@
 import Color from "../core/Color";
-import { benchmark } from "../core/Utils";
 import Vec2 from "../core/Vec2";
 import Canvas from "../systems/Canvas";
 import Galaxy from "../systems/Galaxy";
@@ -87,7 +86,10 @@ export default class Ship {
     );
 
     canvas.context.restore();
-    this.drawPath(canvas);
+
+    if (this.showPath) {
+      this.drawPath(canvas);
+    }
   }
 
   update(dt: number) {
@@ -111,7 +113,9 @@ export default class Ship {
     this.pos = this.pos.add(this.vel);
     this.angle += this.angluarVel;
 
-    this.predictPath(this.predictionInteration, dt);
+    if (this.showPath) {
+      this.predictPath(this.predictionInteration, dt);
+    }
   }
 
   getVelocity(dt: number, pos: Vec2 = this.pos) {
@@ -131,12 +135,13 @@ export default class Ship {
         directionY * forceMagnitude
       ).clamp(-0.4, 0.4);
 
-      if (
-        directionX * forceMagnitude > 0.2 ||
-        directionY * forceMagnitude > 0.2
-      ) {
-        console.log(directionX * forceMagnitude, directionY * forceMagnitude);
-      }
+      // SPEED CLAMP DEBUG
+      // if (
+      //   directionX * forceMagnitude > 0.2 ||
+      //   directionY * forceMagnitude > 0.2
+      // ) {
+      //   console.log(directionX * forceMagnitude, directionY * forceMagnitude);
+      // }
 
       addedVelocities = addedVelocities.add(forceVector);
     }
@@ -160,6 +165,8 @@ export default class Ship {
   }
 
   drawPath(canvas: Canvas) {
+    if (!this.path[0]) return;
+
     const initPos = canvas.place(this.path[0]);
 
     canvas.context.beginPath();
@@ -171,7 +178,5 @@ export default class Ship {
     canvas.context.strokeStyle = this.pathColor.getRGBA();
     canvas.context.lineWidth = 4;
     canvas.context.stroke();
-
-    benchmark(this.predictPath.bind(this), 10000);
   }
 }

@@ -2,7 +2,7 @@ import { loadImage } from "./core/Functions";
 import Vec2 from "./core/Vec2";
 import BlackHole from "./entities/BlackHole";
 import Information from "./entities/Information";
-import { RangeInput } from "./entities/Input";
+import { CheckboxInput, RangeInput } from "./entities/Input";
 import Ship from "./entities/Ship";
 import Canvas from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
@@ -17,14 +17,39 @@ const fpsInfo = new Information("FPS");
 const nbStarInfo = new Information("Stars");
 const shipSpeedIndo = new Information("Speed", "m/s");
 
+// INPUTS
+
+// RANGE INPUTS
 const simulationSpeedRangeInput = new RangeInput(
   "Simulation speed",
   1,
   [0, 10],
-  () => {
-    SIMULATION_SPEED = simulationSpeedRangeInput.value;
+  (e) => {
+    SIMULATION_SPEED = e.value;
   },
   10
+);
+const pathIterationCheckboxInput = new RangeInput(
+  "Path iterations",
+  3000,
+  [0, 10000],
+  (e) => {
+    if (galaxy.ship) {
+      galaxy.ship.predictionInteration = e.value;
+    }
+  }
+);
+
+// CHECKBOX INPUTS
+const SHOW_SHIP_PATH_BY_DEFAULT = false;
+const showShipPathCheckboxInput = new CheckboxInput(
+  "Predicted path",
+  SHOW_SHIP_PATH_BY_DEFAULT,
+  (e) => {
+    if (galaxy.ship) {
+      galaxy.ship.showPath = e.value;
+    }
+  }
 );
 
 const infoManager = new ToolManager("#info", [
@@ -32,6 +57,8 @@ const infoManager = new ToolManager("#info", [
   fpsInfo,
   shipSpeedIndo,
   simulationSpeedRangeInput,
+  showShipPathCheckboxInput,
+  pathIterationCheckboxInput,
 ]);
 
 // WORLD
@@ -48,7 +75,7 @@ const galaxy = new Galaxy(
 
 let SIMULATION_SPEED = 1;
 let lastTime = 0;
-const UPDATE_INTERVAL_MS = 100;
+const UPDATE_INTERVAL_MS = 200;
 let lastUpdate: number = Date.now();
 
 const FIXED_STEP = 1 / 60; // 60Hz physics
@@ -92,7 +119,7 @@ Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
       spriteThrusterOff,
       spriteThrusterOn,
       30,
-      true,
+      SHOW_SHIP_PATH_BY_DEFAULT,
       [gargantua, gargantua2]
     );
   })

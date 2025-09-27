@@ -9,19 +9,30 @@ import Galaxy from "./systems/Galaxy";
 import ToolManager from "./systems/ToolManager";
 
 // IMAGES
-const spriteThrusterOffUrl = "../public/assets/ship.png";
-const spriteThrusterOnUrl = "../public/assets/ship-thrust.png";
+const spriteThrusterOffUrl = "/assets/ship.png";
+const spriteThrusterOnUrl = "/assets/ship-thrust.png";
 
 // INFORMATIONS BOX
-const fpsInfo = new Information("FPS")
-const nbStarInfo = new Information("Stars")
-const shipSpeedIndo = new Information("Speed", "m/s")
+const fpsInfo = new Information("FPS");
+const nbStarInfo = new Information("Stars");
+const shipSpeedIndo = new Information("Speed", "m/s");
 
-const simulationSpeedRangeInput = new RangeInput("Simulation speed", 1, [0, 10], () => {
-  SIMULATION_SPEED = simulationSpeedRangeInput.value
-}, 10);
+const simulationSpeedRangeInput = new RangeInput(
+  "Simulation speed",
+  1,
+  [0, 10],
+  () => {
+    SIMULATION_SPEED = simulationSpeedRangeInput.value;
+  },
+  10
+);
 
-const infoManager = new ToolManager("#info", [nbStarInfo, fpsInfo, shipSpeedIndo, simulationSpeedRangeInput]);
+const infoManager = new ToolManager("#info", [
+  nbStarInfo,
+  fpsInfo,
+  shipSpeedIndo,
+  simulationSpeedRangeInput,
+]);
 
 // WORLD
 const gargantua = new BlackHole(new Vec2(0, 0), 10);
@@ -47,7 +58,7 @@ function animate(time: number) {
   const now = Date.now();
   if (now - lastUpdate >= UPDATE_INTERVAL_MS) {
     fpsInfo.set(Math.round(1 / rawDelta)); // use frameDelta, not simDelta
-    nbStarInfo.set(galaxy.stars.filter(star => !star.shouldDestroy).length);
+    nbStarInfo.set(galaxy.stars.filter((star) => !star.shouldDestroy).length);
     shipSpeedIndo.set(Math.round((galaxy.ship?.vel?.length() ?? 0) * 1000));
 
     infoManager.update();
@@ -58,13 +69,10 @@ function animate(time: number) {
     galaxy.update(FIXED_STEP);
     accumulator -= FIXED_STEP;
   }
-  
 
   galaxy.draw();
   requestAnimationFrame(animate);
 }
-
-
 
 Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
   .then(([spriteThrusterOff, spriteThrusterOn]) => {
@@ -86,5 +94,3 @@ Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
   });
 
 requestAnimationFrame(animate);
-
-

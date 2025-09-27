@@ -21,7 +21,7 @@ export default class Star {
     this.vel = vel;
     this.size = size;
 
-    this.mass = size **3; // 
+    this.mass = size ** 3; //
   }
 
   update(blackholes: BlackHole[], dt: number) {
@@ -29,7 +29,9 @@ export default class Star {
       const distance = this.pos.distance(blackhole.pos);
 
       if (distance > blackhole.size / 600) {
-        const forceMagnitude = Galaxy.G * blackhole.mass * this.mass / (distance ** 2) * Star.kGravity;
+        const forceMagnitude =
+          ((Galaxy.G * blackhole.mass * this.mass) / distance ** 2) *
+          Star.kGravity;
 
         const directionX = (blackhole.pos.x - this.pos.x) / distance;
         const directionY = (blackhole.pos.y - this.pos.y) / distance;
@@ -50,17 +52,6 @@ export default class Star {
 
   draw(canvas: Canvas) {
     const screenPos = canvas.place(this.pos);
-
-    const glow = canvas.context.createRadialGradient(
-      screenPos.x,
-      screenPos.y,
-      0,
-      screenPos.x,
-      screenPos.y,
-      this.size
-    );
-    glow.addColorStop(0, Star.getColor(this.vel));
-    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
 
     canvas.context.fillStyle = Star.getColor(this.vel);
     canvas.context.beginPath();

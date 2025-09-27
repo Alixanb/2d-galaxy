@@ -1,4 +1,3 @@
-import { clamp } from "../core/Utils";
 import Vec2 from "../core/Vec2";
 import Canvas from "../systems/Canvas";
 import Galaxy from "../systems/Galaxy";
@@ -6,12 +5,12 @@ import BlackHole from "./BlackHole";
 import Star from "./Star";
 
 export type ShipStatus = "idle" | "thrusting";
-export type ShipSprite = {
-  [key in ShipStatus]: HTMLImageElement;
+export type SpriteStatusKey<T> = {
+  [key in ShipStatus]: T;
 };
 
 export default class Ship {
-  static THRUSTPOWER = 0.0001;
+  static THRUSTPOWER = 0.001;
   static RADIALPOWER = 0.002;
   static MASS = 3;
 
@@ -20,27 +19,28 @@ export default class Ship {
   vel: Vec2 = new Vec2();
 
   keys: { [key: string]: boolean } = {};
-  sprites: ShipSprite;
+  sprites: SpriteStatusKey<HTMLImageElement>;
   status: ShipStatus = "idle";
   angle: number = 0; // en radian
   angluarVel: number = 0;
-  spriteWidthRatio: number;
+  spritesWidthRatio: SpriteStatusKey<number> = {idle: 0, thrusting: 0}; // ratio [idle, thrusting]
 
   constructor(
     pos: Vec2,
-    spriteThrusterOff: HTMLImageElement,
-    spriteThrusterOn: HTMLImageElement,
+    spriteIdle: HTMLImageElement,
+    spriteThrusting: HTMLImageElement,
     size: number
   ) {
     this.pos = pos;
 
     this.sprites = {
-      idle: spriteThrusterOff,
-      thrusting: spriteThrusterOn,
+      idle: spriteIdle,
+      thrusting: spriteThrusting,
     };
     this.size = size;
 
-    this.spriteWidthRatio = spriteThrusterOff.height / spriteThrusterOff.width;
+    this.spritesWidthRatio["idle"] = spriteIdle.height / spriteIdle.width;
+    this.spritesWidthRatio["thrusting"] = spriteThrusting.height / spriteThrusting.width;
 
     document.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
@@ -53,28 +53,31 @@ export default class Ship {
 
   draw(canvas: Canvas, bhPos: Vec2) {
     const screenPos = canvas.place(this.pos);
-
+  
+    const width = this.size;
+    const height = this.size * this.spritesWidthRatio[this.status];
+  
     canvas.context.save();
-    canvas.context.globalAlpha = clamp(this.pos.distance(bhPos) * -1, 0.3, 1);
-
-    canvas.context.translate(
-      screenPos.x + this.size / 2,
-      screenPos.y + (this.size * this.spriteWidthRatio) / 2
-    );
+  
+    // translate to CENTER
+    canvas.context.translate(screenPos.x, screenPos.y - height);
+    
     canvas.context.rotate(this.angle);
-
+  
+    // draw with center at origin
     canvas.context.drawImage(
       this.sprites[this.status],
-      -this.size / 2,
-      -this.size / 2,
-      this.size,
-      this.size * this.spriteWidthRatio
+      -width / 2,
+      -height / 2,
+      width,
+      height
     );
 
     canvas.context.restore();
   }
+  
 
-  update(blackholes: BlackHole[]) {
+  update(blackholes: BlackHole[], dt: number) {
     if (this.keys["ArrowRight"]) {
       this.angluarVel += Ship.RADIALPOWER;
     }
@@ -108,7 +111,7 @@ export default class Ship {
       this.vel = this.vel.add(forceVector);
     }
 
-    this.pos = this.pos.add(this.vel);
+    this.pos = this.pos.add(this.vel.multiply(dt));
     this.angle += this.angluarVel;
   }
 }

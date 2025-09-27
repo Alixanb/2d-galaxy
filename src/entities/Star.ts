@@ -5,9 +5,10 @@ import Galaxy from "../systems/Galaxy";
 import BlackHole from "./BlackHole";
 
 export default class Star {
-  static kGravity = 5000;
-  static kInitVelocity = 80;
-  static MAX_VELOCITY = 0.005; // Theoretical max velocity for a star, color will be calculted depending on that
+  static kGravity = 8.5 * 10e4;
+  static kInitVelocity = 7.5 * 10e2;
+  static MAX_VELOCITY = 10000; // Theoretical max velocity for a star, color will be calculted depending on that
+  static MAX_SIZE = 1.5;
 
   pos: Vec2;
   vel: Vec2;
@@ -15,23 +16,20 @@ export default class Star {
   mass: number;
   shouldDestroy: boolean = false;
 
-  constructor(pos: Vec2, size: number = 5, vel: Vec2 = new Vec2()) {
+  constructor(pos: Vec2, size: number = 1, vel: Vec2 = new Vec2()) {
     this.pos = pos;
     this.vel = vel;
     this.size = size;
 
-    this.mass = size;
+    this.mass = size **3; // 
   }
 
-  update(blackholes: BlackHole[]) {
-    this.pos = this.pos.add(this.vel);
-
+  update(blackholes: BlackHole[], dt: number) {
     for (let blackhole of blackholes) {
       const distance = this.pos.distance(blackhole.pos);
 
       if (distance > blackhole.size / 600) {
-        const forceMagnitude =
-          Galaxy.G * (blackhole.mass / distance ** 2) * Star.kGravity;
+        const forceMagnitude = Galaxy.G * blackhole.mass * this.mass / (distance ** 2) * Star.kGravity;
 
         const directionX = (blackhole.pos.x - this.pos.x) / distance;
         const directionY = (blackhole.pos.y - this.pos.y) / distance;
@@ -41,11 +39,13 @@ export default class Star {
           directionY * forceMagnitude
         );
 
-        this.vel = this.vel.add(forceVector);
+        this.vel = this.vel.add(forceVector.divide(this.mass));
       } else {
         this.shouldDestroy = true;
       }
     }
+
+    this.pos = this.pos.add(this.vel.multiply(dt));
   }
 
   draw(canvas: Canvas) {
@@ -62,18 +62,18 @@ export default class Star {
     glow.addColorStop(0, Star.getColor(this.vel));
     glow.addColorStop(1, "rgba(0, 0, 0, 0)");
 
-    canvas.context.fillStyle = glow;
+    canvas.context.fillStyle = Star.getColor(this.vel);
     canvas.context.beginPath();
     canvas.context.arc(screenPos.x, screenPos.y, this.size, 0, Math.PI * 2);
     canvas.context.fill();
   }
 
-  static getColor(vel: Vec2): string {
+  static getColor(vec: Vec2): string {
     const COLOR_MULTIPLICATOR = 1;
 
     const value = clamp(
       Math.round(
-        (vel.length() / this.MAX_VELOCITY) * 255 * COLOR_MULTIPLICATOR
+        (vec.length() / this.MAX_VELOCITY) * 255 * COLOR_MULTIPLICATOR
       ),
       0,
       255

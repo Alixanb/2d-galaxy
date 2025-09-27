@@ -1,3 +1,4 @@
+import { clamp } from "../core/Utils";
 import BlackHole from "../entities/BlackHole";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
@@ -10,34 +11,38 @@ export default class Galaxy {
   stars: Star[];
   blackholes: BlackHole[];
   ship?: Ship;
+  size: number;
 
   constructor(
     canvas: Canvas,
     blackholes: BlackHole[],
     ship?: Ship,
-    nStar: number = 100
+    nStar: number = 100,
+    size: number = 0.7
   ) {
     this.canvas = canvas;
     this.stars = [];
     this.blackholes = blackholes;
     this.ship = ship;
 
+    this.size = clamp(size, 0.1, 2);
+
     this.createStars(nStar);
   }
 
   createStars(n: number) {
     for (let i = 0; i < n; i++) {
-      const pos = this.canvas.randomPosition().multiply(2);
-      const size = Math.random() * 5;
+      const pos = this.canvas.randomCirclePosition(this.size);
+      const size = Math.random() * Star.MAX_SIZE;
       const vel = Star.getVelocity(pos, this.blackholes[0]);
 
       this.stars.push(new Star(pos, size, vel));
     }
   }
 
-  update() {
+  update(dt: number) {
     if (this.ship) {
-      this.ship.update(this.blackholes);
+      this.ship.update(this.blackholes, dt);
     }
 
     this.stars = this.stars.filter((star) => !star.shouldDestroy);
@@ -45,7 +50,7 @@ export default class Galaxy {
     let maxVel = 0;
 
     for (let star of this.stars) {
-      star.update(this.blackholes);
+      star.update(this.blackholes, dt);
       if (star.vel.length() > maxVel) {
         maxVel = star.vel.length();
       }

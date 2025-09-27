@@ -6,3 +6,16 @@ body{
 canvas {
   display: block;
 }
+
+.info {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #0000003c;
+  color: white;
+  gap: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+}

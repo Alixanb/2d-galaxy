@@ -1,32 +1,70 @@
 import { loadImage } from "./core/Functions";
 import Vec2 from "./core/Vec2";
 import BlackHole from "./entities/BlackHole";
+import Information from "./entities/Information";
+import { RangeInput } from "./entities/Input";
 import Ship from "./entities/Ship";
 import Canvas from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
+import ToolManager from "./systems/ToolManager";
 
-const spriteThrusterOffUrl = "./assets/ship.png";
-const spriteThrusterOnUrl = "./assets/ship-thrust.png";
+// IMAGES
+const spriteThrusterOffUrl = "../public/assets/ship.png";
+const spriteThrusterOnUrl = "../public/assets/ship-thrust.png";
 
-const gargantua = new BlackHole(new Vec2(0, 0), 50);
+// INFORMATIONS BOX
+const fpsInfo = new Information("FPS")
+const nbStarInfo = new Information("Stars")
+const shipSpeedIndo = new Information("Speed", "m/s")
+
+const simulationSpeedRangeInput = new RangeInput("Simulation speed", 1, [0, 10], () => {
+  SIMULATION_SPEED = simulationSpeedRangeInput.value
+}, 10);
+
+const infoManager = new ToolManager("#info", [nbStarInfo, fpsInfo, shipSpeedIndo, simulationSpeedRangeInput]);
+
+// WORLD
+const gargantua = new BlackHole(new Vec2(0, 0), 10);
 // const gargantua2 = new BlackHole(new Vec2(0.5, 0), 50)
-let discovery = undefined;
+let discovery: Ship | null = null;
 const canvas = new Canvas("#app");
-const galaxy = new Galaxy(canvas, [gargantua], discovery, 50);
+const galaxy = new Galaxy(canvas, [gargantua], discovery ?? undefined, 10000);
 
-const fps = 60;
-const interval = 1000 / fps;
+let SIMULATION_SPEED = 1;
 let lastTime = 0;
+const UPDATE_INTERVAL_MS = 100;
+let lastUpdate: number = Date.now();
+
+const FIXED_STEP = 1 / 60; // 60Hz physics
+let accumulator = 0;
 
 function animate(time: number) {
-  const delta = time - lastTime;
-  if (delta >= interval) {
-    lastTime = time - (delta % interval);
+  let rawDelta = (time - lastTime) / 1000;
+  lastTime = time;
 
-    galaxy.update();
-    galaxy.draw();
+  accumulator += rawDelta * SIMULATION_SPEED;
+
+  const now = Date.now();
+  if (now - lastUpdate >= UPDATE_INTERVAL_MS) {
+    fpsInfo.set(Math.round(1 / rawDelta)); // use frameDelta, not simDelta
+    nbStarInfo.set(galaxy.stars.filter(star => !star.shouldDestroy).length);
+    shipSpeedIndo.set(Math.round((galaxy.ship?.vel?.length() ?? 0) * 1000));
+
+    infoManager.update();
+    lastUpdate = now;
   }
+
+  while (accumulator >= FIXED_STEP) {
+    galaxy.update(FIXED_STEP);
+    accumulator -= FIXED_STEP;
+  }
+  
+
+  galaxy.draw();
+  requestAnimationFrame(animate);
 }
+
+
 
 Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
   .then(([spriteThrusterOff, spriteThrusterOn]) => {
@@ -40,7 +78,7 @@ Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
       new Vec2(0.8, 0.8),
       spriteThrusterOff,
       spriteThrusterOn,
-      50
+      30
     );
   })
   .catch((err) => {
@@ -48,3 +86,5 @@ Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
   });
 
 requestAnimationFrame(animate);
+
+

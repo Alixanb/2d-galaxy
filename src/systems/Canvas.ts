@@ -90,6 +90,116 @@ export class Canvas2d extends Canvas<CanvasRenderingContext2D> {
   }
 }
 
+type ShaderType = "frag" | "vertex";
 export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
+  shaders: Shader[] = [];
+  buffer: WebGLBuffer | null = null;
+
+  constructor(ref: string, height: number = 1) {
+    super(ref, height);
+
+    const context = this.element.getContext("webgl");
+    if (!context) throw new Error("Unable to get canvas context");
+
+    this.context = context;
+
+    window.addEventListener("resize", this.sizing.bind(this));
+    this.sizing();
+  }
+
+  newShader(source: string, type: ShaderType) {
+    const shader = this.compileShader(source, type);
+    this.shaders.push(shader);
+    return shader;
+  }
+
+  compileShaders(type: ShaderType | "all" = "all") {
+    let shadersToUse = this.shaders;
+    if (type !== "all") {
+      shadersToUse = this.shaders.filter((s) => s.type === type);
+    }
+    return new ShaderProgram(this.context, ...shadersToUse);
+  }
+
+  compileShader(source: string, type: ShaderType) {
+    return new Shader(source, type, this.context);
+  }
+
+  sendToGPU(data: BufferSource) {
+    this.buffer = this.context.createBuffer();
+    this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffer);
+    this.context.bufferData(
+      this.context.ARRAY_BUFFER,
+      data,
+      this.context.STATIC_DRAW
+    );
+  }
+
   protected onResize(): void {}
+}
+
+export class ShaderProgram {
+  program: WebGLProgram;
+
+  constructor(gl: WebGLRenderingContext, ...shaders: Shader[]) {
+    this.program = gl.createProgram();
+    if (!this.program) {
+      throw new Error("Unable to create WebGLProgram");
+    }
+
+    for (let shader of shaders) {
+      gl.attachShader(this.program, shader.shader);
+    }
+
+    gl.linkProgram(this.program);
+
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+      const info = gl.getProgramInfoLog(this.program);
+      throw new Error("Program linking failed:\n" + info);
+    }
+  }
+
+  use(gl: WebGLRenderingContext) {
+    gl.useProgram(this.program);
+  }
+}
+
+export class Shader {
+  static shaderTypeGL: Record<ShaderType, "FRAGMENT_SHADER" | "VERTEX_SHADER"> =
+    {
+      frag: "FRAGMENT_SHADER",
+      vertex: "VERTEX_SHADER",
+    };
+
+  source: string;
+  shader!: WebGLShader;
+  type: ShaderType;
+  gl: WebGLRenderingContext;
+
+  constructor(source: string, type: ShaderType, gl: WebGLRenderingContext) {
+    this.source = source;
+    this.type = type;
+    this.gl = gl;
+
+    this.compile();
+  }
+
+  compile() {
+    const typeGL = this.gl[Shader.shaderTypeGL[this.type]];
+
+    const shader = this.gl.createShader(typeGL);
+    if (!shader) throw new Error("Unable to compile shader ; \n" + this.source);
+
+    this.shader = shader;
+
+    this.gl.shaderSource(this.shader, this.source);
+    this.gl.compileShader(this.shader);
+
+    if (!this.gl.getShaderParameter(this.shader, this.gl.COMPILE_STATUS)) {
+      const info = this.gl.getShaderInfoLog(this.shader);
+      throw new Error(
+        "Shader compilation failed:\n" + info + "\nSource:\n" + this.source
+      );
+    }
+  }
 }

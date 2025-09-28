@@ -140,27 +140,36 @@ export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
 
 export class ShaderProgram {
   program: WebGLProgram;
+  gl: WebGLRenderingContext;
+  position?: number;
 
   constructor(gl: WebGLRenderingContext, ...shaders: Shader[]) {
-    this.program = gl.createProgram();
+    this.gl = gl;
+    this.program = this.gl.createProgram();
     if (!this.program) {
       throw new Error("Unable to create WebGLProgram");
     }
 
     for (let shader of shaders) {
-      gl.attachShader(this.program, shader.shader);
+      this.gl.attachShader(this.program, shader.shader);
     }
 
-    gl.linkProgram(this.program);
+    this.gl.linkProgram(this.program);
 
-    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
-      const info = gl.getProgramInfoLog(this.program);
+    if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
+      const info = this.gl.getProgramInfoLog(this.program);
       throw new Error("Program linking failed:\n" + info);
     }
   }
 
-  use(gl: WebGLRenderingContext) {
-    gl.useProgram(this.program);
+  use() {
+    this.gl.useProgram(this.program);
+  }
+
+  createLocation(location: string) {
+    this.position = this.gl.getAttribLocation(this.program, location);
+    this.gl.enableVertexAttribArray(this.position);
+    this.gl.vertexAttribPointer(this.position, 2, this.gl.FLOAT, false, 0, 0);
   }
 }
 

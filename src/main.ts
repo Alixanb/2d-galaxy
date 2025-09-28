@@ -12,7 +12,9 @@ import ToolManager from "./systems/ToolManager";
 const spriteThrusterOffUrl = "/assets/ship.png";
 const spriteThrusterOnUrl = "/assets/ship-thrust.png";
 
-// INFORMATIONS BOX
+// TOOL MANAGER
+
+// INFORMATIONS
 const fpsInfo = new Information("FPS");
 const nbStarInfo = new Information("Stars");
 const shipSpeedIndo = new Information("Speed", "m/s");
@@ -29,15 +31,6 @@ const simulationSpeedRangeInput = new RangeInput(
   },
   10
 );
-
-const showBlackholesCheckboxInput = new CheckboxInput(
-  "Blackholes",
-  false,
-  (e) => {
-    galaxy.blackholes.forEach((b) => (b.show = e.value));
-  }
-);
-
 const pathIterationCheckboxInput = new RangeInput(
   "Path iterations",
   3000,
@@ -49,6 +42,7 @@ const pathIterationCheckboxInput = new RangeInput(
   }
 );
 
+// CHECBOX INPUTS
 const showShipPathCheckboxInput = new CheckboxInput(
   "Predicted path",
   false,
@@ -56,6 +50,13 @@ const showShipPathCheckboxInput = new CheckboxInput(
     if (galaxy.ship) {
       galaxy.ship.showPath = e.value;
     }
+  }
+);
+const showBlackholesCheckboxInput = new CheckboxInput(
+  "Blackholes",
+  false,
+  (e) => {
+    galaxy.blackholes.forEach((b) => (b.show = e.value));
   }
 );
 
@@ -99,6 +100,7 @@ let lastUpdate: number = Date.now();
 const FIXED_STEP = 1 / 60; // 60Hz physics
 let accumulator = 0;
 
+// ANIMATION LOOP
 function animate(time: number) {
   let rawDelta = (time - lastTime) / 1000;
   lastTime = time;
@@ -124,6 +126,7 @@ function animate(time: number) {
   requestAnimationFrame(animate);
 }
 
+// IMAGE LOAD
 Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
   .then(([spriteThrusterOff, spriteThrusterOn]) => {
     console.log(

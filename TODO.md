@@ -6,6 +6,6 @@ X Chemin gravitationel prévu pour le vaisseau
 - Rendre le tout magnifique (eg. video seb; agrandir, + opacité + flou gaussien)
 - Interaction graviationelles entre les étoiles
 - Collision Vaisseau - Particule
-- Regler problème de sprite de la fusée (mauvais ratio entre activé / desactivé)
+- Regler problème de sprite de la fusée (mauvais ratio entre activé / desactivé, pas centré)
 - FIX ZOOM
 - Optimisation: iadd, imultiply (add in-place)

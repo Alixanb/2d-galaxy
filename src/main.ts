@@ -4,7 +4,7 @@ import BlackHole from "./entities/BlackHole";
 import Information from "./entities/Information";
 import { CheckboxInput, RangeInput } from "./entities/Input";
 import Ship from "./entities/Ship";
-import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
+import { Canvas2d, CanvasWebGL, Shader, ShaderProgram } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import ToolManager from "./systems/ToolManager";
 
@@ -149,3 +149,38 @@ Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
   });
 
 requestAnimationFrame(animate);
+
+const vs = new Shader(
+  `attribute vec2 a_position;     
+  void main(void) {
+    gl_PointSize = 2.0;         // chaque point aura une taille fixe de 2x2 pixels
+    gl_Position = vec4(a_position, 0.0, 1.0); // position du point (x, y, z=0, w=1)
+  }`,
+  "vertex",
+  canvasGl.context
+);
+
+const fs = new Shader(
+  `void main(void) {
+    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); // couleur blanche opaque
+  }`,
+  "fragment",
+  canvasGl.context
+);
+
+const program = new ShaderProgram(canvasGl.context, vs, fs);
+program.compile();
+
+const numPoints = 100000;
+const positions = new Float32Array(numPoints * 2);
+
+for (let i = 0; i < numPoints * 2; i++) {
+  positions[i] = Math.random() * 5 - 1;
+}
+
+canvasGl.createBuffer(positions);
+program.createLocation("a_position");
+
+canvasGl.context.clearColor(0.0, 0.0, 0.0, 0.0);
+canvasGl.context.clear(canvasGl.context.COLOR_BUFFER_BIT);
+canvasGl.context.drawArrays(canvasGl.context.POINTS, 0, numPoints);

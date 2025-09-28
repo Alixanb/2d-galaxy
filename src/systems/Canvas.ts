@@ -90,7 +90,6 @@ export class Canvas2d extends Canvas<CanvasRenderingContext2D> {
   }
 }
 
-type ShaderType = "frag" | "vertex";
 export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
   shaders: Shader[] = [];
   buffer: WebGLBuffer | null = null;
@@ -125,7 +124,7 @@ export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
     return new Shader(source, type, this.context);
   }
 
-  sendToGPU(data: BufferSource) {
+  createBuffer(data: BufferSource) {
     this.buffer = this.context.createBuffer();
     this.context.bindBuffer(this.context.ARRAY_BUFFER, this.buffer);
     this.context.bufferData(
@@ -135,22 +134,30 @@ export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
     );
   }
 
-  protected onResize(): void {}
+  protected onResize(): void {
+    this.context.viewport(0, 0, this.element.width, this.element.height);
+  }
 }
 
 export class ShaderProgram {
   program: WebGLProgram;
   gl: WebGLRenderingContext;
   position?: number;
+  shaders: Shader[];
 
   constructor(gl: WebGLRenderingContext, ...shaders: Shader[]) {
     this.gl = gl;
     this.program = this.gl.createProgram();
-    if (!this.program) {
-      throw new Error("Unable to create WebGLProgram");
-    }
+    if (!this.program) throw new Error("Unable to create WebGLProgram");
 
-    for (let shader of shaders) {
+    this.shaders = shaders;
+  }
+
+  compile() {
+    if (!this.shaders.length)
+      throw new Error("Impossible to compile shaders since there isn't any");
+
+    for (let shader of this.shaders) {
       this.gl.attachShader(this.program, shader.shader);
     }
 
@@ -160,9 +167,7 @@ export class ShaderProgram {
       const info = this.gl.getProgramInfoLog(this.program);
       throw new Error("Program linking failed:\n" + info);
     }
-  }
 
-  use() {
     this.gl.useProgram(this.program);
   }
 
@@ -173,10 +178,11 @@ export class ShaderProgram {
   }
 }
 
+type ShaderType = "fragment" | "vertex";
 export class Shader {
   static shaderTypeGL: Record<ShaderType, "FRAGMENT_SHADER" | "VERTEX_SHADER"> =
     {
-      frag: "FRAGMENT_SHADER",
+      fragment: "FRAGMENT_SHADER",
       vertex: "VERTEX_SHADER",
     };
 

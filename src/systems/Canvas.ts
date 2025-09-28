@@ -1,12 +1,13 @@
 import Vec2 from "../core/Vec2";
 
-export default class Canvas {
+abstract class Canvas<
+  Ctx extends CanvasRenderingContext2D | WebGLRenderingContext
+> {
   element: HTMLCanvasElement;
   dimensions: Vec2 = new Vec2();
-  height: number;
   ratio: number = 0;
-  context: CanvasRenderingContext2D;
-  zoom: number = 1;
+  context!: Ctx;
+  height: number;
 
   constructor(ref: string, height: number = 1) {
     const element = document.querySelector<HTMLCanvasElement>(ref);
@@ -14,15 +15,18 @@ export default class Canvas {
       throw new Error("Unable to fetch canvas element with string " + ref);
 
     this.element = element;
-
-    const context = this.element.getContext("2d");
-    if (!context) throw new Error("Unable to get canvas context");
-
-    this.context = context;
     this.height = height;
+  }
 
-    window.addEventListener("resize", this.sizing.bind(this));
-    this.sizing();
+  place(vec: Vec2) {
+    const normalizedY =
+      ((vec.y + 1) / 2) * (this.dimensions.y / window.devicePixelRatio);
+
+    const normalizedX =
+      ((vec.x + this.ratio) / (2 * this.ratio)) *
+      (this.dimensions.x / window.devicePixelRatio);
+
+    return new Vec2(normalizedX, normalizedY);
   }
 
   sizing() {
@@ -40,26 +44,25 @@ export default class Canvas {
     this.dimensions = new Vec2(this.element.width, this.element.height);
     this.ratio = this.dimensions.x / this.dimensions.y;
 
-    this.context.setTransform(1, 0, 0, 1, 0, 0);
-    this.context.translate(this.element.width / 2, this.element.height / 2);
-    this.context.scale(
-      (devicePixelRatio * this.zoom) / 2,
-      (devicePixelRatio * this.zoom) / 2
-    );
-    this.context.translate(-this.element.width / 2, -this.element.height / 2);
-
-    this.context.scale(devicePixelRatio, devicePixelRatio);
+    this.onResize();
   }
 
-  place(vec: Vec2) {
-    const normalizedY =
-      ((vec.y + 1) / 2) * (this.dimensions.y / window.devicePixelRatio);
+  protected abstract onResize(): void;
+}
 
-    const normalizedX =
-      ((vec.x + this.ratio) / (2 * this.ratio)) *
-      (this.dimensions.x / window.devicePixelRatio);
+export class Canvas2d extends Canvas<CanvasRenderingContext2D> {
+  zoom: number = 1;
 
-    return new Vec2(normalizedX, normalizedY);
+  constructor(ref: string, height: number = 1) {
+    super(ref, height);
+
+    const context = this.element.getContext("2d");
+    if (!context) throw new Error("Unable to get canvas context");
+
+    this.context = context;
+
+    window.addEventListener("resize", this.sizing.bind(this));
+    this.sizing();
   }
 
   randomPosition() {
@@ -73,4 +76,20 @@ export default class Canvas {
 
     return new Vec2(Math.sin(theta) * r, Math.cos(theta) * r);
   }
+
+  protected onResize(): void {
+    this.context.setTransform(1, 0, 0, 1, 0, 0);
+    this.context.translate(this.element.width / 2, this.element.height / 2);
+    this.context.scale(
+      (devicePixelRatio * this.zoom) / 2,
+      (devicePixelRatio * this.zoom) / 2
+    );
+    this.context.translate(-this.element.width / 2, -this.element.height / 2);
+
+    this.context.scale(devicePixelRatio, devicePixelRatio);
+  }
+}
+
+export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
+  protected onResize(): void {}
 }

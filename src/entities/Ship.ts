@@ -1,6 +1,6 @@
 import Color from "../core/Color";
 import Vec2 from "../core/Vec2";
-import Canvas from "../systems/Canvas";
+import type { Canvas2d } from "../systems/Canvas";
 import Galaxy from "../systems/Galaxy";
 import BlackHole from "./BlackHole";
 import Star from "./Star";
@@ -62,7 +62,7 @@ export default class Ship {
     });
   }
 
-  draw(canvas: Canvas) {
+  draw(canvas: Canvas2d) {
     const screenPos = canvas.place(this.pos);
 
     const width = this.size;
@@ -159,7 +159,7 @@ export default class Ship {
     }
   }
 
-  drawPath(canvas: Canvas) {
+  drawPath(canvas: Canvas2d) {
     if (!this.path[0]) return;
 
     const initPos = canvas.place(this.path[0]);

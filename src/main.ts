@@ -4,7 +4,7 @@ import BlackHole from "./entities/BlackHole";
 import Information from "./entities/Information";
 import { CheckboxInput, RangeInput } from "./entities/Input";
 import Ship from "./entities/Ship";
-import Canvas from "./systems/Canvas";
+import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import ToolManager from "./systems/ToolManager";
 
@@ -29,6 +29,15 @@ const simulationSpeedRangeInput = new RangeInput(
   },
   10
 );
+
+const showBlackholesCheckboxInput = new CheckboxInput(
+  "Blackholes",
+  false,
+  (e) => {
+    galaxy.blackholes.forEach((b) => (b.show = e.value));
+  }
+);
+
 const pathIterationCheckboxInput = new RangeInput(
   "Path iterations",
   3000,
@@ -40,11 +49,9 @@ const pathIterationCheckboxInput = new RangeInput(
   }
 );
 
-// CHECKBOX INPUTS
-const SHOW_SHIP_PATH_BY_DEFAULT = false;
 const showShipPathCheckboxInput = new CheckboxInput(
   "Predicted path",
-  SHOW_SHIP_PATH_BY_DEFAULT,
+  false,
   (e) => {
     if (galaxy.ship) {
       galaxy.ship.showPath = e.value;
@@ -56,18 +63,29 @@ const infoManager = new ToolManager("#info", [
   nbStarInfo,
   fpsInfo,
   shipSpeedIndo,
+  showBlackholesCheckboxInput,
   simulationSpeedRangeInput,
   showShipPathCheckboxInput,
   pathIterationCheckboxInput,
 ]);
 
 // WORLD
-const gargantua = new BlackHole(new Vec2(-0.5, 0), 10);
-const gargantua2 = new BlackHole(new Vec2(0.5, 0), 10);
+const gargantua = new BlackHole(
+  new Vec2(-0.5, 0),
+  10,
+  showBlackholesCheckboxInput.value
+);
+const gargantua2 = new BlackHole(
+  new Vec2(0.5, 0),
+  10,
+  showBlackholesCheckboxInput.value
+);
 let discovery: Ship | null = null;
-const canvas = new Canvas("#app");
+const canvas2d = new Canvas2d("#canvas-2d");
+const canvasGl = new CanvasWebGL("#canvas-web-gl");
 const galaxy = new Galaxy(
-  canvas,
+  canvas2d,
+  canvasGl,
   [gargantua, gargantua2],
   discovery ?? undefined,
   10000
@@ -119,7 +137,7 @@ Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
       spriteThrusterOff,
       spriteThrusterOn,
       30,
-      SHOW_SHIP_PATH_BY_DEFAULT,
+      showShipPathCheckboxInput.value,
       [gargantua, gargantua2]
     );
   })

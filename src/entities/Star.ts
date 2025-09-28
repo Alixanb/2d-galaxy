@@ -1,6 +1,6 @@
 import { clamp } from "../core/Utils";
 import Vec2 from "../core/Vec2";
-import Canvas from "../systems/Canvas";
+import type { Canvas2d } from "../systems/Canvas";
 import Galaxy from "../systems/Galaxy";
 import BlackHole from "./BlackHole";
 
@@ -50,7 +50,7 @@ export default class Star {
     this.pos = this.pos.add(this.vel.multiply(dt));
   }
 
-  draw(canvas: Canvas) {
+  draw(canvas: Canvas2d) {
     const screenPos = canvas.place(this.pos);
 
     canvas.context.fillStyle = Star.getColor(this.vel);

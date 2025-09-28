@@ -2,25 +2,28 @@ import { clamp } from "../core/Utils";
 import BlackHole from "../entities/BlackHole";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
-import Canvas from "./Canvas";
+import type { Canvas2d, CanvasWebGL } from "./Canvas";
 
 export default class Galaxy {
   static G = 6.6743e-11;
 
-  canvas: Canvas;
+  canvas2d: Canvas2d;
+  canvasWebGL: CanvasWebGL;
   stars: Star[];
   blackholes: BlackHole[];
   ship?: Ship;
   size: number;
 
   constructor(
-    canvas: Canvas,
+    canvas2d: Canvas2d,
+    canvasWebGL: CanvasWebGL,
     blackholes: BlackHole[],
     ship?: Ship,
     nStar: number = 100,
     size: number = 0.7
   ) {
-    this.canvas = canvas;
+    this.canvas2d = canvas2d;
+    this.canvasWebGL = canvasWebGL;
     this.stars = [];
     this.blackholes = blackholes;
     this.ship = ship;
@@ -32,7 +35,7 @@ export default class Galaxy {
 
   createStars(n: number) {
     for (let i = 0; i < n; i++) {
-      const pos = this.canvas.randomCirclePosition(this.size);
+      const pos = this.canvas2d.randomCirclePosition(this.size);
       const size = Math.random() * Star.MAX_SIZE;
       const vel = Star.getVelocity(pos, this.blackholes[0]);
 
@@ -60,15 +63,15 @@ export default class Galaxy {
   }
 
   draw() {
-    this.canvas.context.clearRect(
+    this.canvas2d.context.clearRect(
       0,
       0,
-      this.canvas.dimensions.x,
-      this.canvas.dimensions.y
+      this.canvas2d.dimensions.x,
+      this.canvas2d.dimensions.y
     );
 
-    this.stars.forEach((s) => s.draw(this.canvas));
-    this.blackholes.forEach((b) => b.draw(this.canvas));
-    if (this.ship) this.ship.draw(this.canvas);
+    this.stars.forEach((s) => s.draw(this.canvas2d));
+    this.blackholes.forEach((b) => b.draw(this.canvas2d));
+    if (this.ship) this.ship.draw(this.canvas2d);
   }
 }

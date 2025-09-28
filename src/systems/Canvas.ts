@@ -102,6 +102,12 @@ export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
 
     this.context = context;
 
+    this.context.enable(this.context.BLEND);
+    this.context.blendFunc(
+      this.context.SRC_ALPHA,
+      this.context.ONE_MINUS_SRC_ALPHA
+    );
+
     window.addEventListener("resize", this.sizing.bind(this));
     this.sizing();
   }

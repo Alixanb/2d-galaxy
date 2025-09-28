@@ -152,17 +152,25 @@ requestAnimationFrame(animate);
 
 const vs = new Shader(
   `attribute vec2 a_position;     
-  void main(void) {
-    gl_PointSize = 2.0;         // chaque point aura une taille fixe de 2x2 pixels
-    gl_Position = vec4(a_position, 0.0, 1.0); // position du point (x, y, z=0, w=1)
-  }`,
+void main(void) {
+  gl_PointSize = 1.0;                   
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}
+`,
   "vertex",
   canvasGl.context
 );
 
 const fs = new Shader(
-  `void main(void) {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); // couleur blanche opaque
+  `precision mediump float;
+
+  void main(void) {
+    vec2 coord = gl_PointCoord - vec2(0.5);
+    float dist = length(coord);
+
+    if (dist > 0.5) discard;
+
+    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); 
   }`,
   "fragment",
   canvasGl.context
@@ -175,7 +183,7 @@ const numPoints = 100000;
 const positions = new Float32Array(numPoints * 2);
 
 for (let i = 0; i < numPoints * 2; i++) {
-  positions[i] = Math.random() * 5 - 1;
+  positions[i] = Math.random() * 2 - 1;
 }
 
 canvasGl.createBuffer(positions);

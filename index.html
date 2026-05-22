@@ -10,7 +10,32 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/style.css" />
-    <title>2D Galaxy</title>
+    <title>2D Galaxy | Advanced Gravitational N-Body Simulation</title>
+    <meta name="description" content="Experience a realistic 2D gravitational N-body simulation. Explore galaxies, interact with black holes, and pilot your ship through complex orbital mechanics." />
+    <meta name="keywords" content="gravitational simulation, n-body simulation, galaxy simulator, webgl physics, space exploration game, black hole simulation" />
+    <link rel="canonical" href="https://2d-galaxy.com/" />
+
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="theme-color" content="#130e0e">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://2d-galaxy.com/">
+    <meta property="og:title" content="2D Galaxy | Advanced Gravitational Simulation">
+    <meta property="og:description" content="Experience a realistic 2D gravitational N-body simulation. Explore galaxies, interact with black holes, and pilot your ship.">
+    <meta property="og:image" content="https://2d-galaxy.com/assets/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://2d-galaxy.com/">
+    <meta property="twitter:title" content="2D Galaxy | Advanced Gravitational Simulation">
+    <meta property="twitter:description" content="Experience a realistic 2D gravitational N-body simulation. Explore galaxies, interact with black holes, and pilot your ship.">
+    <meta property="twitter:image" content="https://2d-galaxy.com/assets/og-image.png">
   </head>
   <body>
     <canvas id="canvas-web-gl"></canvas>
@@ -18,97 +43,142 @@
 
     <!-- Landing page -->
     <div id="landing">
-      <!-- Left: title as graphic element -->
-      <div class="landing-left">
-        <h1 class="landing-title">2D<br />Galaxy</h1>
-        <p class="landing-sub">Gravitational Simulation</p>
+      <div class="landing-hero">
+        <!-- Left: title as graphic element -->
+        <div class="landing-left">
+          <h1 class="landing-title">2D<br />Galaxy</h1>
+          <p class="landing-sub">Gravitational Simulation</p>
+        </div>
+
+        <!-- Right: settings panel -->
+        <div class="landing-panel">
+          <div class="landing-panel-body">
+            <div class="landing-panel-label">Configure</div>
+
+            <div class="settings-grid">
+              <div class="setting" style="--delay: 0">
+                <div class="setting-header">
+                  <span class="setting-label">Stars</span>
+                  <span class="setting-value" id="val-stars">5000</span>
+                </div>
+                <input
+                  type="range"
+                  id="inp-stars"
+                  min="100"
+                  max="10000"
+                  value="5000"
+                  step="100"
+                />
+              </div>
+
+              <div class="setting" style="--delay: 1">
+                <div class="setting-header">
+                  <span class="setting-label">Galaxy size</span>
+                  <span class="setting-value" id="val-galaxy-size">0.70</span>
+                </div>
+                <input
+                  type="range"
+                  id="inp-galaxy-size"
+                  min="10"
+                  max="200"
+                  value="70"
+                  step="5"
+                />
+              </div>
+
+              <div class="setting" style="--delay: 2">
+                <div class="setting-header">
+                  <span class="setting-label">Sim speed</span>
+                  <span class="setting-value" id="val-sim-speed">1×</span>
+                </div>
+                <input
+                  type="range"
+                  id="inp-sim-speed"
+                  min="1"
+                  max="10"
+                  value="1"
+                  step="1"
+                />
+              </div>
+
+              <div class="setting" style="--delay: 3">
+                <div class="setting-header">
+                  <span class="setting-label">Black holes</span>
+                  <span class="setting-value" id="val-blackholes">2</span>
+                </div>
+                <input
+                  type="range"
+                  id="inp-blackholes"
+                  min="0"
+                  max="3"
+                  value="1"
+                  step="1"
+                />
+              </div>
+
+              <div class="setting setting--toggle" style="--delay: 4">
+                <span class="setting-label">Ship path</span>
+                <label class="toggle">
+                  <input type="checkbox" id="inp-show-path" />
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+
+              <div class="setting setting--toggle" style="--delay: 5">
+                <span class="setting-label">Black holes</span>
+                <label class="toggle">
+                  <input type="checkbox" id="inp-show-blackholes" checked />
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+
+            <button id="start-btn" style="--delay: 6">Start Simulation</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Right: settings panel -->
-      <div class="landing-panel">
-        <div class="landing-panel-body">
-          <div class="landing-panel-label">Configure</div>
+      <div class="landing-seo">
+        <section class="seo-section">
+          <h2>Advanced N-Body Simulation</h2>
+          <p>Experience the beauty of orbital mechanics through our highly optimized 2D gravitational simulator. Powered by WebGL, it can handle thousands of stars in real-time, creating stunning visual patterns that emerge from simple physical laws of universal gravitation.</p>
+        </section>
+        
+        <section class="seo-section">
+          <h2>Interactive Galactic Exploration</h2>
+          <p>Customize your universe by adjusting stellar density, galactic scale, and temporal flow. Add supermassive black holes to observe how they warp spacetime and dictate the movement of entire star systems within your simulation.</p>
+        </section>
 
-          <div class="settings-grid">
-            <div class="setting" style="--delay: 0">
-              <div class="setting-header">
-                <span class="setting-label">Stars</span>
-                <span class="setting-value" id="val-stars">5000</span>
-              </div>
-              <input
-                type="range"
-                id="inp-stars"
-                min="100"
-                max="10000"
-                value="5000"
-                step="100"
-              />
+        <section class="seo-section">
+          <h2>Precision Flight Mechanics</h2>
+          <p>Take command of a sophisticated spacecraft. Our simulation features a real-time prediction engine that calculates your future trajectory, allowing you to execute complex gravity assists and navigate the treacherous proximity of singularities.</p>
+        </section>
+
+        <section class="seo-section">
+          <h2>Simulation Features</h2>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <h3>High-Performance WebGL</h3>
+              <p>Utilizing custom shaders to render massive star fields at 60 FPS.</p>
             </div>
-
-            <div class="setting" style="--delay: 1">
-              <div class="setting-header">
-                <span class="setting-label">Galaxy size</span>
-                <span class="setting-value" id="val-galaxy-size">0.70</span>
-              </div>
-              <input
-                type="range"
-                id="inp-galaxy-size"
-                min="10"
-                max="200"
-                value="70"
-                step="5"
-              />
+            <div class="feature-card">
+              <h3>Dynamic N-Body Physics</h3>
+              <p>Every star and body exerts gravitational force on every other body.</p>
             </div>
-
-            <div class="setting" style="--delay: 2">
-              <div class="setting-header">
-                <span class="setting-label">Sim speed</span>
-                <span class="setting-value" id="val-sim-speed">1×</span>
-              </div>
-              <input
-                type="range"
-                id="inp-sim-speed"
-                min="1"
-                max="10"
-                value="1"
-                step="1"
-              />
+            <div class="feature-card">
+              <h3>Integrated MFD Systems</h3>
+              <p>Multi-Function Displays providing radar, telemetry, and attitude data.</p>
             </div>
-
-            <div class="setting" style="--delay: 3">
-              <div class="setting-header">
-                <span class="setting-label">Black holes</span>
-                <span class="setting-value" id="val-blackholes">2</span>
-              </div>
-              <input
-                type="range"
-                id="inp-blackholes"
-                min="0"
-                max="3"
-                value="1"
-                step="1"
-              />
-            </div>
-
-            <div class="setting setting--toggle" style="--delay: 4">
-              <span class="setting-label">Ship path</span>
-              <label class="toggle">
-                <input type="checkbox" id="inp-show-path" />
-                <span class="toggle-track"></span>
-              </label>
-            </div>
-
-            <div class="setting setting--toggle" style="--delay: 5">
-              <span class="setting-label">Black holes</span>
-              <label class="toggle">
-                <input type="checkbox" id="inp-show-blackholes" checked />
-                <span class="toggle-track"></span>
-              </label>
+            <div class="feature-card">
+              <h3>Trajectory Prediction</h3>
+              <p>Advanced orbital forecasting for precise navigation in deep space.</p>
             </div>
           </div>
+        </section>
 
-          <button id="start-btn" style="--delay: 6">Start Simulation</button>
-        </div>
+        <footer class="landing-footer">
+          <p>&copy; 2026 2D Galaxy Project. An open-source gravitational experiment.</p>
+        </footer>
       </div>
     </div>
 

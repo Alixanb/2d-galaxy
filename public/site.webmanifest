@@ -1,0 +1,19 @@
+{
+  "name": "2D Galaxy Gravitational Simulation",
+  "short_name": "2D Galaxy",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#130e0e",
+  "background_color": "#130e0e",
+  "display": "standalone"
+}

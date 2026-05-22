@@ -2,6 +2,7 @@ import { loadImage } from "./core/Functions";
 import Vec2 from "./core/Vec2";
 import BlackHole from "./entities/BlackHole";
 import Ship from "./entities/Ship";
+import Star from "./entities/Star";
 import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import { createFloatingWindow } from "./systems/FloatingWindow";
@@ -78,14 +79,31 @@ function startSimulation(config: SimulationConfig) {
 
   Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
     .then(([spriteOff, spriteOn]) => {
+      let spawnPos = new Vec2(0, 0);
+      let spawnVel = new Vec2(0, 0);
+
+      if (blackholes.length === 1) {
+        // Spawn on the outer rim of the galaxy
+        const radius = config.galaxySize;
+        const angle = Math.random() * Math.PI * 2;
+        spawnPos = new Vec2(Math.cos(angle) * radius, Math.sin(angle) * radius);
+        // Already in orbit
+        spawnVel = Star.getVelocity(spawnPos, blackholes[0]);
+      } else {
+        // Multiple black holes: spawn in the middle with no velocity
+        spawnPos = new Vec2(0, 0);
+        spawnVel = new Vec2(0, 0);
+      }
+
       galaxy.ship = new Ship(
-        new Vec2(0.8, 0.8),
+        spawnPos,
         spriteOff,
         spriteOn,
         30,
         config.showPath,
         blackholes
       );
+      galaxy.ship.vel = spawnVel;
     })
     .catch(console.error);
 

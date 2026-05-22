@@ -15,7 +15,7 @@ export interface MFDData {
   isThrusting: boolean;
 }
 
-type MFDView = "home" | "vel" | "att" | "tel" | "fuel" | "radar";
+type MFDView = "home" | "vel" | "att" | "tel";
 
 const CHART_MAX_POINTS = 120;
 const SCALE = 10000;
@@ -25,35 +25,30 @@ export default class MFD {
   private galaxy: Galaxy;
   private root: HTMLElement;
   private screen: HTMLElement;
-  private osbs: [HTMLButtonElement, HTMLButtonElement, HTMLButtonElement,
-                 HTMLButtonElement, HTMLButtonElement, HTMLButtonElement];
+  private osbs: [HTMLButtonElement, HTMLButtonElement, HTMLButtonElement, HTMLButtonElement];
   private currentView: MFDView = "home";
 
   private flags = {
-    vel:   { showAngVel: false },
-    att:   { showOrient: true, showVector: true },
-    tel:   { showFPS: true, showChart: true },
-    fuel:  { showRate: true, showEst: true },
-    radar: { showGrid: true, showVector: true },
+    vel: { showAngVel: false },
+    att: { showOrient: true, showVector: true },
+    tel: { showFPS: true, showChart: true },
   };
 
-  private data: MFDData = {
-    vx: 0, vy: 0, dist: 0, angularVel: 0,
+  private data: MFDData = { 
+    vx: 0, vy: 0, dist: 0, angularVel: 0, 
     starCount: 0, totalStars: 0, fps: 0,
     liquidErgol: 0, maxLiquidErgol: 500,
     monergol: 0, maxMonergol: 100,
-    isThrusting: false,
+    isThrusting: false
   };
 
-  // Corner label refs (6: TL, ML, BL, TR, MR, BR)
+  // Corner label refs (overlay on screen)
   private lblOsb1!: HTMLElement;
   private lblOsb2!: HTMLElement;
   private lblOsb3!: HTMLElement;
   private lblOsb4!: HTMLElement;
-  private lblOsb5!: HTMLElement;
-  private lblOsb6!: HTMLElement;
 
-  // VEL view
+  // VEL view refs
   private velArrowX!: HTMLElement;
   private velArrowY!: HTMLElement;
   private velValueX!: HTMLElement;
@@ -69,7 +64,7 @@ export default class MFD {
   private attSpriteCache: HTMLCanvasElement | null = null;
   private attInitialized = false;
 
-  // TEL view
+  // TEL view refs
   private telStarsEl!: HTMLElement;
   private telTotalEl!: HTMLElement;
   private telFpsEl!: HTMLElement;
@@ -78,28 +73,6 @@ export default class MFD {
   private chartCanvas!: HTMLCanvasElement;
   private chartCtx: CanvasRenderingContext2D | null = null;
   private chartData: number[] = [];
-
-  // FUEL view
-  private fuelLeFill!: HTMLElement;
-  private fuelLeAmount!: HTMLElement;
-  private fuelMoFill!: HTMLElement;
-  private fuelMoAmount!: HTMLElement;
-  private fuelRateWrap!: HTMLElement;
-  private fuelLeRateEl!: HTMLElement;
-  private fuelMoRateEl!: HTMLElement;
-  private fuelEstWrap!: HTMLElement;
-  private fuelLeEstEl!: HTMLElement;
-  private fuelMoEstEl!: HTMLElement;
-  private leRateSmoothed = 0;
-  private moRateSmoothed = 0;
-  private lastFuelLE = -1;
-  private lastFuelMO = -1;
-  private lastFuelTime = 0;
-
-  // RADAR view
-  private radarCanvas!: HTMLCanvasElement;
-  private radarCtx: CanvasRenderingContext2D | null = null;
-  private radarInitialized = false;
 
   constructor(galaxy: Galaxy) {
     this.galaxy = galaxy;
@@ -116,39 +89,33 @@ export default class MFD {
     this.screen = document.createElement("div");
     this.screen.className = "mfd-screen";
 
+    // Corner labels overlay
     const lblWrap = document.createElement("div");
     lblWrap.className = "mfd-corner-lbls";
     lblWrap.setAttribute("aria-hidden", "true");
 
     this.lblOsb1 = this.makeCornerLbl("mfd-lbl-tl");
-    this.lblOsb2 = this.makeCornerLbl("mfd-lbl-ml");
-    this.lblOsb3 = this.makeCornerLbl("mfd-lbl-bl");
-    this.lblOsb4 = this.makeCornerLbl("mfd-lbl-tr");
-    this.lblOsb5 = this.makeCornerLbl("mfd-lbl-mr");
-    this.lblOsb6 = this.makeCornerLbl("mfd-lbl-br");
+    this.lblOsb2 = this.makeCornerLbl("mfd-lbl-bl");
+    this.lblOsb3 = this.makeCornerLbl("mfd-lbl-tr");
+    this.lblOsb4 = this.makeCornerLbl("mfd-lbl-br");
 
     lblWrap.appendChild(this.lblOsb1);
     lblWrap.appendChild(this.lblOsb2);
     lblWrap.appendChild(this.lblOsb3);
     lblWrap.appendChild(this.lblOsb4);
-    lblWrap.appendChild(this.lblOsb5);
-    lblWrap.appendChild(this.lblOsb6);
     this.screen.appendChild(lblWrap);
 
+    // OSBs: plain LED indicator buttons
     const osb1 = this.makeOSB(() => this.setView("home"));
-    const osb2 = this.makeOSB(() => this.onOSB(2));
-    const osb3 = this.makeOSB(() => this.onOSB(3));
-    const osb4 = this.makeOSB(() => this.onOSB(4));
-    const osb5 = this.makeOSB(() => this.onOSB(5));
-    const osb6 = this.makeOSB(() => this.onOSB(6));
-    this.osbs = [osb1, osb2, osb3, osb4, osb5, osb6];
+    const osb2 = this.makeOSB(() => this.onOSB2());
+    const osb3 = this.makeOSB(() => this.onOSB3());
+    const osb4 = this.makeOSB(() => this.onOSB4());
+    this.osbs = [osb1, osb2, osb3, osb4];
 
     leftStrip.appendChild(osb1);
     leftStrip.appendChild(osb2);
-    leftStrip.appendChild(osb3);
+    rightStrip.appendChild(osb3);
     rightStrip.appendChild(osb4);
-    rightStrip.appendChild(osb5);
-    rightStrip.appendChild(osb6);
 
     this.root.appendChild(leftStrip);
     this.root.appendChild(this.screen);
@@ -158,8 +125,6 @@ export default class MFD {
     this.buildVelView();
     this.buildAttView();
     this.buildTelView();
-    this.buildFuelView();
-    this.buildRadarView();
 
     this.setView("home");
   }
@@ -171,29 +136,13 @@ export default class MFD {
   update(data: MFDData): void {
     this.data = data;
 
+    // Always accumulate chart data so the graph records from simulation start
     this.chartData.push(data.starCount);
     if (this.chartData.length > CHART_MAX_POINTS) this.chartData.shift();
 
-    // Smoothed fuel consumption rate (EMA)
-    const now = performance.now();
-    if (this.lastFuelLE >= 0) {
-      const dt = (now - this.lastFuelTime) / 1000;
-      if (dt > 0.05) {
-        const leRate = (this.lastFuelLE - data.liquidErgol) / dt;
-        const moRate = (this.lastFuelMO - data.monergol) / dt;
-        this.leRateSmoothed = this.leRateSmoothed * 0.88 + Math.max(0, leRate) * 0.12;
-        this.moRateSmoothed = this.moRateSmoothed * 0.88 + Math.max(0, moRate) * 0.12;
-      }
-    }
-    this.lastFuelLE = data.liquidErgol;
-    this.lastFuelMO = data.monergol;
-    this.lastFuelTime = now;
-
-    if (this.currentView === "vel")   this.refreshVel();
-    if (this.currentView === "att")   this.drawAttitude();
-    if (this.currentView === "tel")   this.refreshTel();
-    if (this.currentView === "fuel")  this.refreshFuel();
-    if (this.currentView === "radar") this.drawRadar();
+    if (this.currentView === "vel") this.refreshVel();
+    if (this.currentView === "att") this.drawAttitude();
+    if (this.currentView === "tel") this.refreshTel();
   }
 
   // ─── Navigation ──────────────────────────────────────────────────────────
@@ -209,39 +158,45 @@ export default class MFD {
     this.updateOSBs();
   }
 
-  private onOSB(n: number): void {
+  private onOSB2(): void {
     switch (this.currentView) {
-      case "home":
-        if      (n === 2) this.setView("vel");
-        else if (n === 3) this.setView("att");
-        else if (n === 4) this.setView("tel");
-        else if (n === 5) this.setView("fuel");
-        else if (n === 6) this.setView("radar");
-        break;
+      case "home": this.setView("vel"); break;
       case "vel":
-        if (n === 2) {
-          this.flags.vel.showAngVel = !this.flags.vel.showAngVel;
-          this.velAngRow.style.display = this.flags.vel.showAngVel ? "flex" : "none";
-          this.updateOSBs();
-        }
+        this.flags.vel.showAngVel = !this.flags.vel.showAngVel;
+        this.velAngRow.style.display = this.flags.vel.showAngVel ? "flex" : "none";
+        this.updateOSBs();
         break;
       case "att":
-        if      (n === 2) { this.flags.att.showOrient = !this.flags.att.showOrient; this.drawAttitude(); this.updateOSBs(); }
-        else if (n === 3) { this.flags.att.showVector = !this.flags.att.showVector; this.drawAttitude(); this.updateOSBs(); }
+        this.flags.att.showOrient = !this.flags.att.showOrient;
+        this.drawAttitude();
+        this.updateOSBs();
         break;
       case "tel":
-        if      (n === 2) { this.flags.tel.showFPS = !this.flags.tel.showFPS; this.telFpsRow.style.display = this.flags.tel.showFPS ? "flex" : "none"; this.updateOSBs(); }
-        else if (n === 3) { this.flags.tel.showChart = !this.flags.tel.showChart; this.telChartWrap.style.display = this.flags.tel.showChart ? "block" : "none"; this.updateOSBs(); }
-        break;
-      case "fuel":
-        if      (n === 2) { this.flags.fuel.showRate = !this.flags.fuel.showRate; this.fuelRateWrap.style.display = this.flags.fuel.showRate ? "block" : "none"; this.updateOSBs(); }
-        else if (n === 3) { this.flags.fuel.showEst  = !this.flags.fuel.showEst;  this.fuelEstWrap.style.display  = this.flags.fuel.showEst  ? "block" : "none"; this.updateOSBs(); }
-        break;
-      case "radar":
-        if      (n === 2) { this.flags.radar.showGrid   = !this.flags.radar.showGrid;   this.drawRadar(); this.updateOSBs(); }
-        else if (n === 3) { this.flags.radar.showVector = !this.flags.radar.showVector; this.drawRadar(); this.updateOSBs(); }
+        this.flags.tel.showFPS = !this.flags.tel.showFPS;
+        this.telFpsRow.style.display = this.flags.tel.showFPS ? "flex" : "none";
+        this.updateOSBs();
         break;
     }
+  }
+
+  private onOSB3(): void {
+    switch (this.currentView) {
+      case "home": this.setView("att"); break;
+      case "att":
+        this.flags.att.showVector = !this.flags.att.showVector;
+        this.drawAttitude();
+        this.updateOSBs();
+        break;
+      case "tel":
+        this.flags.tel.showChart = !this.flags.tel.showChart;
+        this.telChartWrap.style.display = this.flags.tel.showChart ? "block" : "none";
+        this.updateOSBs();
+        break;
+    }
+  }
+
+  private onOSB4(): void {
+    if (this.currentView === "home") this.setView("tel");
   }
 
   private makeOSB(onClick: () => void): HTMLButtonElement {
@@ -258,61 +213,45 @@ export default class MFD {
   }
 
   private updateOSBs(): void {
-    const [osb1, osb2, osb3, osb4, osb5, osb6] = this.osbs;
-
+    const [osb1, osb2, osb3, osb4] = this.osbs;
     for (const o of this.osbs) o.className = "mfd-osb";
+
+    // Reset corner labels
     this.lblOsb1.className = "mfd-corner-lbl mfd-lbl-tl";
-    this.lblOsb2.className = "mfd-corner-lbl mfd-lbl-ml";
-    this.lblOsb3.className = "mfd-corner-lbl mfd-lbl-bl";
-    this.lblOsb4.className = "mfd-corner-lbl mfd-lbl-tr";
-    this.lblOsb5.className = "mfd-corner-lbl mfd-lbl-mr";
-    this.lblOsb6.className = "mfd-corner-lbl mfd-lbl-br";
-
-    this.lblOsb1.textContent = "HOME";
-
-    for (const o of [osb2, osb3, osb4, osb5, osb6]) o.classList.add("unused");
-    for (const l of [this.lblOsb2, this.lblOsb3, this.lblOsb4, this.lblOsb5, this.lblOsb6]) {
-      l.textContent = "";
-      l.classList.add("unused");
-    }
-
-    const enable = (btn: HTMLButtonElement, lbl: HTMLElement, text: string) => {
-      btn.classList.remove("unused");
-      lbl.classList.remove("unused");
-      lbl.textContent = text;
-    };
-    const tog = (btn: HTMLButtonElement, lbl: HTMLElement, text: string, on: boolean) => {
-      enable(btn, lbl, text);
-      if (on) { btn.classList.add("modifier-on"); lbl.classList.add("modifier-on"); }
-    };
+    this.lblOsb2.className = "mfd-corner-lbl mfd-lbl-bl";
+    this.lblOsb3.className = "mfd-corner-lbl mfd-lbl-tr";
+    this.lblOsb4.className = "mfd-corner-lbl mfd-lbl-br";
 
     switch (this.currentView) {
       case "home":
-        osb1.classList.add("active"); this.lblOsb1.classList.add("active");
-        enable(osb2, this.lblOsb2, "VEL");
-        enable(osb3, this.lblOsb3, "ATT");
-        enable(osb4, this.lblOsb4, "TEL");
-        enable(osb5, this.lblOsb5, "FUEL");
-        enable(osb6, this.lblOsb6, "RADAR");
+        osb1.classList.add("active");
+        this.lblOsb1.textContent = "HOME"; this.lblOsb1.classList.add("active");
+        this.lblOsb2.textContent = "VEL";
+        this.lblOsb3.textContent = "ATT";
+        this.lblOsb4.textContent = "TEL";
         break;
       case "vel":
-        tog(osb2, this.lblOsb2, "ANG VEL", this.flags.vel.showAngVel);
+        this.lblOsb1.textContent = "HOME";
+        this.lblOsb2.textContent = "ANG VEL";
+        if (this.flags.vel.showAngVel) { osb2.classList.add("modifier-on"); this.lblOsb2.classList.add("modifier-on"); }
+        osb3.classList.add("unused"); this.lblOsb3.textContent = "—"; this.lblOsb3.classList.add("unused");
+        osb4.classList.add("unused"); this.lblOsb4.textContent = "—"; this.lblOsb4.classList.add("unused");
         break;
       case "att":
-        tog(osb2, this.lblOsb2, "ORIENT", this.flags.att.showOrient);
-        tog(osb3, this.lblOsb3, "VECTOR", this.flags.att.showVector);
+        this.lblOsb1.textContent = "HOME";
+        this.lblOsb2.textContent = "ORIENT";
+        if (this.flags.att.showOrient) { osb2.classList.add("modifier-on"); this.lblOsb2.classList.add("modifier-on"); }
+        this.lblOsb3.textContent = "VECTOR";
+        if (this.flags.att.showVector) { osb3.classList.add("modifier-on"); this.lblOsb3.classList.add("modifier-on"); }
+        osb4.classList.add("unused"); this.lblOsb4.textContent = "—"; this.lblOsb4.classList.add("unused");
         break;
       case "tel":
-        tog(osb2, this.lblOsb2, "FPS",   this.flags.tel.showFPS);
-        tog(osb3, this.lblOsb3, "CHART", this.flags.tel.showChart);
-        break;
-      case "fuel":
-        tog(osb2, this.lblOsb2, "RATE", this.flags.fuel.showRate);
-        tog(osb3, this.lblOsb3, "EST",  this.flags.fuel.showEst);
-        break;
-      case "radar":
-        tog(osb2, this.lblOsb2, "GRID", this.flags.radar.showGrid);
-        tog(osb3, this.lblOsb3, "VECT", this.flags.radar.showVector);
+        this.lblOsb1.textContent = "HOME";
+        this.lblOsb2.textContent = "FPS";
+        if (this.flags.tel.showFPS) { osb2.classList.add("modifier-on"); this.lblOsb2.classList.add("modifier-on"); }
+        this.lblOsb3.textContent = "CHART";
+        if (this.flags.tel.showChart) { osb3.classList.add("modifier-on"); this.lblOsb3.classList.add("modifier-on"); }
+        osb4.classList.add("unused"); this.lblOsb4.textContent = "—"; this.lblOsb4.classList.add("unused");
         break;
     }
   }
@@ -324,14 +263,8 @@ export default class MFD {
     view.className = "mfd-view mfd-view-home";
     view.style.display = "none";
 
-    const items: [string, MFDView][] = [
-      ["VELOCITY",  "vel"],
-      ["ATTITUDE",  "att"],
-      ["TELEMETRY", "tel"],
-      ["ERGOL SYS", "fuel"],
-      ["RADAR NAV", "radar"],
-    ];
-    const osbLabels = ["OSB2", "OSB3", "OSB4", "OSB5", "OSB6"];
+    const items: [string, MFDView][] = [["VELOCITY", "vel"], ["ATTITUDE", "att"], ["TELEMETRY", "tel"]];
+    const osbLabels = ["OSB2", "OSB3", "OSB4"];
 
     items.forEach(([label, targetView], i) => {
       const item = document.createElement("div");
@@ -379,17 +312,20 @@ export default class MFD {
 
     const spdRow = document.createElement("div");
     spdRow.className = "mfd-row";
-    spdRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "SPD" }));
-    spdRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-unit", textContent: "m/s" }));
+    const spdLbl = Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "SPD" });
+    const spdUnit = Object.assign(document.createElement("span"), { className: "mfd-unit", textContent: "m/s" });
     this.velSpd = Object.assign(document.createElement("span"), { className: "mfd-val mfd-val-spd", textContent: "0.0" });
+    spdRow.appendChild(spdLbl);
+    spdRow.appendChild(spdUnit);
     spdRow.appendChild(this.velSpd);
     view.appendChild(spdRow);
 
     this.velAngRow = document.createElement("div");
     this.velAngRow.className = "mfd-row";
     this.velAngRow.style.display = "none";
-    this.velAngRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "ω RAD" }));
+    const angLbl = Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "ω RAD" });
     this.velAngValue = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "0.000" });
+    this.velAngRow.appendChild(angLbl);
     this.velAngRow.appendChild(this.velAngValue);
     view.appendChild(this.velAngRow);
 
@@ -402,15 +338,18 @@ export default class MFD {
     const label = Object.assign(document.createElement("span"), { className: "mfd-label", textContent: axis });
     const arrow = Object.assign(document.createElement("span"), { className: "mfd-arrow", textContent: "·" });
     const value = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "0.00" });
-    el.appendChild(label); el.appendChild(arrow); el.appendChild(value);
+    el.appendChild(label);
+    el.appendChild(arrow);
+    el.appendChild(value);
     return { el, arrow, value };
   }
 
   private makeDataRow(label: string): { el: HTMLElement; value: HTMLElement } {
     const el = document.createElement("div");
     el.className = "mfd-row";
-    el.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: label }));
+    const lbl = Object.assign(document.createElement("span"), { className: "mfd-label", textContent: label });
     const value = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "—" });
+    el.appendChild(lbl);
     el.appendChild(value);
     return { el, value };
   }
@@ -525,6 +464,7 @@ export default class MFD {
         const velAngle = Math.atan2(vy, vx);
         const arrowLen = Math.min(cx, cy) * 0.72;
         const tip = 6 * dpr;
+
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(velAngle);
@@ -533,9 +473,12 @@ export default class MFD {
         ctx.lineWidth = 1.5 * dpr;
         ctx.lineJoin = "round";
         ctx.beginPath();
-        ctx.moveTo(0, 0); ctx.lineTo(arrowLen, 0);
-        ctx.moveTo(arrowLen, 0); ctx.lineTo(arrowLen - tip, -tip * 0.5);
-        ctx.moveTo(arrowLen, 0); ctx.lineTo(arrowLen - tip,  tip * 0.5);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(arrowLen, 0);
+        ctx.moveTo(arrowLen, 0);
+        ctx.lineTo(arrowLen - tip, -tip * 0.5);
+        ctx.moveTo(arrowLen, 0);
+        ctx.lineTo(arrowLen - tip, tip * 0.5);
         ctx.stroke();
         ctx.restore();
       }
@@ -570,8 +513,9 @@ export default class MFD {
 
     this.telFpsRow = document.createElement("div");
     this.telFpsRow.className = "mfd-row";
-    this.telFpsRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "FPS" }));
+    const fpsLbl = Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "FPS" });
     this.telFpsEl = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "—" });
+    this.telFpsRow.appendChild(fpsLbl);
     this.telFpsRow.appendChild(this.telFpsEl);
     view.appendChild(this.telFpsRow);
 
@@ -601,7 +545,11 @@ export default class MFD {
     this.telStarsEl.textContent = String(this.data.starCount);
     this.telTotalEl.textContent = String(this.data.totalStars);
     if (this.flags.tel.showFPS) this.telFpsEl.textContent = String(this.data.fps);
-    if (this.flags.tel.showChart) { this.initChartCanvas(); if (this.chartCtx) this.drawChart(); }
+
+    if (this.flags.tel.showChart) {
+      this.initChartCanvas();
+      if (this.chartCtx) this.drawChart();
+    }
   }
 
   private drawChart(): void {
@@ -620,7 +568,10 @@ export default class MFD {
     ctx.lineWidth = 1;
     for (let i = 1; i <= 3; i++) {
       const y = Math.round((h / 4) * i);
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
     }
 
     if (data.length < 2) return;
@@ -631,11 +582,14 @@ export default class MFD {
     for (let i = 0; i < data.length; i++) {
       const x = (i + CHART_MAX_POINTS - data.length) * stepX;
       const y = h - (data[i] / chartMax) * h * 0.85 - h * 0.05;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
-    const lastX  = (CHART_MAX_POINTS - 1) * stepX;
+    const lastX = (CHART_MAX_POINTS - 1) * stepX;
     const firstX = (CHART_MAX_POINTS - data.length) * stepX;
-    ctx.lineTo(lastX, h); ctx.lineTo(firstX, h); ctx.closePath();
+    ctx.lineTo(lastX, h);
+    ctx.lineTo(firstX, h);
+    ctx.closePath();
     ctx.fillStyle = "rgba(61, 255, 122, 0.08)";
     ctx.fill();
 
@@ -646,248 +600,10 @@ export default class MFD {
     for (let i = 0; i < data.length; i++) {
       const x = (i + CHART_MAX_POINTS - data.length) * stepX;
       const y = h - (data[i] / chartMax) * h * 0.85 - h * 0.05;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
     }
     ctx.stroke();
-  }
-
-  // ─── FUEL view ────────────────────────────────────────────────────────────
-
-  private buildFuelView(): void {
-    const view = document.createElement("div");
-    view.className = "mfd-view mfd-view-fuel";
-    view.style.display = "none";
-
-    view.appendChild(this.makeMFDHeader("ERGOL SYS"));
-    view.appendChild(this.makeSep());
-
-    const leBar = this.makeFuelBarRow("L-ERGOL", "mfd-fuel-le");
-    this.fuelLeFill = leBar.fill; this.fuelLeAmount = leBar.amount;
-    view.appendChild(leBar.el);
-
-    const moBar = this.makeFuelBarRow("MONERGOL", "mfd-fuel-mo");
-    this.fuelMoFill = moBar.fill; this.fuelMoAmount = moBar.amount;
-    view.appendChild(moBar.el);
-
-    view.appendChild(this.makeSep());
-
-    // Rate section (toggleable via OSB2)
-    this.fuelRateWrap = document.createElement("div");
-    const leRateRow = document.createElement("div");
-    leRateRow.className = "mfd-row";
-    leRateRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "LE/S" }));
-    this.fuelLeRateEl = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "0.0" });
-    leRateRow.appendChild(this.fuelLeRateEl);
-    leRateRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-unit", textContent: "u/s" }));
-    const moRateRow = document.createElement("div");
-    moRateRow.className = "mfd-row";
-    moRateRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "MO/S" }));
-    this.fuelMoRateEl = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "0.0" });
-    moRateRow.appendChild(this.fuelMoRateEl);
-    moRateRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-unit", textContent: "u/s" }));
-    this.fuelRateWrap.appendChild(leRateRow);
-    this.fuelRateWrap.appendChild(moRateRow);
-    view.appendChild(this.fuelRateWrap);
-
-    view.appendChild(this.makeSep());
-
-    // Estimate section (toggleable via OSB3)
-    this.fuelEstWrap = document.createElement("div");
-    const leEstRow = document.createElement("div");
-    leEstRow.className = "mfd-row";
-    leEstRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "LE ETA" }));
-    this.fuelLeEstEl = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "—" });
-    leEstRow.appendChild(this.fuelLeEstEl);
-    const moEstRow = document.createElement("div");
-    moEstRow.className = "mfd-row";
-    moEstRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: "MO ETA" }));
-    this.fuelMoEstEl = Object.assign(document.createElement("span"), { className: "mfd-val", textContent: "—" });
-    moEstRow.appendChild(this.fuelMoEstEl);
-    this.fuelEstWrap.appendChild(leEstRow);
-    this.fuelEstWrap.appendChild(moEstRow);
-    view.appendChild(this.fuelEstWrap);
-
-    this.screen.appendChild(view);
-  }
-
-  private makeFuelBarRow(label: string, colorClass: string): { el: HTMLElement; fill: HTMLElement; amount: HTMLElement } {
-    const el = document.createElement("div");
-    el.className = "mfd-fuel-row";
-
-    const headerRow = document.createElement("div");
-    headerRow.className = "mfd-row";
-    headerRow.appendChild(Object.assign(document.createElement("span"), { className: "mfd-label", textContent: label }));
-    const amount = Object.assign(document.createElement("span"), { className: "mfd-val mfd-fuel-amount", textContent: "—" });
-    headerRow.appendChild(amount);
-    el.appendChild(headerRow);
-
-    const barWrap = document.createElement("div");
-    barWrap.className = "mfd-fuel-bar-wrap";
-    const fill = document.createElement("div");
-    fill.className = `mfd-fuel-bar-fill ${colorClass}`;
-    fill.style.width = "100%";
-    barWrap.appendChild(fill);
-    el.appendChild(barWrap);
-
-    return { el, fill, amount };
-  }
-
-  private refreshFuel(): void {
-    const { liquidErgol, maxLiquidErgol, monergol, maxMonergol } = this.data;
-
-    const lePct = maxLiquidErgol > 0 ? liquidErgol / maxLiquidErgol : 0;
-    const moPct = maxMonergol    > 0 ? monergol    / maxMonergol    : 0;
-
-    this.fuelLeFill.style.width = `${lePct * 100}%`;
-    this.fuelLeAmount.textContent = `${Math.ceil(liquidErgol)}/${maxLiquidErgol}`;
-    this.fuelLeFill.classList.toggle("mfd-fuel-critical", lePct < 0.2);
-
-    this.fuelMoFill.style.width = `${moPct * 100}%`;
-    this.fuelMoAmount.textContent = `${Math.ceil(monergol)}/${maxMonergol}`;
-    this.fuelMoFill.classList.toggle("mfd-fuel-critical", moPct < 0.2);
-
-    if (this.flags.fuel.showRate) {
-      this.fuelLeRateEl.textContent = this.leRateSmoothed.toFixed(1);
-      this.fuelMoRateEl.textContent = this.moRateSmoothed.toFixed(1);
-    }
-
-    if (this.flags.fuel.showEst) {
-      const eta = (fuel: number, rate: number) => {
-        if (rate < 0.05) return "∞";
-        const s = fuel / rate;
-        if (s > 3600) return `${Math.floor(s / 3600)}h${Math.floor((s % 3600) / 60)}m`;
-        if (s > 60)   return `${Math.floor(s / 60)}m${Math.floor(s % 60)}s`;
-        return `${Math.floor(s)}s`;
-      };
-      this.fuelLeEstEl.textContent = eta(liquidErgol, this.leRateSmoothed);
-      this.fuelMoEstEl.textContent = eta(monergol,    this.moRateSmoothed);
-    }
-  }
-
-  // ─── RADAR view ───────────────────────────────────────────────────────────
-
-  private buildRadarView(): void {
-    const view = document.createElement("div");
-    view.className = "mfd-view mfd-view-radar";
-    view.style.display = "none";
-
-    this.radarCanvas = document.createElement("canvas");
-    this.radarCanvas.className = "mfd-radar-canvas";
-    view.appendChild(this.radarCanvas);
-
-    this.screen.appendChild(view);
-  }
-
-  private initRadarCanvas(): void {
-    if (this.radarInitialized) return;
-    const w = this.screen.clientWidth;
-    const h = this.screen.clientHeight;
-    if (w === 0 || h === 0) return;
-    const dpr = window.devicePixelRatio;
-    this.radarCanvas.width = Math.round(w * dpr);
-    this.radarCanvas.height = Math.round(h * dpr);
-    this.radarCanvas.style.width = `${w}px`;
-    this.radarCanvas.style.height = `${h}px`;
-    this.radarCtx = this.radarCanvas.getContext("2d");
-    this.radarInitialized = true;
-  }
-
-  private drawRadar(): void {
-    this.initRadarCanvas();
-    if (!this.radarCtx) return;
-
-    const ctx = this.radarCtx;
-    const dpr = window.devicePixelRatio;
-    const w = this.radarCanvas.width;
-    const h = this.radarCanvas.height;
-    const cx = w / 2;
-    const cy = h / 2;
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = "#030a04";
-    ctx.fillRect(0, 0, w, h);
-
-    const range = this.galaxy.size * 1.3;
-    const scale = Math.min(cx, cy) * 0.88 / range;
-
-    const toScreen = (wx: number, wy: number): [number, number] => [
-      cx + wx * scale,
-      cy + wy * scale,
-    ];
-
-    if (this.flags.radar.showGrid) {
-      ctx.strokeStyle = "rgba(61, 255, 122, 0.07)";
-      ctx.lineWidth = 1;
-      for (let r = 0.25; r <= 1.25; r += 0.25) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, r * this.galaxy.size * scale, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      ctx.beginPath();
-      ctx.moveTo(cx, 0); ctx.lineTo(cx, h);
-      ctx.moveTo(0, cy); ctx.lineTo(w, cy);
-      ctx.stroke();
-    }
-
-    // Galaxy boundary
-    ctx.strokeStyle = "rgba(61, 255, 122, 0.18)";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3 * dpr, 4 * dpr]);
-    ctx.beginPath();
-    ctx.arc(cx, cy, this.galaxy.size * scale, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Black holes
-    for (const bh of this.galaxy.blackholes) {
-      const [sx, sy] = toScreen(bh.pos.x, bh.pos.y);
-      const grd = ctx.createRadialGradient(sx, sy, 0, sx, sy, 18 * dpr);
-      grd.addColorStop(0, "rgba(236, 38, 38, 0.45)");
-      grd.addColorStop(1, "rgba(236, 38, 38, 0)");
-      ctx.fillStyle = grd;
-      ctx.beginPath(); ctx.arc(sx, sy, 18 * dpr, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ec2626";
-      ctx.beginPath(); ctx.arc(sx, sy, 3 * dpr, 0, Math.PI * 2); ctx.fill();
-    }
-
-    const ship = this.galaxy.ship;
-    if (ship) {
-      const [sx, sy] = toScreen(ship.pos.x, ship.pos.y);
-
-      if (this.flags.radar.showVector) {
-        const speed = Math.hypot(this.data.vx, this.data.vy);
-        if (speed > VEL_THRESHOLD) {
-          const vAngle = Math.atan2(this.data.vy, this.data.vx);
-          const len = Math.min(cx * 0.35, speed * scale * 60000) * dpr;
-          ctx.strokeStyle = "rgba(61, 255, 122, 0.55)";
-          ctx.lineWidth = 1.5 * dpr;
-          ctx.beginPath();
-          ctx.moveTo(sx, sy);
-          ctx.lineTo(sx + Math.cos(vAngle) * len, sy + Math.sin(vAngle) * len);
-          ctx.stroke();
-        }
-      }
-
-      // Ship triangle pointing in facing direction
-      ctx.save();
-      ctx.translate(sx, sy);
-      ctx.rotate(ship.angle);
-      ctx.fillStyle = "#3dff7a";
-      const s = 5 * dpr;
-      ctx.beginPath();
-      ctx.moveTo(0, -s * 1.6);
-      ctx.lineTo(s, s);
-      ctx.lineTo(-s, s);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      ctx.font = `${8 * dpr}px "Courier New", monospace`;
-      ctx.fillStyle = "rgba(61, 255, 122, 0.3)";
-      ctx.textAlign = "right";
-      ctx.textBaseline = "bottom";
-      ctx.fillText(`±${range.toFixed(1)} AU`, w - 5 * dpr, h - 4 * dpr);
-    }
   }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────

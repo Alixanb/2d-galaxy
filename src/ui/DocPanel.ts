@@ -58,7 +58,12 @@ export function buildDocPanel(): HTMLElement {
       const targetId = a.getAttribute('href')?.substring(1);
       const target = body.querySelector("#" + targetId) as HTMLElement;
       if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Use scrollTop on the body (the scrollable container) instead of scrollIntoView
+        // to avoid scrolling the entire browser window.
+        body.scrollTo({
+          top: target.offsetTop - 10,
+          behavior: 'smooth'
+        });
         target.classList.add("doc-highlight");
         setTimeout(() => target.classList.remove("doc-highlight"), 2000);
       }

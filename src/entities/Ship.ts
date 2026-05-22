@@ -177,25 +177,35 @@ export default class Ship {
   update(dt: number) {
     this.thrusterPct = Ship.THRUSTPOWER / Ship.DEFAULT_THRUSTPOWER;
 
-    if (this.keys["ArrowRight"]) {
+    // RCS rotation — consumes monergol
+    if (this.keys["ArrowRight"] && this.monergol > 0) {
       this.angluarVel += Ship.RADIALPOWER;
+      this.monergol -= Ship.MONERGOL_RATE * dt;
     }
-    if (this.keys["ArrowLeft"]) this.angluarVel -= Ship.RADIALPOWER;
+    if (this.keys["ArrowLeft"] && this.monergol > 0) {
+      this.angluarVel -= Ship.RADIALPOWER;
+      this.monergol -= Ship.MONERGOL_RATE * dt;
+    }
 
-    if (this.keys["ArrowUp"]) {
+    // Main engine — consumes liquid ergol
+    if (this.keys["ArrowUp"] && this.liquidErgol > 0) {
       this.status = "thrusting";
-
       const ax = Ship.THRUSTPOWER * Math.sin(this.angle);
       const ay = -Ship.THRUSTPOWER * Math.cos(this.angle);
-
       this.vel = this.vel.add(new Vec2(ax, ay));
+      this.liquidErgol -= Ship.LIQUID_ERGOL_RATE * dt;
     } else {
       this.status = "idle";
     }
 
+    // Auto-stab — consumes monergol only while actively damping
     if (this.autoStab && !this.keys["ArrowRight"] && !this.keys["ArrowLeft"] && !this.retrogradeActive) {
-      this.angluarVel *= 0.88;
-      if (Math.abs(this.angluarVel) < 0.00005) this.angluarVel = 0;
+      if (this.monergol > 0 && Math.abs(this.angluarVel) > 0.00005) {
+        this.angluarVel *= 0.88;
+        this.monergol -= 0.5 * dt;
+      } else if (Math.abs(this.angluarVel) <= 0.00005) {
+        this.angluarVel = 0;
+      }
     }
 
     if (this.retrogradeActive) {
@@ -210,24 +220,33 @@ export default class Ship {
         while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
         while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
-        if (this.retrogradePhase === 'align') {
+        // Align phase — requires monergol
+        if (this.retrogradePhase === 'align' && this.monergol > 0) {
           if (Math.abs(angleDiff) < 0.05) {
             this.angle = targetAngle;
             this.angluarVel = 0;
             this.retrogradePhase = 'burn';
           } else {
             this.angluarVel = Math.sign(angleDiff) * 0.04;
+            this.monergol -= Ship.MONERGOL_RATE * dt;
           }
-        } else if (this.retrogradePhase === 'burn') {
+        }
+
+        // Burn phase — requires liquid ergol
+        if (this.retrogradePhase === 'burn' && this.liquidErgol > 0) {
           this.angle = targetAngle;
           this.angluarVel = 0;
           const ax = Ship.THRUSTPOWER * Math.sin(this.angle);
           const ay = -Ship.THRUSTPOWER * Math.cos(this.angle);
           this.vel = this.vel.add(new Vec2(ax, ay));
           this.status = "thrusting";
+          this.liquidErgol -= Ship.LIQUID_ERGOL_RATE * dt;
         }
       }
     }
+
+    this.liquidErgol = Math.max(0, Math.min(this.maxLiquidErgol, this.liquidErgol));
+    this.monergol = Math.max(0, Math.min(this.maxMonergol, this.monergol));
 
     this.vel = this.vel.add(this.getVelocity(dt));
     this.pos = this.pos.add(this.vel);
@@ -235,6 +254,14 @@ export default class Ship {
 
     if (this.showPath) {
       this.predictPath(this.predictionInteration, dt);
+    }
+  }
+
+  collectFuel(type: 'liquid-ergol' | 'monergol', amount: number): void {
+    if (type === 'liquid-ergol') {
+      this.liquidErgol = Math.min(this.maxLiquidErgol, this.liquidErgol + amount);
+    } else {
+      this.monergol = Math.min(this.maxMonergol, this.monergol + amount);
     }
   }
 

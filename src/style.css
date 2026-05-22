@@ -485,7 +485,7 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
   background: var(--bg);
   border-top: 1px solid var(--border-strong);
   display: grid;
-  grid-template-columns: 240px 240px 170px 160px 190px;
+  grid-template-columns: 240px 240px 170px 160px 190px 160px;
   z-index: 200;
   overflow: hidden;
 }
@@ -976,4 +976,26 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
   color: var(--cyan);
   background: rgba(80, 182, 201, 0.06);
   box-shadow: inset 0 0 12px rgba(80, 182, 201, 0.08);
+}
+
+/* ─── Propellant Section ─────────────────────────────────── */
+
+.propellant-section {
+  padding: 10px 4px 8px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.fuel-gauges {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.fuel-gauges canvas {
+  display: block;
 }

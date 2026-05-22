@@ -1,6 +1,7 @@
 import { clamp } from "../core/Utils";
 import Vec2 from "../core/Vec2";
 import BlackHole from "../entities/BlackHole";
+import FuelDepot from "../entities/FuelDepot";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
 import {
@@ -47,6 +48,7 @@ export default class Galaxy {
   canvasWebGL: CanvasWebGL;
   stars: Star[];
   blackholes: BlackHole[];
+  fuelDepots: FuelDepot[] = [];
   ship?: Ship;
   size: number;
   shaderProgram: ShaderProgram;
@@ -101,6 +103,30 @@ export default class Galaxy {
 
     this.shaderProgram = new ShaderProgram(gl, vs, fs);
     this.shaderProgram.compile();
+
+    this.spawnFuelDepots();
+  }
+
+  private spawnFuelDepots(): void {
+    if (this.blackholes.length === 0) return;
+
+    // 5 liquid ergol depots (restores 20% of max tank each)
+    for (let i = 0; i < 5; i++) {
+      const bh = this.blackholes[i % this.blackholes.length];
+      const radius = 0.12 + Math.random() * 0.28;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.15 + Math.random() * 0.10;
+      this.fuelDepots.push(new FuelDepot(bh.pos, radius, angle, 'liquid-ergol', 100, speed));
+    }
+
+    // 8 monergol depots (restores 25% of max tank each)
+    for (let i = 0; i < 8; i++) {
+      const bh = this.blackholes[i % this.blackholes.length];
+      const radius = 0.08 + Math.random() * 0.22;
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.30 + Math.random() * 0.20;
+      this.fuelDepots.push(new FuelDepot(bh.pos, radius, angle, 'monergol', 25, speed));
+    }
   }
 
   createStars(n: number) {
@@ -146,6 +172,16 @@ export default class Galaxy {
     }
 
     Star.MAX_VELOCITY = maxVel;
+
+    // Update fuel depots and collect if ship is close enough
+    for (const depot of this.fuelDepots) {
+      depot.update(dt);
+      if (this.ship && this.ship.pos.distance(depot.pos) < depot.collectRadius) {
+        this.ship.collectFuel(depot.type, depot.amount);
+        depot.collected = true;
+      }
+    }
+    this.fuelDepots = this.fuelDepots.filter(d => !d.collected);
   }
 
   draw() {
@@ -160,6 +196,9 @@ export default class Galaxy {
     this.drawStarsUsingWebGL();
 
     this.blackholes.forEach((b) => b.draw(this.canvas2d));
+    for (const depot of this.fuelDepots) {
+      depot.draw(this.canvas2d, this.ship?.pos);
+    }
     if (this.ship) this.ship.draw(this.canvas2d);
   }
 

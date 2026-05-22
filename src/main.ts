@@ -115,6 +115,17 @@ function startSimulation(config: SimulationConfig) {
       lastUpdate = now;
     }
 
+    // Redraw fuel gauges every frame for smooth pulse animation
+    const ship2 = galaxy.ship;
+    if (ship2) {
+      cockpit.updateFuel(
+        ship2.liquidErgol,
+        ship2.maxLiquidErgol,
+        ship2.monergol,
+        ship2.maxMonergol
+      );
+    }
+
     while (accumulator >= FIXED_STEP) {
       galaxy.update(FIXED_STEP);
       accumulator -= FIXED_STEP;

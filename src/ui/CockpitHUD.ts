@@ -18,6 +18,9 @@ export default class CockpitHUD {
   private retroBtn!: HTMLButtonElement;
   private presetBtns: HTMLButtonElement[] = [];
 
+  private leCanvas!: HTMLCanvasElement;
+  private moCanvas!: HTMLCanvasElement;
+
   constructor(galaxy: Galaxy) {
     this.galaxy = galaxy;
     const panel = document.createElement("div");
@@ -31,6 +34,7 @@ export default class CockpitHUD {
     panel.appendChild(this.buildSimParams());
     panel.appendChild(this.buildPredictionSection());
     panel.appendChild(this.buildFlightCtrlSection());
+    panel.appendChild(this.buildPropellantSection());
 
     document.body.appendChild(panel);
   }
@@ -207,5 +211,145 @@ export default class CockpitHUD {
     wrap.appendChild(this.retroBtn);
     section.appendChild(wrap);
     return section;
+  }
+
+  // ─── Propellant ───────────────────────────────────────────────────────────
+
+  private buildPropellantSection(): HTMLElement {
+    const section = document.createElement("div");
+    section.className = "propellant-section";
+
+    section.appendChild(Object.assign(document.createElement("div"), {
+      className: "cockpit-section-label",
+      textContent: "PROPELLANT",
+    }));
+
+    const wrap = document.createElement("div");
+    wrap.className = "fuel-gauges";
+
+    this.leCanvas = this.makeGaugeCanvas(62);
+    this.moCanvas = this.makeGaugeCanvas(62);
+    wrap.appendChild(this.leCanvas);
+    wrap.appendChild(this.moCanvas);
+    section.appendChild(wrap);
+
+    return section;
+  }
+
+  private makeGaugeCanvas(cssSize: number): HTMLCanvasElement {
+    const dpr = window.devicePixelRatio;
+    const canvas = document.createElement("canvas");
+    canvas.width = cssSize * dpr;
+    canvas.height = cssSize * dpr;
+    canvas.style.width = `${cssSize}px`;
+    canvas.style.height = `${cssSize}px`;
+    return canvas;
+  }
+
+  private drawGauge(
+    canvas: HTMLCanvasElement,
+    pct: number,
+    color: string,
+    label: string,
+    value: string,
+    critical: boolean
+  ): void {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio;
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2 + 3 * dpr;
+    const r = w * 0.33;
+    const trackW = 3.5 * dpr;
+
+    // Arc from 225° (7:30) clockwise 270° to 315° (4:30), gap at bottom
+    const START = (5 * Math.PI) / 4;
+    const SWEEP = (3 * Math.PI) / 2;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Track
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, START, START + SWEEP);
+    ctx.strokeStyle = "rgba(236, 223, 205, 0.09)";
+    ctx.lineWidth = trackW;
+    ctx.lineCap = "butt";
+    ctx.stroke();
+
+    // Tick marks at 0%, 25%, 50%, 75%, 100%
+    for (let i = 0; i <= 4; i++) {
+      const a = START + (i / 4) * SWEEP;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * (r - trackW * 1.6), cy + Math.sin(a) * (r - trackW * 1.6));
+      ctx.lineTo(cx + Math.cos(a) * (r + trackW * 0.6), cy + Math.sin(a) * (r + trackW * 0.6));
+      ctx.strokeStyle = "rgba(236, 223, 205, 0.18)";
+      ctx.lineWidth = 1 * dpr;
+      ctx.stroke();
+    }
+
+    // Fill arc
+    const pulse = 0.55 + 0.45 * Math.sin(Date.now() / 220);
+    const fillColor = critical ? `rgba(236, 38, 38, ${pulse})` : color;
+
+    if (pct > 0.004) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, START, START + SWEEP * pct);
+      ctx.strokeStyle = fillColor;
+      ctx.lineWidth = trackW;
+      ctx.lineCap = "round";
+      ctx.stroke();
+
+      // Bright tip dot
+      const tipA = START + SWEEP * pct;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(tipA) * r, cy + Math.sin(tipA) * r, trackW * 0.65, 0, Math.PI * 2);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+
+    // Center value
+    const textPulse = critical ? pulse : 1;
+    ctx.fillStyle = critical
+      ? `rgba(236, 38, 38, ${0.6 + 0.4 * pulse})`
+      : "rgba(236, 223, 205, 0.92)";
+    ctx.globalAlpha = textPulse;
+    ctx.font = `bold ${9.5 * dpr}px Inter, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(pct < 0.005 ? "!!!" : value, cx, cy - 2 * dpr);
+    ctx.globalAlpha = 1;
+
+    // Label below
+    ctx.fillStyle = "rgba(236, 223, 205, 0.32)";
+    ctx.font = `${6.5 * dpr}px Inter, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, cx, cy + r * 0.55);
+  }
+
+  updateFuel(liquidErgol: number, maxLE: number, monergol: number, maxM: number): void {
+    const lePct = maxLE > 0 ? Math.max(0, liquidErgol / maxLE) : 0;
+    const moPct = maxM  > 0 ? Math.max(0, monergol   / maxM)  : 0;
+
+    this.drawGauge(
+      this.leCanvas,
+      lePct,
+      "rgba(80, 182, 201, 0.9)",
+      "L-ERGOL",
+      Math.ceil(liquidErgol).toString(),
+      lePct < 0.2
+    );
+
+    this.drawGauge(
+      this.moCanvas,
+      moPct,
+      "rgba(176, 111, 216, 0.9)",
+      "MONO",
+      Math.ceil(monergol).toString(),
+      moPct < 0.2
+    );
   }
 }

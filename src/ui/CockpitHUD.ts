@@ -75,16 +75,22 @@ export default class CockpitHUD {
     const rotDefault = Ship.DEFAULT_RADIALPOWER;
 
     section.appendChild(this.makeFader("THRUSTER PWR", 20, 0, 100, 5, "cyan",
-      (v) => { Ship.THRUSTPOWER = thrustDefault * (v / 20); }, (v) => `${v}%`));
+      (v) => { Ship.THRUSTPOWER = thrustDefault * (v / 20); }, 
+      (v) => `${v}%`,
+      () => Math.round((Ship.THRUSTPOWER / thrustDefault) * 20)));
+      
     section.appendChild(this.makeFader("RCS RATE", 20, 0, 100, 5, "cyan",
-      (v) => { Ship.RADIALPOWER = rotDefault * (v / 20); }, (v) => `${v}%`));
+      (v) => { Ship.RADIALPOWER = rotDefault * (v / 20); }, 
+      (v) => `${v}%`,
+      () => Math.round((Ship.RADIALPOWER / rotDefault) * 20)));
 
     return section;
   }
 
   private makeFader(
     label: string, defaultValue: number, min: number, max: number, step: number,
-    accent: string, onChange: (v: number) => void, format: (v: number) => string
+    accent: string, onChange: (v: number) => void, format: (v: number) => string,
+    getValue?: () => number
   ): HTMLElement {
     const row = document.createElement("div");
     row.className = "cockpit-fader";
@@ -102,11 +108,29 @@ export default class CockpitHUD {
     slider.max = String(max);
     slider.step = String(step);
     slider.value = String(defaultValue);
+    
+    let isDragging = false;
+    
+    slider.addEventListener("mousedown", () => { isDragging = true; });
+    slider.addEventListener("mouseup", () => { isDragging = false; });
+    
     slider.addEventListener("input", () => {
       const v = parseFloat(slider.value);
       val.textContent = format(v);
       onChange(v);
     });
+    slider.addEventListener("change", () => slider.blur());
+
+    if (getValue) {
+      setInterval(() => {
+        if (isDragging) return;
+        const currentV = getValue();
+        if (parseFloat(slider.value) !== currentV) {
+          slider.value = String(currentV);
+          val.textContent = format(currentV);
+        }
+      }, 100);
+    }
 
     row.appendChild(header);
     row.appendChild(slider);

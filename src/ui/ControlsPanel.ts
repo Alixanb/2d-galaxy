@@ -31,14 +31,16 @@ export function buildControlsPanel(
   body.appendChild(
     makeSliderRow("THRUST", 1, 0.5, 5, 0.1, "yellow",
       (v) => { Ship.THRUSTPOWER = thrustDefault * v; },
-      (v) => `${v.toFixed(1)}×`
+      (v) => `${v.toFixed(1)}×`,
+      () => Number((Ship.THRUSTPOWER / thrustDefault).toFixed(1))
     )
   );
 
   body.appendChild(
     makeSliderRow("ROTATION", 1, 0.5, 5, 0.1, "yellow",
       (v) => { Ship.RADIALPOWER = rotDefault * v; },
-      (v) => `${v.toFixed(1)}×`
+      (v) => `${v.toFixed(1)}×`,
+      () => Number((Ship.RADIALPOWER / rotDefault).toFixed(1))
     )
   );
 
@@ -98,7 +100,8 @@ function makeSliderRow(
   step: number,
   colorClass: string,
   onChange: (v: number) => void,
-  format: (v: number) => string
+  format: (v: number) => string,
+  getValue?: () => number
 ): HTMLElement {
   const row = document.createElement("div");
   row.className = "ctrl-row";
@@ -123,11 +126,28 @@ function makeSliderRow(
   slider.max = String(max);
   slider.step = String(step);
   slider.value = String(defaultValue);
+  
+  let isDragging = false;
+  slider.addEventListener("mousedown", () => { isDragging = true; });
+  slider.addEventListener("mouseup", () => { isDragging = false; });
+  
   slider.addEventListener("input", () => {
     const v = parseFloat(slider.value);
     val.textContent = format(v);
     onChange(v);
   });
+  slider.addEventListener("change", () => slider.blur());
+
+  if (getValue) {
+    setInterval(() => {
+      if (isDragging) return;
+      const currentV = getValue();
+      if (parseFloat(slider.value) !== currentV) {
+        slider.value = String(currentV);
+        val.textContent = format(currentV);
+      }
+    }, 100);
+  }
 
   row.appendChild(header);
   row.appendChild(slider);

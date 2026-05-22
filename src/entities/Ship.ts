@@ -68,10 +68,12 @@ export default class Ship {
 
     document.addEventListener("keydown", (e) => {
       this.keys[e.code] = true;
+      this.keys[e.key.toLowerCase()] = true;
     });
 
     document.addEventListener("keyup", (e) => {
       this.keys[e.code] = false;
+      this.keys[e.key.toLowerCase()] = false;
     });
   }
 
@@ -175,6 +177,19 @@ export default class Ship {
   }
 
   update(dt: number) {
+    if (this.keys["z"]) {
+      Ship.THRUSTPOWER = Math.min(Ship.DEFAULT_THRUSTPOWER * 5, Ship.THRUSTPOWER + Ship.DEFAULT_THRUSTPOWER * 0.05);
+    }
+    if (this.keys["s"]) {
+      Ship.THRUSTPOWER = Math.max(0, Ship.THRUSTPOWER - Ship.DEFAULT_THRUSTPOWER * 0.05);
+    }
+    if (this.keys["e"]) {
+      Ship.RADIALPOWER = Math.min(Ship.DEFAULT_RADIALPOWER * 5, Ship.RADIALPOWER + Ship.DEFAULT_RADIALPOWER * 0.05);
+    }
+    if (this.keys["q"]) {
+      Ship.RADIALPOWER = Math.max(0, Ship.RADIALPOWER - Ship.DEFAULT_RADIALPOWER * 0.05);
+    }
+
     this.thrusterPct = Ship.THRUSTPOWER / Ship.DEFAULT_THRUSTPOWER;
 
     // RCS rotation — consumes monergol

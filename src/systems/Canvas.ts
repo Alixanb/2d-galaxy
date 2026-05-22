@@ -52,6 +52,7 @@ abstract class Canvas<
 
 export class Canvas2d extends Canvas<CanvasRenderingContext2D> {
   zoom: number = 1;
+  camera: Vec2 = new Vec2();
 
   constructor(ref: string, height: number = 1) {
     super(ref, height);
@@ -63,6 +64,55 @@ export class Canvas2d extends Canvas<CanvasRenderingContext2D> {
 
     window.addEventListener("resize", this.sizing.bind(this));
     this.sizing();
+  }
+
+  // Override base place() to account for camera offset
+  place(vec: Vec2): Vec2 {
+    const W = this.dimensions.x / window.devicePixelRatio;
+    const H = this.dimensions.y / window.devicePixelRatio;
+    const wx = vec.x - this.camera.x;
+    const wy = vec.y - this.camera.y;
+    const normalizedX = ((wx + this.ratio) / (2 * this.ratio)) * W;
+    const normalizedY = ((wy + 1) / 2) * H;
+    return new Vec2(normalizedX, normalizedY);
+  }
+
+  unplace(screenVec: Vec2): Vec2 {
+    const W = this.dimensions.x / window.devicePixelRatio;
+    const H = this.dimensions.y / window.devicePixelRatio;
+    const x = (screenVec.x / W) * (2 * this.ratio) - this.ratio + this.camera.x;
+    const y = (screenVec.y / H) * 2 - 1 + this.camera.y;
+    return new Vec2(x, y);
+  }
+
+  enablePan() {
+    let panning = false;
+    let lastX = 0, lastY = 0;
+
+    this.element.addEventListener("mousedown", (e) => {
+      if (e.button === 2) {
+        panning = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        e.preventDefault();
+      }
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!panning) return;
+      const W = this.dimensions.x / devicePixelRatio;
+      const H = this.dimensions.y / devicePixelRatio;
+      this.camera.x -= (e.clientX - lastX) / W * (2 * this.ratio);
+      this.camera.y -= (e.clientY - lastY) / H * 2;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+
+    document.addEventListener("mouseup", (e) => {
+      if (e.button === 2) panning = false;
+    });
+
+    this.element.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
   randomPosition() {
@@ -78,15 +128,7 @@ export class Canvas2d extends Canvas<CanvasRenderingContext2D> {
   }
 
   protected onResize(): void {
-    this.context.setTransform(1, 0, 0, 1, 0, 0);
-    this.context.translate(this.element.width / 2, this.element.height / 2);
-    this.context.scale(
-      (devicePixelRatio * this.zoom) / 2,
-      (devicePixelRatio * this.zoom) / 2
-    );
-    this.context.translate(-this.element.width / 2, -this.element.height / 2);
-
-    this.context.scale(devicePixelRatio, devicePixelRatio);
+    this.context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
   }
 }
 

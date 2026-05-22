@@ -95,7 +95,7 @@ function startSimulation(config: SimulationConfig) {
         spawnVel = new Vec2(0, 0);
       }
 
-      galaxy.ship = new Ship(
+      const ship = new Ship(
         spawnPos,
         spriteOff,
         spriteOn,
@@ -103,7 +103,8 @@ function startSimulation(config: SimulationConfig) {
         config.showPath,
         blackholes
       );
-      galaxy.ship.vel = spawnVel;
+      ship.vel = spawnVel;
+      galaxy.ship = ship;
     })
     .catch(console.error);
 

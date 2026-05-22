@@ -20,6 +20,7 @@ export default class CockpitHUD {
 
   private leCanvas!: HTMLCanvasElement;
   private moCanvas!: HTMLCanvasElement;
+  private spCanvas!: HTMLCanvasElement;
 
   constructor(galaxy: Galaxy) {
     this.galaxy = galaxy;
@@ -34,7 +35,7 @@ export default class CockpitHUD {
     panel.appendChild(this.buildSimParams());
     panel.appendChild(this.buildPredictionSection());
     panel.appendChild(this.buildFlightCtrlSection());
-    panel.appendChild(this.buildPropellantSection());
+    panel.appendChild(this.buildStatusSection());
 
     document.body.appendChild(panel);
   }
@@ -58,6 +59,17 @@ export default class CockpitHUD {
       this.retroBtn.classList.remove("retro-active", "retro-align", "retro-burn");
       this.retroBtn.textContent = "RETRO BURN";
     }
+
+    const speed = Math.hypot(data.vx, data.vy) * 10000;
+    const speedPct = Math.min(1, speed / 500); // 500 m/s as max for gauge
+    this.drawGauge(
+      this.spCanvas,
+      speedPct,
+      "rgba(233, 214, 40, 0.9)",
+      "SPEED",
+      speed.toFixed(1),
+      false
+    );
   }
 
   // ─── Sim Params ───────────────────────────────────────────────────────────
@@ -237,22 +249,24 @@ export default class CockpitHUD {
     return section;
   }
 
-  // ─── Propellant ───────────────────────────────────────────────────────────
+  // ─── Status ───────────────────────────────────────────────────────────────
 
-  private buildPropellantSection(): HTMLElement {
+  private buildStatusSection(): HTMLElement {
     const section = document.createElement("div");
-    section.className = "propellant-section";
+    section.className = "status-section";
 
     section.appendChild(Object.assign(document.createElement("div"), {
       className: "cockpit-section-label",
-      textContent: "PROPELLANT",
+      textContent: "SHIP STATUS",
     }));
 
     const wrap = document.createElement("div");
-    wrap.className = "fuel-gauges";
+    wrap.className = "status-gauges";
 
+    this.spCanvas = this.makeGaugeCanvas(80);
     this.leCanvas = this.makeGaugeCanvas(80);
     this.moCanvas = this.makeGaugeCanvas(80);
+    wrap.appendChild(this.spCanvas);
     wrap.appendChild(this.leCanvas);
     wrap.appendChild(this.moCanvas);
     section.appendChild(wrap);

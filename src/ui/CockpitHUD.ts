@@ -59,17 +59,6 @@ export default class CockpitHUD {
       this.retroBtn.classList.remove("retro-active", "retro-align", "retro-burn");
       this.retroBtn.textContent = "RETRO BURN";
     }
-
-    const speed = Math.hypot(data.vx, data.vy) * 10000;
-    const speedPct = Math.min(1, speed / 500); // 500 m/s as max for gauge
-    this.drawGauge(
-      this.spCanvas,
-      speedPct,
-      "rgba(233, 214, 40, 0.9)",
-      "SPEED",
-      speed.toFixed(1),
-      false
-    );
   }
 
   // ─── Sim Params ───────────────────────────────────────────────────────────
@@ -368,9 +357,20 @@ export default class CockpitHUD {
     ctx.fillText(label, cx, cy + r * 0.6);
   }
 
-  updateFuel(liquidErgol: number, maxLE: number, monergol: number, maxM: number): void {
+  updateStatusGauges(vx: number, vy: number, liquidErgol: number, maxLE: number, monergol: number, maxM: number): void {
     const lePct = maxLE > 0 ? Math.max(0, liquidErgol / maxLE) : 0;
     const moPct = maxM  > 0 ? Math.max(0, monergol   / maxM)  : 0;
+
+    const speed = Math.hypot(vx, vy) * 10000;
+    const speedPct = Math.min(1, speed / 500); // 500 m/s as max for gauge
+    this.drawGauge(
+      this.spCanvas,
+      speedPct,
+      "rgba(233, 214, 40, 0.9)",
+      "SPEED",
+      speed.toFixed(1),
+      false
+    );
 
     this.drawGauge(
       this.leCanvas,

@@ -110,15 +110,22 @@ function startSimulation(config: SimulationConfig) {
         vy: ship?.vel?.y ?? 0,
         dist: distFromCam,
         angularVel: ship?.angluarVel ?? 0,
+        liquidErgol: ship?.liquidErgol ?? 0,
+        maxLiquidErgol: ship?.maxLiquidErgol ?? 500,
+        monergol: ship?.monergol ?? 0,
+        maxMonergol: ship?.maxMonergol ?? 100,
+        isThrusting: ship?.status === "thrusting",
       });
 
       lastUpdate = now;
     }
 
-    // Redraw fuel gauges every frame for smooth pulse animation
+    // Redraw status gauges every frame for smooth pulse animation and high speed refresh
     const ship2 = galaxy.ship;
     if (ship2) {
-      cockpit.updateFuel(
+      cockpit.updateStatusGauges(
+        ship2.vel.x,
+        ship2.vel.y,
         ship2.liquidErgol,
         ship2.maxLiquidErgol,
         ship2.monergol,

@@ -250,11 +250,21 @@ export default class Ship {
         if (this.retrogradePhase === 'burn' && this.liquidErgol > 0) {
           this.angle = targetAngle;
           this.angluarVel = 0;
-          const ax = Ship.THRUSTPOWER * Math.sin(this.angle);
-          const ay = -Ship.THRUSTPOWER * Math.cos(this.angle);
-          this.vel = this.vel.add(new Vec2(ax, ay));
-          this.status = "thrusting";
-          this.liquidErgol -= Ship.LIQUID_ERGOL_RATE * dt;
+
+          if (speed <= Ship.THRUSTPOWER) {
+            const thrustFactor = speed / Ship.THRUSTPOWER;
+            this.vel = new Vec2(0, 0);
+            this.liquidErgol -= Ship.LIQUID_ERGOL_RATE * dt * thrustFactor;
+            this.retrogradeActive = false;
+            this.retrogradePhase = null;
+            this.status = "idle";
+          } else {
+            const ax = Ship.THRUSTPOWER * Math.sin(this.angle);
+            const ay = -Ship.THRUSTPOWER * Math.cos(this.angle);
+            this.vel = this.vel.add(new Vec2(ax, ay));
+            this.status = "thrusting";
+            this.liquidErgol -= Ship.LIQUID_ERGOL_RATE * dt;
+          }
         }
       }
     }

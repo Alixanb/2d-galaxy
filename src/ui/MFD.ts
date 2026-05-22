@@ -25,8 +25,14 @@ export default class MFD {
   private galaxy: Galaxy;
   private root: HTMLElement;
   private screen: HTMLElement;
-  private osbs: [HTMLButtonElement, HTMLButtonElement, HTMLButtonElement,
-                 HTMLButtonElement, HTMLButtonElement, HTMLButtonElement];
+
+  // Top row: osbs[0-2], bottom row: osbs[3-5]
+  private osbs!: [HTMLButtonElement, HTMLButtonElement, HTMLButtonElement,
+                  HTMLButtonElement, HTMLButtonElement, HTMLButtonElement];
+  // Matching label cells: lbls[0-2] = top, lbls[3-5] = bottom
+  private lbls!: [HTMLElement, HTMLElement, HTMLElement,
+                  HTMLElement, HTMLElement, HTMLElement];
+
   private currentView: MFDView = "home";
 
   private flags = {
@@ -44,14 +50,6 @@ export default class MFD {
     monergol: 0, maxMonergol: 100,
     isThrusting: false,
   };
-
-  // Corner label refs (6: TL, ML, BL, TR, MR, BR)
-  private lblOsb1!: HTMLElement;
-  private lblOsb2!: HTMLElement;
-  private lblOsb3!: HTMLElement;
-  private lblOsb4!: HTMLElement;
-  private lblOsb5!: HTMLElement;
-  private lblOsb6!: HTMLElement;
 
   // VEL view
   private velArrowX!: HTMLElement;
@@ -107,34 +105,25 @@ export default class MFD {
     this.root = document.createElement("div");
     this.root.className = "mfd";
 
-    const leftStrip = document.createElement("div");
-    leftStrip.className = "mfd-btns-left";
+    // ── Top buttons ────────────────────────────────────────────
+    const topStrip = document.createElement("div");
+    topStrip.className = "mfd-btns-top";
 
-    const rightStrip = document.createElement("div");
-    rightStrip.className = "mfd-btns-right";
+    const topLabels = document.createElement("div");
+    topLabels.className = "mfd-labels-top";
 
+    // ── Screen ─────────────────────────────────────────────────
     this.screen = document.createElement("div");
     this.screen.className = "mfd-screen";
 
-    const lblWrap = document.createElement("div");
-    lblWrap.className = "mfd-corner-lbls";
-    lblWrap.setAttribute("aria-hidden", "true");
+    // ── Bottom buttons ──────────────────────────────────────────
+    const bottomLabels = document.createElement("div");
+    bottomLabels.className = "mfd-labels-bottom";
 
-    this.lblOsb1 = this.makeCornerLbl("mfd-lbl-tl");
-    this.lblOsb2 = this.makeCornerLbl("mfd-lbl-ml");
-    this.lblOsb3 = this.makeCornerLbl("mfd-lbl-bl");
-    this.lblOsb4 = this.makeCornerLbl("mfd-lbl-tr");
-    this.lblOsb5 = this.makeCornerLbl("mfd-lbl-mr");
-    this.lblOsb6 = this.makeCornerLbl("mfd-lbl-br");
+    const bottomStrip = document.createElement("div");
+    bottomStrip.className = "mfd-btns-bottom";
 
-    lblWrap.appendChild(this.lblOsb1);
-    lblWrap.appendChild(this.lblOsb2);
-    lblWrap.appendChild(this.lblOsb3);
-    lblWrap.appendChild(this.lblOsb4);
-    lblWrap.appendChild(this.lblOsb5);
-    lblWrap.appendChild(this.lblOsb6);
-    this.screen.appendChild(lblWrap);
-
+    // Create OSBs and labels
     const osb1 = this.makeOSB(() => this.setView("home"));
     const osb2 = this.makeOSB(() => this.onOSB(2));
     const osb3 = this.makeOSB(() => this.onOSB(3));
@@ -143,16 +132,33 @@ export default class MFD {
     const osb6 = this.makeOSB(() => this.onOSB(6));
     this.osbs = [osb1, osb2, osb3, osb4, osb5, osb6];
 
-    leftStrip.appendChild(osb1);
-    leftStrip.appendChild(osb2);
-    leftStrip.appendChild(osb3);
-    rightStrip.appendChild(osb4);
-    rightStrip.appendChild(osb5);
-    rightStrip.appendChild(osb6);
+    topStrip.appendChild(osb1);
+    topStrip.appendChild(osb2);
+    topStrip.appendChild(osb3);
+    bottomStrip.appendChild(osb4);
+    bottomStrip.appendChild(osb5);
+    bottomStrip.appendChild(osb6);
 
-    this.root.appendChild(leftStrip);
+    const lbls: HTMLElement[] = [];
+    for (let i = 0; i < 3; i++) {
+      const l = document.createElement("span");
+      l.className = "mfd-lbl";
+      topLabels.appendChild(l);
+      lbls.push(l);
+    }
+    for (let i = 0; i < 3; i++) {
+      const l = document.createElement("span");
+      l.className = "mfd-lbl";
+      bottomLabels.appendChild(l);
+      lbls.push(l);
+    }
+    this.lbls = lbls as typeof this.lbls;
+
+    this.root.appendChild(topStrip);
+    this.root.appendChild(topLabels);
     this.root.appendChild(this.screen);
-    this.root.appendChild(rightStrip);
+    this.root.appendChild(bottomLabels);
+    this.root.appendChild(bottomStrip);
 
     this.buildHomeView();
     this.buildVelView();
@@ -210,37 +216,56 @@ export default class MFD {
   }
 
   private onOSB(n: number): void {
-    switch (this.currentView) {
-      case "home":
-        if      (n === 2) this.setView("vel");
-        else if (n === 3) this.setView("att");
-        else if (n === 4) this.setView("tel");
-        else if (n === 5) this.setView("fuel");
-        else if (n === 6) this.setView("radar");
-        break;
-      case "vel":
-        if (n === 2) {
+    // Bottom row always navigates to TEL / FUEL / RADAR
+    if (n === 4) { this.setView("tel");   return; }
+    if (n === 5) { this.setView("fuel");  return; }
+    if (n === 6) { this.setView("radar"); return; }
+
+    // Top-middle (OSB2)
+    if (n === 2) {
+      switch (this.currentView) {
+        case "home":  this.setView("vel"); break;
+        case "vel":
           this.flags.vel.showAngVel = !this.flags.vel.showAngVel;
           this.velAngRow.style.display = this.flags.vel.showAngVel ? "flex" : "none";
-          this.updateOSBs();
-        }
-        break;
-      case "att":
-        if      (n === 2) { this.flags.att.showOrient = !this.flags.att.showOrient; this.drawAttitude(); this.updateOSBs(); }
-        else if (n === 3) { this.flags.att.showVector = !this.flags.att.showVector; this.drawAttitude(); this.updateOSBs(); }
-        break;
-      case "tel":
-        if      (n === 2) { this.flags.tel.showFPS = !this.flags.tel.showFPS; this.telFpsRow.style.display = this.flags.tel.showFPS ? "flex" : "none"; this.updateOSBs(); }
-        else if (n === 3) { this.flags.tel.showChart = !this.flags.tel.showChart; this.telChartWrap.style.display = this.flags.tel.showChart ? "block" : "none"; this.updateOSBs(); }
-        break;
-      case "fuel":
-        if      (n === 2) { this.flags.fuel.showRate = !this.flags.fuel.showRate; this.fuelRateWrap.style.display = this.flags.fuel.showRate ? "block" : "none"; this.updateOSBs(); }
-        else if (n === 3) { this.flags.fuel.showEst  = !this.flags.fuel.showEst;  this.fuelEstWrap.style.display  = this.flags.fuel.showEst  ? "block" : "none"; this.updateOSBs(); }
-        break;
-      case "radar":
-        if      (n === 2) { this.flags.radar.showGrid   = !this.flags.radar.showGrid;   this.drawRadar(); this.updateOSBs(); }
-        else if (n === 3) { this.flags.radar.showVector = !this.flags.radar.showVector; this.drawRadar(); this.updateOSBs(); }
-        break;
+          this.updateOSBs(); break;
+        case "att":
+          this.flags.att.showOrient = !this.flags.att.showOrient;
+          this.drawAttitude(); this.updateOSBs(); break;
+        case "tel":
+          this.flags.tel.showFPS = !this.flags.tel.showFPS;
+          this.telFpsRow.style.display = this.flags.tel.showFPS ? "flex" : "none";
+          this.updateOSBs(); break;
+        case "fuel":
+          this.flags.fuel.showRate = !this.flags.fuel.showRate;
+          this.fuelRateWrap.style.display = this.flags.fuel.showRate ? "block" : "none";
+          this.updateOSBs(); break;
+        case "radar":
+          this.flags.radar.showGrid = !this.flags.radar.showGrid;
+          this.drawRadar(); this.updateOSBs(); break;
+      }
+    }
+
+    // Top-right (OSB3)
+    if (n === 3) {
+      switch (this.currentView) {
+        case "home":  this.setView("att"); break;
+        case "att":
+          this.flags.att.showVector = !this.flags.att.showVector;
+          this.drawAttitude(); this.updateOSBs(); break;
+        case "tel":
+          this.flags.tel.showChart = !this.flags.tel.showChart;
+          this.telChartWrap.style.display = this.flags.tel.showChart ? "block" : "none";
+          this.updateOSBs(); break;
+        case "fuel":
+          this.flags.fuel.showEst = !this.flags.fuel.showEst;
+          this.fuelEstWrap.style.display = this.flags.fuel.showEst ? "block" : "none";
+          this.updateOSBs(); break;
+        case "radar":
+          this.flags.radar.showVector = !this.flags.radar.showVector;
+          this.drawRadar(); this.updateOSBs(); break;
+        // vel: OSB3 unused
+      }
     }
   }
 
@@ -251,68 +276,53 @@ export default class MFD {
     return btn;
   }
 
-  private makeCornerLbl(posClass: string): HTMLElement {
-    const el = document.createElement("span");
-    el.className = `mfd-corner-lbl ${posClass}`;
-    return el;
-  }
-
   private updateOSBs(): void {
     const [osb1, osb2, osb3, osb4, osb5, osb6] = this.osbs;
+    const [lbl1, lbl2, lbl3, lbl4, lbl5, lbl6] = this.lbls;
 
     for (const o of this.osbs) o.className = "mfd-osb";
-    this.lblOsb1.className = "mfd-corner-lbl mfd-lbl-tl";
-    this.lblOsb2.className = "mfd-corner-lbl mfd-lbl-ml";
-    this.lblOsb3.className = "mfd-corner-lbl mfd-lbl-bl";
-    this.lblOsb4.className = "mfd-corner-lbl mfd-lbl-tr";
-    this.lblOsb5.className = "mfd-corner-lbl mfd-lbl-mr";
-    this.lblOsb6.className = "mfd-corner-lbl mfd-lbl-br";
+    for (const l of this.lbls) { l.className = "mfd-lbl"; l.textContent = ""; }
 
-    this.lblOsb1.textContent = "HOME";
+    // OSB1: always HOME
+    lbl1.textContent = "HOME";
+    if (this.currentView === "home") { osb1.classList.add("active"); lbl1.classList.add("active"); }
 
-    for (const o of [osb2, osb3, osb4, osb5, osb6]) o.classList.add("unused");
-    for (const l of [this.lblOsb2, this.lblOsb3, this.lblOsb4, this.lblOsb5, this.lblOsb6]) {
-      l.textContent = "";
-      l.classList.add("unused");
-    }
+    // Bottom row: always TEL / FUEL / RADAR
+    lbl4.textContent = "TEL";  lbl5.textContent = "FUEL"; lbl6.textContent = "RADAR";
+    if (this.currentView === "tel")   { osb4.classList.add("active"); lbl4.classList.add("active"); }
+    if (this.currentView === "fuel")  { osb5.classList.add("active"); lbl5.classList.add("active"); }
+    if (this.currentView === "radar") { osb6.classList.add("active"); lbl6.classList.add("active"); }
 
-    const enable = (btn: HTMLButtonElement, lbl: HTMLElement, text: string) => {
-      btn.classList.remove("unused");
-      lbl.classList.remove("unused");
-      lbl.textContent = text;
-    };
     const tog = (btn: HTMLButtonElement, lbl: HTMLElement, text: string, on: boolean) => {
-      enable(btn, lbl, text);
+      lbl.textContent = text;
       if (on) { btn.classList.add("modifier-on"); lbl.classList.add("modifier-on"); }
+    };
+    const unused = (btn: HTMLButtonElement, lbl: HTMLElement) => {
+      btn.classList.add("unused"); lbl.classList.add("unused"); lbl.textContent = "—";
     };
 
     switch (this.currentView) {
       case "home":
-        osb1.classList.add("active"); this.lblOsb1.classList.add("active");
-        enable(osb2, this.lblOsb2, "VEL");
-        enable(osb3, this.lblOsb3, "ATT");
-        enable(osb4, this.lblOsb4, "TEL");
-        enable(osb5, this.lblOsb5, "FUEL");
-        enable(osb6, this.lblOsb6, "RADAR");
-        break;
+        lbl2.textContent = "VEL"; lbl3.textContent = "ATT"; break;
       case "vel":
-        tog(osb2, this.lblOsb2, "ANG VEL", this.flags.vel.showAngVel);
+        tog(osb2, lbl2, "ANG VEL", this.flags.vel.showAngVel);
+        unused(osb3, lbl3);
         break;
       case "att":
-        tog(osb2, this.lblOsb2, "ORIENT", this.flags.att.showOrient);
-        tog(osb3, this.lblOsb3, "VECTOR", this.flags.att.showVector);
+        tog(osb2, lbl2, "ORIENT", this.flags.att.showOrient);
+        tog(osb3, lbl3, "VECTOR", this.flags.att.showVector);
         break;
       case "tel":
-        tog(osb2, this.lblOsb2, "FPS",   this.flags.tel.showFPS);
-        tog(osb3, this.lblOsb3, "CHART", this.flags.tel.showChart);
+        tog(osb2, lbl2, "FPS",   this.flags.tel.showFPS);
+        tog(osb3, lbl3, "CHART", this.flags.tel.showChart);
         break;
       case "fuel":
-        tog(osb2, this.lblOsb2, "RATE", this.flags.fuel.showRate);
-        tog(osb3, this.lblOsb3, "EST",  this.flags.fuel.showEst);
+        tog(osb2, lbl2, "RATE", this.flags.fuel.showRate);
+        tog(osb3, lbl3, "EST",  this.flags.fuel.showEst);
         break;
       case "radar":
-        tog(osb2, this.lblOsb2, "GRID", this.flags.radar.showGrid);
-        tog(osb3, this.lblOsb3, "VECT", this.flags.radar.showVector);
+        tog(osb2, lbl2, "GRID", this.flags.radar.showGrid);
+        tog(osb3, lbl3, "VECT", this.flags.radar.showVector);
         break;
     }
   }
@@ -324,32 +334,28 @@ export default class MFD {
     view.className = "mfd-view mfd-view-home";
     view.style.display = "none";
 
+    // Top row: VEL, ATT (matching OSB2, OSB3)
+    const rowTop = document.createElement("div");
+    rowTop.className = "mfd-home-row";
+    const rowBot = document.createElement("div");
+    rowBot.className = "mfd-home-row";
+
     const items: [string, MFDView][] = [
-      ["VELOCITY",  "vel"],
-      ["ATTITUDE",  "att"],
-      ["TELEMETRY", "tel"],
-      ["ERGOL SYS", "fuel"],
-      ["RADAR NAV", "radar"],
+      ["VELOCITY", "vel"], ["ATTITUDE", "att"],   // top
+      ["TELEMETRY", "tel"], ["ERGOL SYS", "fuel"], ["RADAR NAV", "radar"], // bottom
     ];
-    const osbLabels = ["OSB2", "OSB3", "OSB4", "OSB5", "OSB6"];
 
     items.forEach(([label, targetView], i) => {
       const item = document.createElement("div");
       item.className = "mfd-home-item";
       item.addEventListener("click", () => this.setView(targetView));
-
-      const name = document.createElement("span");
-      name.textContent = label;
-
-      const key = document.createElement("span");
-      key.className = "mfd-home-key";
-      key.textContent = osbLabels[i];
-
-      item.appendChild(name);
-      item.appendChild(key);
-      view.appendChild(item);
+      item.textContent = label;
+      if (i < 2) rowTop.appendChild(item);
+      else rowBot.appendChild(item);
     });
 
+    view.appendChild(rowTop);
+    view.appendChild(rowBot);
     this.screen.appendChild(view);
   }
 

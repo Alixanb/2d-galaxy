@@ -6,7 +6,7 @@ import BlackHole from "./BlackHole";
 
 export default class Star {
   static kGravity = 8.5 * 10e4;
-  static kInitVelocity = 7.5 * 10e2;
+  static kInitVelocity = 2.1 * 10e1;
   static MAX_VELOCITY = 10000; // Theoretical max velocity for a star, color will be calculted depending on that
   static MAX_SIZE = 3;
 

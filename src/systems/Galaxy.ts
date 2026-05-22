@@ -1,4 +1,5 @@
 import { clamp } from "../core/Utils";
+import Vec2 from "../core/Vec2";
 import BlackHole from "../entities/BlackHole";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
@@ -8,6 +9,36 @@ import {
   type Canvas2d,
   type CanvasWebGL,
 } from "./Canvas";
+
+// Palette colors as [r, g, b] in 0-1 range
+const PALETTE = {
+  cyan:   [0.314, 0.714, 0.788] as [number, number, number],
+  green:  [0.424, 0.725, 0.451] as [number, number, number],
+  yellow: [0.914, 0.839, 0.157] as [number, number, number],
+  red:    [0.925, 0.149, 0.149] as [number, number, number],
+};
+
+function lerpColor(
+  a: [number, number, number],
+  b: [number, number, number],
+  t: number
+): [number, number, number] {
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ];
+}
+
+function velocityToColor(velRatio: number): [number, number, number] {
+  if (velRatio < 0.33) {
+    return lerpColor(PALETTE.cyan, PALETTE.green, velRatio / 0.33);
+  } else if (velRatio < 0.67) {
+    return lerpColor(PALETTE.green, PALETTE.yellow, (velRatio - 0.33) / 0.34);
+  } else {
+    return lerpColor(PALETTE.yellow, PALETTE.red, (velRatio - 0.67) / 0.33);
+  }
+}
 
 export default class Galaxy {
   static G = 6.6743e-11;
@@ -19,6 +50,7 @@ export default class Galaxy {
   ship?: Ship;
   size: number;
   shaderProgram: ShaderProgram;
+  totalStarsSpawned = 0;
 
   constructor(
     canvas2d: Canvas2d,
@@ -40,29 +72,29 @@ export default class Galaxy {
 
     const gl = this.canvasWebGL.context;
 
-    // WebGL
     const vs = new Shader(
-      `attribute vec2 a_position;     
-    void main(void) {
-      gl_PointSize = 30.0;                   
-      gl_Position = vec4(a_position, 0.0, 1.0);
-    }
-    `,
+      `attribute vec2 a_position;
+       attribute float a_size;
+       attribute vec3 a_color;
+       varying vec3 v_color;
+       void main(void) {
+         gl_PointSize = a_size;
+         gl_Position = vec4(a_position, 0.0, 1.0);
+         v_color = a_color;
+       }`,
       "vertex",
       gl
     );
 
     const fs = new Shader(
       `precision mediump float;
-    
-      void main(void) {
-        vec2 coord = gl_PointCoord - vec2(0.5);
-        float dist = length(coord);
-    
-        if (dist > 0.5) discard;
-    
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 0.05); 
-      }`,
+       varying vec3 v_color;
+       void main(void) {
+         vec2 coord = gl_PointCoord - vec2(0.5);
+         float dist = length(coord);
+         float alpha = smoothstep(0.5, 0.15, dist);
+         gl_FragColor = vec4(v_color, alpha * 0.9);
+       }`,
       "fragment",
       gl
     );
@@ -75,10 +107,26 @@ export default class Galaxy {
     for (let i = 0; i < n; i++) {
       const pos = this.canvas2d.randomCirclePosition(this.size);
       const size = Math.random() * Star.MAX_SIZE;
-      const vel = Star.getVelocity(pos, this.blackholes[0]);
+      const vel = this.blackholes.length > 0 
+        ? Star.getVelocity(pos, this.blackholes[0])
+        : new Vec2(0, 0);
 
       this.stars.push(new Star(pos, size, vel));
     }
+    this.totalStarsSpawned += n;
+  }
+
+  addStarAt(worldPos: Vec2) {
+    const size = Math.random() * Star.MAX_SIZE;
+    const vel = this.blackholes.length > 0
+      ? Star.getVelocity(worldPos, this.blackholes[0])
+      : new Vec2(0, 0);
+    this.stars.push(new Star(worldPos, size, vel));
+    this.totalStarsSpawned += 1;
+  }
+
+  addStars(n: number) {
+    this.createStars(n);
   }
 
   update(dt: number) {
@@ -101,14 +149,14 @@ export default class Galaxy {
   }
 
   draw() {
-    this.canvas2d.context.clearRect(
-      0,
-      0,
-      this.canvas2d.dimensions.x,
-      this.canvas2d.dimensions.y
-    );
+    // Reset transform before clearing so the full physical canvas is wiped,
+    // not just a transformed sub-region (which leaves trails at the edges).
+    const ctx = this.canvas2d.context;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, this.canvas2d.element.width, this.canvas2d.element.height);
+    ctx.restore();
 
-    // Draw stars using webGL
     this.drawStarsUsingWebGL();
 
     this.blackholes.forEach((b) => b.draw(this.canvas2d));
@@ -118,23 +166,64 @@ export default class Galaxy {
   drawStarsUsingWebGL() {
     const nStars = this.stars.length;
     const gl = this.canvasWebGL.context;
-    const positions = new Float32Array(nStars * 2);
+
+    // 6 floats per star: x, y, size, r, g, b
+    const FLOATS_PER_STAR = 6;
+    const data = new Float32Array(nStars * FLOATS_PER_STAR);
 
     for (let i = 0; i < nStars; i++) {
       const star = this.stars[i];
-      positions[i * 2] = star.pos.x;
-      positions[i * 2 + 1] = star.pos.y;
+      const velRatio = clamp(star.vel.length() / Star.MAX_VELOCITY, 0, 1);
+      const [r, g, b] = velocityToColor(velRatio);
+
+      const ratio = this.canvas2d.ratio;
+      const cam = this.canvas2d.camera;
+      const base = i * FLOATS_PER_STAR;
+      // Convert world coords to WebGL clip space:
+      // x: world [-ratio, +ratio] → clip [-1, +1]  → divide by ratio
+      // y: Canvas2D has y=+1 at bottom; WebGL clip has y=+1 at top → negate
+      data[base]     = (star.pos.x - cam.x) / ratio;
+      data[base + 1] = -(star.pos.y - cam.y);
+      data[base + 2] = Math.max(3.0, star.size * 5);
+      data[base + 3] = r;
+      data[base + 4] = g;
+      data[base + 5] = b;
     }
 
-    this.canvasWebGL.createBuffer(positions);
-    this.shaderProgram.createLocation("a_position");
+    const program = this.shaderProgram.program;
+    if (!program) return;
+
+    gl.useProgram(program);
+
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+
+    const BYTES = Float32Array.BYTES_PER_ELEMENT;
+    const stride = FLOATS_PER_STAR * BYTES;
+
+    const posLoc = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, stride, 0);
+
+    const sizeLoc = gl.getAttribLocation(program, "a_size");
+    gl.enableVertexAttribArray(sizeLoc);
+    gl.vertexAttribPointer(sizeLoc, 1, gl.FLOAT, false, stride, 2 * BYTES);
+
+    const colorLoc = gl.getAttribLocation(program, "a_color");
+    gl.enableVertexAttribArray(colorLoc);
+    gl.vertexAttribPointer(colorLoc, 3, gl.FLOAT, false, stride, 3 * BYTES);
+
+    // Use normal alpha compositing so colored dots don't wash out to white
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.POINTS, 0, nStars);
-  }
 
-  drawStarsUsingCanvasApi() {
-    this.stars.forEach((s) => s.draw(this.canvas2d));
+    // Restore additive blending (CanvasWebGL default)
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+    gl.deleteBuffer(buffer);
   }
 }

@@ -1,4 +1,3 @@
-import type { Nullable } from "../core/Type";
 import Vec2 from "../core/Vec2";
 import type { Canvas2d } from "../systems/Canvas";
 import Star from "./Star";
@@ -7,7 +6,6 @@ export default class BlackHole extends Star {
   static SIZE_MASS_RATIO = 10;
   mass: number;
   show: boolean;
-  glow: Nullable<CanvasGradient> = null;
 
   constructor(pos: Vec2 = new Vec2(), size: number = 10, show = false) {
     super(pos);
@@ -21,42 +19,37 @@ export default class BlackHole extends Star {
     if (!this.show) return;
 
     const screenPos = canvas.place(this.pos);
+    const ctx = canvas.context;
 
-    const eventHorizonRadius = this.size;
-    const glowRadius = eventHorizonRadius * 1.5;
+    ctx.save();
 
-    canvas.context.save();
+    // Outer glow ring
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, this.size * 2.2, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(80, 182, 201, 0.12)";
+    ctx.lineWidth = this.size * 0.8;
+    ctx.stroke();
 
-    if (!this.glow) {
-      this.glow = canvas.context.createRadialGradient(
-        screenPos.x,
-        screenPos.y,
-        eventHorizonRadius,
-        screenPos.x,
-        screenPos.y,
-        glowRadius
-      );
-      this.glow.addColorStop(0, "rgb(255, 255, 255)");
-      this.glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-    }
+    // Middle ring
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, this.size * 1.5, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(80, 182, 201, 0.35)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
-    canvas.context.fillStyle = this.glow;
+    // Inner ring (event horizon border)
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, this.size * 1.1, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(80, 182, 201, 0.6)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
-    canvas.context.beginPath();
-    canvas.context.arc(screenPos.x, screenPos.y, glowRadius, 0, Math.PI * 2);
-    canvas.context.fill();
+    // Core — filled with background color to "erase" stars behind it
+    ctx.beginPath();
+    ctx.arc(screenPos.x, screenPos.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = "#2b201f";
+    ctx.fill();
 
-    canvas.context.fillStyle = "rgba(0, 0, 0, 1)";
-    canvas.context.beginPath();
-    canvas.context.arc(
-      screenPos.x,
-      screenPos.y,
-      eventHorizonRadius,
-      0,
-      Math.PI * 2
-    );
-    canvas.context.fill();
-
-    canvas.context.restore();
+    ctx.restore();
   }
 }

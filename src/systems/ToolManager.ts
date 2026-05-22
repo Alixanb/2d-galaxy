@@ -1,7 +1,7 @@
 import type Information from "../entities/Information";
-import type { CheckBoxInput, RangeInput } from "../entities/Input";
+import type { CheckboxInput, RangeInput } from "../entities/Input";
 
-type ClassExtendsTool = Information | RangeInput | CheckBoxInput;
+type ClassExtendsTool = Information | RangeInput | CheckboxInput;
 
 export abstract class Tool {
   label: string;

@@ -37,14 +37,12 @@ export default class CockpitHUD {
     panel.appendChild(this.buildPredictionSection());
     panel.appendChild(this.buildFlightCtrlSection());
     panel.appendChild(this.buildStatusSection());
-    panel.appendChild(this.buildHelpSection());
+    this.buildHelpButton();
 
     document.body.appendChild(panel);
   }
 
-  private buildHelpSection(): HTMLElement {
-    const section = document.createElement("div");
-    section.className = "help-section";
+  private buildHelpButton() {
     const docPanel = buildDocPanel();
     const btn = document.createElement("button");
     btn.className = "help-btn";
@@ -53,8 +51,7 @@ export default class CockpitHUD {
       const isVisible = docPanel.style.display === "block";
       docPanel.style.display = isVisible ? "none" : "block";
     });
-    section.appendChild(btn);
-    return section;
+    document.body.appendChild(btn);
   }
 
   update(data: MFDData): void {

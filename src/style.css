@@ -1049,40 +1049,92 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
   display: block;
 }
 
-/* ─── Minimal Doc ───────────────────────────────────────── */
-
-.help-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px;
-}
+/* ─── Documentation Panel ───────────────────────────────── */
 
 .help-btn {
-  width: 24px;
-  height: 24px;
+  position: absolute;
+  bottom: 175px;
+  right: 20px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: var(--bg);
+  background: rgba(5, 5, 5, 0.8);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border-strong);
   color: var(--text-dim);
   font-family: 'Satoshi', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.help-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.help-btn:hover { 
+  border-color: var(--cyan); 
+  color: var(--cyan);
+  background: var(--bg);
+  transform: scale(1.1);
+}
 
-.doc-minimal {
+.doc-container {
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 1.6;
   color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 5px;
+}
+
+.doc-container h3 {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-left: 3px solid var(--cyan);
+  padding-left: 10px;
+}
+
+.doc-list {
+  list-style: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.doc-minimal strong { color: var(--text); font-size: 10px; }
-.doc-minimal a { color: var(--cyan); text-decoration: none; border-bottom: 1px dashed rgba(80,182,201,0.3); }
+.doc-list li {
+  background: rgba(255,255,255,0.03);
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.doc-container strong { 
+  color: var(--text); 
+}
+
+.doc-container a { 
+  color: var(--cyan); 
+  text-decoration: none; 
+  border-bottom: 1px dashed rgba(80,182,201,0.3); 
+}
+
+.doc-container a:hover {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+.doc-highlight {
+  transition: background-color 0.5s;
+  background-color: rgba(80, 182, 201, 0.15) !important;
+  border-radius: 4px;
+}
 

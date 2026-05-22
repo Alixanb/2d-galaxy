@@ -31,8 +31,9 @@ abstract class Canvas<
 
   sizing() {
     const devicePixelRatio = window.devicePixelRatio || 1;
+    const cockpitHeight = 160;
     const displayWidth = window.innerWidth;
-    const displayHeight = window.innerHeight;
+    const displayHeight = window.innerHeight - cockpitHeight;
     console.log(displayWidth, displayHeight, devicePixelRatio);
 
     this.element.width = displayWidth * devicePixelRatio;

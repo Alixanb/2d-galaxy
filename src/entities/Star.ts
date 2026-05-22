@@ -6,7 +6,7 @@ import BlackHole from "./BlackHole";
 
 export default class Star {
   static kGravity = 8.5 * 10e4;
-  static kInitVelocity = 2.1 * 10e1;
+  static kInitVelocity = 7.5 * 10e2;
   static MAX_VELOCITY = 10000; // Theoretical max velocity for a star, color will be calculted depending on that
   static MAX_SIZE = 3;
 
@@ -73,7 +73,7 @@ export default class Star {
     return `#${hex + hex + hex}`;
   }
 
-  static getVelocity(pos: Vec2, blackhole: BlackHole) {
+  static getVelocity(pos: Vec2, blackhole: BlackHole, multiplier: number = Star.kInitVelocity) {
     const M = blackhole.mass;
     const randFactor = 0.1;
 
@@ -81,7 +81,7 @@ export default class Star {
     const r = rVec.length();
     if (r === 0) return new Vec2(0, 0);
 
-    const speed = Math.sqrt((Galaxy.G * M) / r) * Star.kInitVelocity;
+    const speed = Math.sqrt((Galaxy.G * M) / r) * multiplier;
     const delta = (Math.random() * 2 - 1) * randFactor;
     const finalSpeed = speed * (1 + delta);
 

@@ -87,8 +87,8 @@ function startSimulation(config: SimulationConfig) {
         const radius = config.galaxySize;
         const angle = Math.random() * Math.PI * 2;
         spawnPos = new Vec2(Math.cos(angle) * radius, Math.sin(angle) * radius);
-        // Already in orbit
-        spawnVel = Star.getVelocity(spawnPos, blackholes[0]);
+        // Already in orbit — using a lower multiplier for the ship (~20 m/s)
+        spawnVel = Star.getVelocity(spawnPos, blackholes[0], 2.1 * 10e1);
       } else {
         // Multiple black holes: spawn in the middle with no velocity
         spawnPos = new Vec2(0, 0);

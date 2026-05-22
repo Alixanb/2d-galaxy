@@ -74,12 +74,12 @@ export default class CockpitHUD {
     const thrustDefault = Ship.DEFAULT_THRUSTPOWER;
     const rotDefault = Ship.DEFAULT_RADIALPOWER;
 
-    section.appendChild(this.makeFader("THRUSTER PWR", 20, 0, 100, 5, "cyan",
+    section.appendChild(this.makeFader("THRUSTER (Z/S)", 20, 0, 100, 5, "cyan",
       (v) => { Ship.THRUSTPOWER = thrustDefault * (v / 20); }, 
       (v) => `${v}%`,
       () => Math.round((Ship.THRUSTPOWER / thrustDefault) * 20)));
       
-    section.appendChild(this.makeFader("RCS RATE", 20, 0, 100, 5, "cyan",
+    section.appendChild(this.makeFader("RCS (Q/E)", 20, 0, 100, 5, "cyan",
       (v) => { Ship.RADIALPOWER = rotDefault * (v / 20); }, 
       (v) => `${v}%`,
       () => Math.round((Ship.RADIALPOWER / rotDefault) * 20)));
@@ -251,8 +251,8 @@ export default class CockpitHUD {
     const wrap = document.createElement("div");
     wrap.className = "fuel-gauges";
 
-    this.leCanvas = this.makeGaugeCanvas(62);
-    this.moCanvas = this.makeGaugeCanvas(62);
+    this.leCanvas = this.makeGaugeCanvas(80);
+    this.moCanvas = this.makeGaugeCanvas(80);
     wrap.appendChild(this.leCanvas);
     wrap.appendChild(this.moCanvas);
     section.appendChild(wrap);
@@ -285,9 +285,9 @@ export default class CockpitHUD {
     const w = canvas.width;
     const h = canvas.height;
     const cx = w / 2;
-    const cy = h / 2 + 3 * dpr;
-    const r = w * 0.33;
-    const trackW = 3.5 * dpr;
+    const cy = h / 2 + 5 * dpr;
+    const r = w * 0.35;
+    const trackW = 4 * dpr;
 
     // Arc from 225° (7:30) clockwise 270° to 315° (4:30), gap at bottom
     const START = (5 * Math.PI) / 4;
@@ -340,18 +340,18 @@ export default class CockpitHUD {
       ? `rgba(236, 38, 38, ${0.6 + 0.4 * pulse})`
       : "rgba(236, 223, 205, 0.92)";
     ctx.globalAlpha = textPulse;
-    ctx.font = `bold ${9.5 * dpr}px Inter, sans-serif`;
+    ctx.font = `bold ${11 * dpr}px Inter, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(pct < 0.005 ? "!!!" : value, cx, cy - 2 * dpr);
+    ctx.fillText(pct < 0.005 ? "!!!" : value, cx, cy - 4 * dpr);
     ctx.globalAlpha = 1;
 
     // Label below
     ctx.fillStyle = "rgba(236, 223, 205, 0.32)";
-    ctx.font = `${6.5 * dpr}px Inter, sans-serif`;
+    ctx.font = `${7 * dpr}px Inter, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(label, cx, cy + r * 0.55);
+    ctx.fillText(label, cx, cy + r * 0.6);
   }
 
   updateFuel(liquidErgol: number, maxLE: number, monergol: number, maxM: number): void {

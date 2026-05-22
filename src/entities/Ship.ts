@@ -114,11 +114,18 @@ export default class Ship {
     const H = canvas.dimensions.y / dpr;
     const sp = canvas.place(this.pos);
 
-    if (sp.x >= 0 && sp.x <= W && sp.y >= 0 && sp.y <= H) return;
+    const cockpitHeight = 160;
+    // Return if ship is visible and not hidden by the cockpit
+    if (sp.x >= 0 && sp.x <= W && sp.y >= 0 && sp.y <= H - cockpitHeight) return;
 
     const margin = 40;
-    const cx = W / 2;
-    const cy = H / 2;
+    const minX = margin;
+    const maxX = W - margin;
+    const minY = margin;
+    const maxY = H - cockpitHeight - 20; // 20px padding above cockpit
+
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
     const dx = sp.x - cx;
     const dy = sp.y - cy;
     const theta = Math.atan2(dy, dx);
@@ -126,10 +133,10 @@ export default class Ship {
     const sinT = Math.sin(theta);
 
     let t = Infinity;
-    if (cosT > 1e-4)  t = Math.min(t,  (W / 2 - margin) / cosT);
-    if (cosT < -1e-4) t = Math.min(t, -(W / 2 - margin) / cosT);
-    if (sinT > 1e-4)  t = Math.min(t,  (H / 2 - margin) / sinT);
-    if (sinT < -1e-4) t = Math.min(t, -(H / 2 - margin) / sinT);
+    if (cosT > 1e-4)  t = Math.min(t, (maxX - cx) / cosT);
+    if (cosT < -1e-4) t = Math.min(t, (minX - cx) / cosT);
+    if (sinT > 1e-4)  t = Math.min(t, (maxY - cy) / sinT);
+    if (sinT < -1e-4) t = Math.min(t, (minY - cy) / sinT);
 
     const ex = cx + t * cosT;
     const ey = cy + t * sinT;

@@ -1,6 +1,7 @@
 import Ship from "../entities/Ship";
 import Galaxy from "../systems/Galaxy";
 import MFD, { type MFDData } from "./MFD";
+import { buildDocPanel } from "./DocPanel";
 
 const PATH_PRESETS = [
   { label: "100", value: 100 },
@@ -36,8 +37,24 @@ export default class CockpitHUD {
     panel.appendChild(this.buildPredictionSection());
     panel.appendChild(this.buildFlightCtrlSection());
     panel.appendChild(this.buildStatusSection());
+    panel.appendChild(this.buildHelpSection());
 
     document.body.appendChild(panel);
+  }
+
+  private buildHelpSection(): HTMLElement {
+    const section = document.createElement("div");
+    section.className = "help-section";
+    const docPanel = buildDocPanel();
+    const btn = document.createElement("button");
+    btn.className = "help-btn";
+    btn.textContent = "?";
+    btn.addEventListener("click", () => {
+      const isVisible = docPanel.style.display === "block";
+      docPanel.style.display = isVisible ? "none" : "block";
+    });
+    section.appendChild(btn);
+    return section;
   }
 
   update(data: MFDData): void {

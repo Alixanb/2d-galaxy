@@ -111,6 +111,9 @@ export default class Galaxy {
 
     this.spawnFuelDepots();
     this.spawnRelays(relayCount, relayOrbitRadius, relayOrbitSpeed);
+    if (this.ship && this.relayStations.length > 0) {
+      this.ship.targetRelay = this.relayStations[0];
+    }
   }
 
   private spawnRelays(count: number, orbitRadius: number, orbitSpeed: number): void {

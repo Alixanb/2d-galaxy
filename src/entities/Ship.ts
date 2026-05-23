@@ -3,6 +3,7 @@ import Vec2 from "../core/Vec2";
 import type { Canvas2d } from "../systems/Canvas";
 import Galaxy from "../systems/Galaxy";
 import BlackHole from "./BlackHole";
+import RelayStation from "./RelayStation";
 import Star from "./Star";
 
 export type ShipStatus = "idle" | "thrusting";
@@ -11,8 +12,8 @@ export type SpriteStatusKey<T> = {
 };
 
 export default class Ship {
-  static DEFAULT_THRUSTPOWER = 10e-5;
-  static THRUSTPOWER = 10e-5;
+  static DEFAULT_THRUSTPOWER = 50e-7;
+  static THRUSTPOWER = 50e-7;
   static DEFAULT_RADIALPOWER = 0.002;
   static RADIALPOWER = 0.002;
   static MASS = 3;
@@ -39,12 +40,14 @@ export default class Ship {
   showPath: boolean;
   autoStab: boolean = false;
   retrogradeActive: boolean = false;
-  retrogradePhase: 'align' | 'burn' | null = null;
+  retrogradePhase: "align" | "burn" | null = null;
   path: Vec2[] = [];
   pathColor = new Color(80, 182, 201); // cyan #50b6c9
   predictionInteration: number = 2000;
   pe: { worldPos: Vec2; dist: number } | null = null;
   ap: { worldPos: Vec2; dist: number } | null = null;
+  targetRelay?: RelayStation;
+  encounterPoint: { worldPos: Vec2; dist: number; timeToReach: number } | null = null;
 
   constructor(
     pos: Vec2,
@@ -52,7 +55,7 @@ export default class Ship {
     spriteThrusting: HTMLImageElement,
     size: number,
     showPath: boolean = false,
-    blackholes: BlackHole[]
+    blackholes: BlackHole[],
   ) {
     this.pos = pos;
 
@@ -98,7 +101,7 @@ export default class Ship {
       -width / 2,
       -height / 2,
       width,
-      height
+      height,
     );
 
     canvas.context.restore();
@@ -128,9 +131,9 @@ export default class Ship {
     const sinT = Math.sin(theta);
 
     let t = Infinity;
-    if (cosT > 1e-4)  t = Math.min(t,  (W / 2 - margin) / cosT);
+    if (cosT > 1e-4) t = Math.min(t, (W / 2 - margin) / cosT);
     if (cosT < -1e-4) t = Math.min(t, -(W / 2 - margin) / cosT);
-    if (sinT > 1e-4)  t = Math.min(t,  (H / 2 - margin) / sinT);
+    if (sinT > 1e-4) t = Math.min(t, (H / 2 - margin) / sinT);
     if (sinT < -1e-4) t = Math.min(t, -(H / 2 - margin) / sinT);
 
     const ex = cx + t * cosT;
@@ -180,16 +183,28 @@ export default class Ship {
 
   update(dt: number) {
     if (this.keys["z"]) {
-      Ship.THRUSTPOWER = Math.min(Ship.DEFAULT_THRUSTPOWER * 5, Ship.THRUSTPOWER + Ship.DEFAULT_THRUSTPOWER * 0.05);
+      Ship.THRUSTPOWER = Math.min(
+        Ship.DEFAULT_THRUSTPOWER * 5,
+        Ship.THRUSTPOWER + Ship.DEFAULT_THRUSTPOWER * 0.05,
+      );
     }
     if (this.keys["s"]) {
-      Ship.THRUSTPOWER = Math.max(0, Ship.THRUSTPOWER - Ship.DEFAULT_THRUSTPOWER * 0.05);
+      Ship.THRUSTPOWER = Math.max(
+        0,
+        Ship.THRUSTPOWER - Ship.DEFAULT_THRUSTPOWER * 0.05,
+      );
     }
     if (this.keys["e"]) {
-      Ship.RADIALPOWER = Math.min(Ship.DEFAULT_RADIALPOWER * 5, Ship.RADIALPOWER + Ship.DEFAULT_RADIALPOWER * 0.05);
+      Ship.RADIALPOWER = Math.min(
+        Ship.DEFAULT_RADIALPOWER * 5,
+        Ship.RADIALPOWER + Ship.DEFAULT_RADIALPOWER * 0.05,
+      );
     }
     if (this.keys["q"]) {
-      Ship.RADIALPOWER = Math.max(0, Ship.RADIALPOWER - Ship.DEFAULT_RADIALPOWER * 0.05);
+      Ship.RADIALPOWER = Math.max(
+        0,
+        Ship.RADIALPOWER - Ship.DEFAULT_RADIALPOWER * 0.05,
+      );
     }
 
     this.thrusterPct = Ship.THRUSTPOWER / Ship.DEFAULT_THRUSTPOWER;
@@ -216,7 +231,12 @@ export default class Ship {
     }
 
     // Auto-stab — consumes monergol only while actively damping
-    if (this.autoStab && !this.keys["ArrowRight"] && !this.keys["ArrowLeft"] && !this.retrogradeActive) {
+    if (
+      this.autoStab &&
+      !this.keys["ArrowRight"] &&
+      !this.keys["ArrowLeft"] &&
+      !this.retrogradeActive
+    ) {
       if (this.monergol > 0 && Math.abs(this.angluarVel) > 0) {
         const damping = Math.min(Math.abs(this.angluarVel), Ship.RADIALPOWER);
         this.angluarVel -= damping * Math.sign(this.angluarVel);
@@ -237,11 +257,11 @@ export default class Ship {
         while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
         // Align phase — requires monergol
-        if (this.retrogradePhase === 'align' && this.monergol > 0) {
+        if (this.retrogradePhase === "align" && this.monergol > 0) {
           if (Math.abs(angleDiff) < 0.05) {
             this.angle = targetAngle;
             this.angluarVel = 0;
-            this.retrogradePhase = 'burn';
+            this.retrogradePhase = "burn";
           } else {
             this.angluarVel = Math.sign(angleDiff) * 0.04;
             this.monergol -= Ship.MONERGOL_RATE * dt;
@@ -249,7 +269,7 @@ export default class Ship {
         }
 
         // Burn phase — requires liquid ergol
-        if (this.retrogradePhase === 'burn' && this.liquidErgol > 0) {
+        if (this.retrogradePhase === "burn" && this.liquidErgol > 0) {
           this.angle = targetAngle;
           this.angluarVel = 0;
 
@@ -271,7 +291,10 @@ export default class Ship {
       }
     }
 
-    this.liquidErgol = Math.max(0, Math.min(this.maxLiquidErgol, this.liquidErgol));
+    this.liquidErgol = Math.max(
+      0,
+      Math.min(this.maxLiquidErgol, this.liquidErgol),
+    );
     this.monergol = Math.max(0, Math.min(this.maxMonergol, this.monergol));
 
     this.vel = this.vel.add(this.getVelocity(dt));
@@ -283,9 +306,12 @@ export default class Ship {
     }
   }
 
-  collectFuel(type: 'liquid-ergol' | 'monergol', amount: number): void {
-    if (type === 'liquid-ergol') {
-      this.liquidErgol = Math.min(this.maxLiquidErgol, this.liquidErgol + amount);
+  collectFuel(type: "liquid-ergol" | "monergol", amount: number): void {
+    if (type === "liquid-ergol") {
+      this.liquidErgol = Math.min(
+        this.maxLiquidErgol,
+        this.liquidErgol + amount,
+      );
     } else {
       this.monergol = Math.min(this.maxMonergol, this.monergol + amount);
     }
@@ -305,7 +331,7 @@ export default class Ship {
 
       const forceVector = new Vec2(
         directionX * forceMagnitude,
-        directionY * forceMagnitude
+        directionY * forceMagnitude,
       ).clamp(-0.4, 0.4);
 
       addedVelocities = addedVelocities.add(forceVector);
@@ -325,6 +351,9 @@ export default class Ship {
     this.path = [];
     this.pe = null;
     this.ap = null;
+    this.encounterPoint = null;
+    let encMinDist = Infinity;
+    let encIdx = -1;
 
     for (let i = 0; i < steps; i++) {
       let minDist = Infinity;
@@ -333,10 +362,8 @@ export default class Ship {
         if (d < minDist) minDist = d;
       }
 
-      const sub = minDist < 0.04 ? 80
-                : minDist < 0.12 ? 40
-                : minDist < 0.30 ? 15
-                : 4;
+      const sub =
+        minDist < 0.04 ? 80 : minDist < 0.12 ? 40 : minDist < 0.3 ? 15 : 4;
 
       const subDt = dt / sub;
       for (let s = 0; s < sub; s++) {
@@ -345,15 +372,34 @@ export default class Ship {
       }
 
       this.path.push(pos.clone());
+
+      if (this.targetRelay) {
+        const relayPos = this.targetRelay.projectPosition(i, dt);
+        const d = pos.distance(relayPos);
+        if (d < encMinDist) { encMinDist = d; encIdx = i; }
+      }
+    }
+
+    if (this.targetRelay && encIdx >= 0 && encMinDist < 0.10) {
+      this.encounterPoint = { worldPos: this.path[encIdx], dist: encMinDist, timeToReach: encIdx * dt };
     }
 
     const bh0 = this.blackholes[0];
     if (bh0 && this.path.length > 0) {
-      let peIdx = 0, apIdx = 0, minD = Infinity, maxD = 0;
+      let peIdx = 0,
+        apIdx = 0,
+        minD = Infinity,
+        maxD = 0;
       for (let i = 0; i < this.path.length; i++) {
         const d = this.path[i].distance(bh0.pos);
-        if (d < minD) { minD = d; peIdx = i; }
-        if (d > maxD) { maxD = d; apIdx = i; }
+        if (d < minD) {
+          minD = d;
+          peIdx = i;
+        }
+        if (d > maxD) {
+          maxD = d;
+          apIdx = i;
+        }
       }
       this.pe = { worldPos: this.path[peIdx], dist: minD };
       this.ap = { worldPos: this.path[apIdx], dist: maxD };
@@ -386,11 +432,41 @@ export default class Ship {
 
     ctx.restore();
 
-    if (this.pe) this.drawOrbitalMarker(canvas, this.pe.worldPos, "▼", "rgba(236, 100, 100, 0.75)");
-    if (this.ap) this.drawOrbitalMarker(canvas, this.ap.worldPos, "▲", "rgba(233, 214, 40, 0.75)");
+    if (this.pe)
+      this.drawOrbitalMarker(
+        canvas,
+        this.pe.worldPos,
+        "▼",
+        "rgba(236, 100, 100, 0.75)",
+      );
+    if (this.ap)
+      this.drawOrbitalMarker(
+        canvas,
+        this.ap.worldPos,
+        "▲",
+        "rgba(233, 214, 40, 0.75)",
+      );
+    if (this.encounterPoint) {
+      this.drawOrbitalMarker(canvas, this.encounterPoint.worldPos, "◆", "#50b6c9");
+      const s = canvas.place(this.encounterPoint.worldPos);
+      const ctx = canvas.context;
+      ctx.save();
+      ctx.fillStyle = "#50b6c9";
+      ctx.font = "10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.globalAlpha = 0.85;
+      ctx.fillText(this.encounterPoint.dist.toFixed(3) + " wu", s.x, s.y + 10);
+      ctx.restore();
+    }
   }
 
-  private drawOrbitalMarker(canvas: Canvas2d, worldPos: Vec2, glyph: string, color: string): void {
+  private drawOrbitalMarker(
+    canvas: Canvas2d,
+    worldPos: Vec2,
+    glyph: string,
+    color: string,
+  ): void {
     const s = canvas.place(worldPos);
     const ctx = canvas.context;
     ctx.save();

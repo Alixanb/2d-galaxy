@@ -1,3 +1,6 @@
+# Claude working files
+.claude/
+
 # Logs
 logs
 *.log
@@ -12,10 +15,6 @@ venv
 dist
 dist-ssr
 *.local
-
-# Claude working files (not for repo)
-CLAUDE.md
-.claude/
 
 # Editor directories and files
 .vscode/*

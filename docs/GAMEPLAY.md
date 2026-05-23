@@ -25,30 +25,30 @@ After unlocking heading lock:
 
 ## Game Modes
 
-| Mode     | Name            | Failure state                            | Tutorial MFD |
-| -------- | --------------- | ---------------------------------------- | ------------ |
-| Career   | **RELAY**       | Respawn at last docked relay, keep parts | ✓ available  |
-| Creative | **FREE FLIGHT** | None — sandbox                           | ✓ available  |
-| Hardcore | **DEAD SIGNAL** | Run out of fuel = game over, no respawn  | ✗ never      |
+| Mode | Name | Failure state | Tutorial MFD |
+| --- | --- | --- | --- |
+| Career | **RELAY** | Respawn at last docked relay, keep parts | ✓ available |
+| Creative | **FREE FLIGHT** | None — sandbox | ✓ available |
+| Hardcore | **DEAD SIGNAL** | Run out of fuel = game over, no respawn | ✗ never |
 
 ---
 
 ## Starting Conditions (RELAY / DEAD SIGNAL)
 
-| System                | Start     | Max (fully upgraded)         |
-| --------------------- | --------- | ---------------------------- |
-| Thrust                | 20%       | 100%                         |
-| Liquid Ergol tank     | 100       | 500                          |
-| RCS power             | 40%       | 100%                         |
-| Monergol tank         | 40        | 100                          |
-| Tidal Shielding       | 0         | III                          |
-| Auto-Stab             | ✗ locked  | ✓ unlock                     |
-| Retro Burn            | ✗ locked  | ✓ unlock                     |
-| MFD slots             | 1         | 2                            |
-| Tutorial MFD          | ✓ free    | — (locked in DEAD SIGNAL)    |
-| Approach MFD          | ✗ locked  | ✓ unlock                     |
-| Heading Lock          | ✗ locked  | prograde → radial → maneuver |
-| Trajectory prediction | 100 steps | 5000 steps                   |
+| System | Start | Max (fully upgraded) |
+| --- | --- | --- |
+| Thrust | 20% | 100% (Visual: Engine upgrade) |
+| Liquid Ergol tank | 100 | 500 (Visual: Tank expansion) |
+| RCS power | 40% | 100% |
+| Monergol tank | 40 | 100 |
+| Tidal Shielding | 0 | III (Visual: Hull plating) |
+| Auto-Stab | ✗ locked | ✓ unlock |
+| Retro Burn | ✗ locked | ✓ unlock |
+| MFD slots | 1 | 2 |
+| Tutorial MFD | ✓ Independent | — (locked in DEAD SIGNAL) |
+| Approach MFD | ✗ locked | ✓ unlock |
+| Heading Lock | ✗ locked | prograde → radial → maneuver |
+| Trajectory prediction | 100 steps | 5000 steps |
 
 ---
 
@@ -82,7 +82,7 @@ DOCK
 REFUEL AT DEPOT (optional, depots orbit the system)
     │
     ▼
-SPEND PARTS IN TECH TREE
+SPEND PARTS IN TECH TREE (100% Refundable)
     │
     ▼
 GALAXY MAP → next system
@@ -106,18 +106,18 @@ DRIFT-2 ──── VOID-4 ──────────────┘ TIDE-5
 
 ### System definitions
 
-| ID          | BH  | Gravity  | Tidal Rating | Relay speed | Hull req | Notes                                         |
-| ----------- | --- | -------- | ------------ | ----------- | -------- | --------------------------------------------- |
-| SOL-0       | 1   | Very Low | None         | Slow        | —        | Tutorial. First system.                       |
-| ECHO-1      | 1   | Low      | None         | Medium      | —        | First rendezvous skill check.                 |
-| DRIFT-2     | 1   | Near-0   | None         | Very slow   | —        | Pure RCS/finesse, almost no gravity.          |
-| VOID-4      | 1   | Medium   | Low          | Fast        | I        | First tidal threat. Hull I required.          |
-| TWIN-I      | 2   | Medium   | Low          | Medium      | I        | Figure-8 gravity zone.                        |
-| TIDE-5      | 1   | High     | Medium       | Fast        | II       | Relay in tight orbit. Hull II required.       |
-| TWIN-II     | 2   | High     | Medium       | Fast        | II       | Chaotic dual-BH field.                        |
-| TRIAD-I     | 3   | High     | Medium       | Variable    | II       | 3 relays, deliver to all 3.                   |
-| DEEP-8      | 1   | Extreme  | High         | Very fast   | III      | Hull III required or timer &lt; 60s.          |
-| SINGULARITY | 1   | Extreme+ | Extreme      | Near-event  | III      | Final system. Full upgrades strongly advised. |
+| ID | BH | Gravity | Tidal Rating | Relay speed | Hull req | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| SOL-0 | 1 | Very Low | None | Slow | — | Tutorial. First system. |
+| ECHO-1 | 1 | Low | None | Medium | — | First rendezvous skill check. |
+| DRIFT-2 | 1 | Near-0 | None | Very slow | — | Pure RCS/finesse, almost no gravity. |
+| VOID-4 | 1 | Medium | Low | Fast | I | First tidal threat. Hull I required. |
+| TWIN-I | 2 | Medium | Low | Medium | I | Figure-8 gravity zone. |
+| TIDE-5 | 1 | High | Medium | Fast | II | Relay in tight orbit. Hull II required. |
+| TWIN-II | 2 | High | Medium | Fast | II | Chaotic dual-BH field. |
+| TRIAD-I | 3 | High | Medium | Variable | II | 3 relays, deliver to all 3. |
+| DEEP-8 | 1 | Extreme | High | Very fast | III | Hull III required or timer &lt; 60s. |
+| SINGULARITY | 1 | Extreme+ | Extreme | Near-event | III | Final system. Full upgrades strongly advised. |
 
 ### System map screen
 
@@ -139,11 +139,11 @@ Blackhole systems emit intense tidal forces. Without adequate shielding, the pro
 - If `system.tidalRating > ship.tidalShielding`, a **decay timer** activates on entry.
 - The bigger the gap, the shorter the timer.
 
-| Gap      | Timer    | Notes                                    |
-| -------- | -------- | ---------------------------------------- |
-| 1 level  | \~5 min  | Tight but doable                         |
+| Gap | Timer | Notes |
+| --- | --- | --- |
+| 1 level | \~5 min | Tight but doable |
 | 2 levels | \~90 sec | Very difficult, requires tight execution |
-| 3 levels | \~30 sec | Near-impossible, effectively gated       |
+| 3 levels | \~30 sec | Near-impossible, effectively gated |
 
 - Timer is shown as a red countdown bar on the HUD, pulsing when &lt; 30s.
 - In **DEAD SIGNAL**: timer reaches 0 = game over. In **RELAY**: you're ejected back to the system entry point.
@@ -207,14 +207,14 @@ The trip between systems is simulated in real physics — no loading screen, no 
 
 Like KSP's heading lock modes. When active, the ship auto-rotates to face the chosen reference direction (uses monergol).
 
-| Mode        | Icon | Direction                    | Unlock tier |
-| ----------- | ---- | ---------------------------- | ----------- |
-| Manual      | —    | Player-controlled            | Always      |
-| Prograde    | ⊙→   | Velocity vector direction    | Tier 2      |
-| Retrograde  | ⊙←   | Opposite velocity vector     | Tier 2      |
-| Radial In   | ⊙↓   | Toward nearest BH            | Tier 3      |
-| Anti-Radial | ⊙↑   | Away from nearest BH         | Tier 3      |
-| Maneuver    | ⊙△   | Toward planned maneuver node | Tier 4      |
+| Mode | Icon | Direction | Unlock tier |
+| --- | --- | --- | --- |
+| Manual | — | Player-controlled | Always |
+| Prograde | ⊙→ | Velocity vector direction | Tier 2 |
+| Retrograde | ⊙← | Opposite velocity vector | Tier 2 |
+| Radial In | ⊙↓ | Toward nearest BH | Tier 3 |
+| Anti-Radial | ⊙↑ | Away from nearest BH | Tier 3 |
+| Maneuver | ⊙△ | Toward planned maneuver node | Tier 4 |
 
 - Heading lock button group appears in the cockpit Flight Ctrl section (replaces manual rotation only when locked).
 - Pressing a rotation key while locked disengages lock (falls back to manual).
@@ -248,11 +248,13 @@ When ship enters **docking range** (≤ 0.05 wu from relay), docking mode activa
 
 ## MFD Screens
 
-### Tutorial MFD (free in RELAY / FREE FLIGHT, locked in DEAD SIGNAL)
+### Tutorial MFD (Independent — Always visible except in DEAD SIGNAL)
+
+This is a dedicated MFD located separately from the standard slots. It is dynamic and context-aware.
 
 Two manual buttons at the top: `[ APPROACH ]` and `[ ESCAPE ]`. Auto-switches based on context (near a relay = APPROACH, far from relay = ESCAPE).
 
-Each mode shows a numbered checklist. Completed steps are crossed out with a dim color.
+Each mode shows a numbered checklist. Completed steps are crossed out. It provides real-time guidance (e.g., "Burn for 50 m/s more", "Point at prograde marker").
 
 ```
 ╔══════════════════════════════╗
@@ -269,45 +271,22 @@ Each mode shows a numbered checklist. Completed steps are crossed out with a dim
 ╚══════════════════════════════╝
 ```
 
-```
-╔══════════════════════════════╗
-║  NAV GUIDE         [ESCAPE]  ║
-╠══════════════════════════════╣
-║  ✓ 1. Point prograde         ║
-║  ► 2. Burn until line green  ║
-║    3. Cut engine             ║
-║    4. Wait for system entry  ║
-╠══════════════════════════════╣
-║  TRAJECTORY: BOUND           ║
-║  Burn for: ~8s more          ║
-╚══════════════════════════════╝
-```
+### Standard MFD Slots (1 at start, 2 with upgrade)
 
-### Approach MFD (unlockable — Tier 3)
-
-High-refresh every frame. Shows relative motion data during docking.
-
-```
-╔══════════════════════════════╗
-║  APPROACH                    ║
-╠══════════════════════════════╣
-║  REL. SPEED   0.042 wu/s     ║
-║  CLOSING      ▼  0.018 wu/s  ║
-║  RANGE        0.031 wu       ║
-╠══════════════════════════════╣
-║  RCS THRUST                  ║
-║   FWD/AFT   [══●══════]  +2  ║
-║   L/R       [═══════●══]  -4 ║
-╠══════════════════════════════╣
-║  DOCKING MODE  ■ ACTIVE      ║
-╚══════════════════════════════╝
-```
+These slots can host any of the standard MFD views (Velocity, Attitude, Telemetry, Radar, Approach). The player toggles which view is active in each slot.
 
 ---
 
 ## Tech Tree
 
 Single interweaved tree. PROPULSION nodes (left) and SYSTEMS nodes (right) alternate, with cross-nodes between tiers that require one from each side. Unlock cost in **parts**.
+
+**Refund Policy**: All upgrades can be refunded at 100% of their cost at any time, allowing players to reconfigure their ship for specific missions (e.g., swapping a large fuel tank for better RCS in a low-gravity system).
+
+**Visual Evolution**: The ship sprite updates in real-time as upgrades are purchased:
+- **Thrust upgrades**: Enhance engine nozzle/glow.
+- **Hull upgrades**: Add armor plating / change hull color.
+- **Fuel upgrades**: Visible external tanks or elongated fuselage.
 
 ```
                         ┌──── ROOT ────┐
@@ -347,33 +326,33 @@ Single interweaved tree. PROPULSION nodes (left) and SYSTEMS nodes (right) alter
 
 ### Node descriptions
 
-| Node          | Parts | Effect                                                            |
-| ------------- | ----- | ----------------------------------------------------------------- |
-| THRUST I      | 1     | Thrust 40%                                                        |
-| AUTO-STAB     | 1     | Angular velocity damping toggle                                   |
-| HULL I        | 2     | Tidal Shielding I — unlocks systems with Low tidal rating         |
-| L-ERGOL I     | 1     | +100 tank capacity (200 total)                                    |
-| PROGRADE LOCK | 1     | Heading lock: prograde + retrograde modes                         |
-| TRAJ 500      | 1     | Trajectory prediction 500 steps                                   |
-| THRUST II     | 1     | Thrust 60%                                                        |
-| RETRO BURN    | 2     | Auto retrograde burn system (requires Auto-Stab + Prograde Lock)  |
-| HULL II       | 2     | Tidal Shielding II — unlocks systems with Medium tidal rating     |
-| RCS BOOST I   | 1     | RCS power 60%                                                     |
-| APPROACH MFD  | 1     | Unlocks Approach MFD screen                                       |
-| TRAJ 1K       | 2     | Trajectory prediction 1000 steps                                  |
-| L-ERGOL II    | 2     | +150 tank capacity (350 total)                                    |
-| RADIAL LOCK   | 2     | Heading lock: radial + anti-radial modes (requires Prograde Lock) |
-| EMERG RES     | 2     | Receive 50 bonus L-Ergol on each successful dock                  |
-| THRUST III    | 2     | Thrust 80%                                                        |
-| 2ND MFD SLOT  | 2     | Two MFDs visible simultaneously                                   |
-| HULL III      | 3     | Tidal Shielding III — unlocks systems with High/Extreme tidal     |
-| RCS BOOST II  | 2     | RCS power 80%                                                     |
-| MANEUVER NODE | 3     | Place delta-V nodes on trajectory; heading lock: maneuver mode    |
-| TRAJ 5K       | 2     | Trajectory prediction 5000 steps                                  |
-| MONO TANK II  | 2     | +40 monergol capacity (100 total)                                 |
-| TIDAL SENSOR  | 2     | Map overlay showing decay timer preview before entering system    |
-| THRUST IV     | 3     | Thrust 100%                                                       |
-| L-ERGOL III   | 3     | +150 tank capacity (500 total)                                    |
+| Node | Parts | Effect |
+| --- | --- | --- |
+| THRUST I | 1 | Thrust 40% |
+| AUTO-STAB | 1 | Angular velocity damping toggle |
+| HULL I | 2 | Tidal Shielding I — unlocks systems with Low tidal rating |
+| L-ERGOL I | 1 | +100 tank capacity (200 total) |
+| PROGRADE LOCK | 1 | Heading lock: prograde + retrograde modes |
+| TRAJ 500 | 1 | Trajectory prediction 500 steps |
+| THRUST II | 1 | Thrust 60% |
+| RETRO BURN | 2 | Auto retrograde burn system (requires Auto-Stab + Prograde Lock) |
+| HULL II | 2 | Tidal Shielding II — unlocks systems with Medium tidal rating |
+| RCS BOOST I | 1 | RCS power 60% |
+| APPROACH MFD | 1 | Unlocks Approach MFD screen |
+| TRAJ 1K | 2 | Trajectory prediction 1000 steps |
+| L-ERGOL II | 2 | +150 tank capacity (350 total) |
+| RADIAL LOCK | 2 | Heading lock: radial + anti-radial modes (requires Prograde Lock) |
+| EMERG RES | 2 | Receive 50 bonus L-Ergol on each successful dock |
+| THRUST III | 2 | Thrust 80% |
+| 2ND MFD SLOT | 2 | Two MFDs visible simultaneously |
+| HULL III | 3 | Tidal Shielding III — unlocks systems with High/Extreme tidal |
+| RCS BOOST II | 2 | RCS power 80% |
+| MANEUVER NODE | 3 | Place delta-V nodes on trajectory; heading lock: maneuver mode |
+| TRAJ 5K | 2 | Trajectory prediction 5000 steps |
+| MONO TANK II | 2 | +40 monergol capacity (100 total) |
+| TIDAL SENSOR | 2 | Map overlay showing decay timer preview before entering system |
+| THRUST IV | 3 | Thrust 100% |
+| L-ERGOL III | 3 | +150 tank capacity (500 total) |
 
 ---
 
@@ -393,6 +372,8 @@ Single interweaved tree. PROPULSION nodes (left) and SYSTEMS nodes (right) alter
 - **Decay timer bar** — appears in SHIP STATUS section when tidal threat is active, red + pulsing.
 - **MAP button** — opens galaxy map overlay (simulation continues, pause separately).
 - **TECH TREE button** — opens tech tree overlay (simulation continues).
+- **Secondary MFD Slot** — becomes visible in the cockpit layout once the "2ND MFD SLOT" upgrade is purchased.
+- **Tutorial MFD** — a dedicated, permanent screen in the cockpit (hidden in DEAD SIGNAL mode).
 
 ---
 

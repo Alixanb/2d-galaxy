@@ -30,17 +30,6 @@ docs/
 
 ## Development workflow (Claude Code)
 
-This project uses [Claude Code](https://claude.ai/code) with an atomic step methodology.
+Type `/step` in Claude Code to implement the next step automatically (tsc + visual verify + commit).
 
-**The rule:** one feature at a time, visual test before every commit.
-
-1. Open `.claude/Plan.md` — find the first unchecked step `[ ]`
-2. Implement only that step (≤ 2 files touched)
-3. `npx tsc --noEmit` must pass
-4. Verify the step's **Test** criterion in the browser (`pnpm dev`)
-5. Commit, check the box `[x]`, push
-6. Repeat
-
-Claude entry point: `CLAUDE.md` (auto-loaded each session, not committed).
-
-**Why atomic steps?** A previous attempt implemented 10 phases (~2000 lines) without testing. Three silent bugs survived `tsc`: broken orbit physics, unwired UI buttons, wrong game state. All reverted. Atomic steps + visual tests prevent this class of failure.
+Or manually: find the first `[ ]` in `.claude/Plan.md`, implement it (≤ 2 files), pass `npx tsc --noEmit`, verify in the browser, commit, push.

@@ -203,29 +203,28 @@ export default class Ship {
         Ship.THRUSTPOWER - Ship.DEFAULT_THRUSTPOWER * 0.05,
       );
     }
-    if (this.keys["e"] && !this.dockingMode) {
-      Ship.RADIALPOWER = Math.min(
-        Ship.DEFAULT_RADIALPOWER * 5,
-        Ship.RADIALPOWER + Ship.DEFAULT_RADIALPOWER * 0.05,
-      );
-    }
-    if (this.keys["q"] && !this.dockingMode) {
-      Ship.RADIALPOWER = Math.max(
-        0,
-        Ship.RADIALPOWER - Ship.DEFAULT_RADIALPOWER * 0.05,
-      );
-    }
-
     this.thrusterPct = Ship.THRUSTPOWER / Ship.DEFAULT_THRUSTPOWER;
 
     if (!this.dockingMode) {
+      if (this.keys["e"]) {
+        Ship.RADIALPOWER = Math.min(
+          Ship.DEFAULT_RADIALPOWER * 5,
+          Ship.RADIALPOWER + Ship.DEFAULT_RADIALPOWER * 0.05,
+        );
+      }
+      if (this.keys["q"]) {
+        Ship.RADIALPOWER = Math.max(
+          0,
+          Ship.RADIALPOWER - Ship.DEFAULT_RADIALPOWER * 0.05,
+        );
+      }
       // RCS rotation — consumes monergol
-      if (this.keys["ArrowRight"] && this.monergol > 0) {
+      if (this.keys["ArrowRight"] && this.monergol > 0 && Ship.RADIALPOWER > 0) {
         this.angluarVel += Ship.RADIALPOWER;
         this.monergol -= Ship.MONERGOL_RATE * dt;
         this.headingLock = 'manual';
       }
-      if (this.keys["ArrowLeft"] && this.monergol > 0) {
+      if (this.keys["ArrowLeft"] && this.monergol > 0 && Ship.RADIALPOWER > 0) {
         this.angluarVel -= Ship.RADIALPOWER;
         this.monergol -= Ship.MONERGOL_RATE * dt;
         this.headingLock = 'manual';
@@ -253,9 +252,10 @@ export default class Ship {
       this.headingLock === 'manual'
     ) {
       if (this.monergol > 0 && Math.abs(this.angluarVel) > 0) {
-        const damping = Math.min(Math.abs(this.angluarVel), Ship.RADIALPOWER);
+        const safeRad = Math.max(Ship.RADIALPOWER, Ship.DEFAULT_RADIALPOWER * 0.1);
+        const damping = Math.min(Math.abs(this.angluarVel), safeRad);
         this.angluarVel -= damping * Math.sign(this.angluarVel);
-        this.monergol -= (damping / Ship.RADIALPOWER) * Ship.MONERGOL_RATE * dt;
+        this.monergol -= (damping / safeRad) * Ship.MONERGOL_RATE * dt;
       }
     }
 
@@ -272,14 +272,15 @@ export default class Ship {
         while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
 
         // Align phase — requires monergol
-        if (this.retrogradePhase === "align" && this.monergol > 0) {
+        if (this.retrogradePhase === "align" && this.monergol > 0 && Ship.RADIALPOWER > 0) {
           if (Math.abs(angleDiff) < 0.05) {
             this.angle = targetAngle;
             this.angluarVel = 0;
             this.retrogradePhase = "burn";
           } else {
-            this.angluarVel = Math.sign(angleDiff) * 0.04;
-            this.monergol -= Ship.MONERGOL_RATE * dt;
+            // Faster align in retrograde burn
+            this.angluarVel = Math.sign(angleDiff) * Math.min(0.1, Ship.RADIALPOWER * 20);
+            this.monergol -= Ship.MONERGOL_RATE * dt * 2;
           }
         }
 
@@ -318,6 +319,8 @@ export default class Ship {
     this.vel = this.vel.add(this.getVelocity(dt));
     this.pos = this.pos.add(this.vel);
     this.angle += this.angluarVel;
+    while (this.angle > Math.PI) this.angle -= 2 * Math.PI;
+    while (this.angle < -Math.PI) this.angle += 2 * Math.PI;
 
     if (this.showPath) {
       this.predictPath(this.predictionInteration, dt);
@@ -325,7 +328,7 @@ export default class Ship {
   }
 
   private updateHeadingLock(dt: number): void {
-    if (this.headingLock === 'manual' || this.monergol <= 0 || this.retrogradeActive) return;
+    if (this.headingLock === 'manual' || this.monergol <= 0 || this.retrogradeActive || Ship.RADIALPOWER <= 0) return;
     let targetAngle: number;
     const bh = this.blackholes[0];
     if (this.headingLock === 'prograde' || this.headingLock === 'retrograde') {
@@ -342,10 +345,19 @@ export default class Ship {
     let diff = targetAngle - this.angle;
     while (diff > Math.PI) diff -= 2 * Math.PI;
     while (diff < -Math.PI) diff += 2 * Math.PI;
-    if (Math.abs(diff) < 0.005) { this.angle = targetAngle; this.angluarVel = 0; return; }
-    const rate = Math.sign(diff) * Math.min(Math.abs(diff), Ship.RADIALPOWER);
+    
+    if (Math.abs(diff) < 0.01) { 
+      this.angle = targetAngle; 
+      this.angluarVel = 0; 
+      return; 
+    }
+    
+    // Increased rotation speed for lock (20x)
+    const maxSpeed = Math.max(Ship.RADIALPOWER, Ship.DEFAULT_RADIALPOWER) * 20;
+    const rate = Math.sign(diff) * Math.min(Math.abs(diff), maxSpeed);
+    
     this.angluarVel = rate;
-    this.monergol -= (Math.abs(rate) / Ship.RADIALPOWER) * Ship.MONERGOL_RATE * dt * 0.1;
+    this.monergol -= Ship.MONERGOL_RATE * dt;
   }
 
   private updateDockingMode(dt: number): void {
@@ -377,18 +389,24 @@ export default class Ship {
       this.monergol -= Ship.MONERGOL_RATE * dt;
       this.rcsSideways = -1;
     }
-    if (this.keys["e"] && this.monergol > 0) {
-      this.angluarVel += Ship.RADIALPOWER;
+    const rotRate = Math.max(Ship.RADIALPOWER, Ship.DEFAULT_RADIALPOWER) * 8;
+    if (this.keys["e"] && this.monergol > 0 && Ship.RADIALPOWER > 0) {
+      this.angluarVel = Ship.RADIALPOWER * 8;
       this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.headingLock = 'manual';
     }
-    if (this.keys["q"] && this.monergol > 0) {
-      this.angluarVel -= Ship.RADIALPOWER;
+    if (this.keys["q"] && this.monergol > 0 && Ship.RADIALPOWER > 0) {
+      this.angluarVel = -Ship.RADIALPOWER * 8;
       this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.headingLock = 'manual';
     }
-    if (!this.keys["q"] && !this.keys["e"] && Math.abs(this.angluarVel) > 0 && this.monergol > 0) {
-      const damping = Math.min(Math.abs(this.angluarVel), Ship.RADIALPOWER);
+    
+    // Only damp if no lock is active
+    if (this.headingLock === 'manual' && !this.keys["q"] && !this.keys["e"] && Math.abs(this.angluarVel) > 0 && this.monergol > 0) {
+      const safeRad = Math.max(Ship.RADIALPOWER, Ship.DEFAULT_RADIALPOWER * 0.1);
+      const damping = Math.min(Math.abs(this.angluarVel), safeRad);
       this.angluarVel -= damping * Math.sign(this.angluarVel);
-      this.monergol -= (damping / Ship.RADIALPOWER) * Ship.MONERGOL_RATE * dt;
+      this.monergol -= (damping / safeRad) * Ship.MONERGOL_RATE * dt;
     }
   }
 

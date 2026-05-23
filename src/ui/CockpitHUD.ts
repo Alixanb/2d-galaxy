@@ -309,9 +309,20 @@ export default class CockpitHUD {
       this.onPauseCb(isPaused);
     });
 
+    const dockBtn = document.createElement("button");
+    dockBtn.className = "autostab-btn";
+    dockBtn.textContent = "DOCK MODE";
+    dockBtn.addEventListener("click", () => {
+      const ship = this.galaxy.ship;
+      if (!ship) return;
+      ship.dockingMode = !ship.dockingMode;
+      dockBtn.classList.toggle("autostab-active", ship.dockingMode);
+    });
+
     wrap.appendChild(this.autoStabBtn);
     wrap.appendChild(this.retroBtn);
     wrap.appendChild(pauseBtn);
+    wrap.appendChild(dockBtn);
     section.appendChild(wrap);
 
     const hlkDefs: { label: string; mode: HeadingLockMode; minTier: number }[] = [

@@ -54,6 +54,9 @@ export default class Ship {
   systemBoundaryRadius: number = 1.0;
   headingLock: HeadingLockMode = 'manual';
   headingLockTier: 0 | 1 | 2 | 3 = 2;
+  dockingMode: boolean = false;
+  rcsForward: number = 0;
+  rcsSideways: number = 0;
 
   constructor(
     pos: Vec2,
@@ -200,13 +203,13 @@ export default class Ship {
         Ship.THRUSTPOWER - Ship.DEFAULT_THRUSTPOWER * 0.05,
       );
     }
-    if (this.keys["e"]) {
+    if (this.keys["e"] && !this.dockingMode) {
       Ship.RADIALPOWER = Math.min(
         Ship.DEFAULT_RADIALPOWER * 5,
         Ship.RADIALPOWER + Ship.DEFAULT_RADIALPOWER * 0.05,
       );
     }
-    if (this.keys["q"]) {
+    if (this.keys["q"] && !this.dockingMode) {
       Ship.RADIALPOWER = Math.max(
         0,
         Ship.RADIALPOWER - Ship.DEFAULT_RADIALPOWER * 0.05,
@@ -215,32 +218,35 @@ export default class Ship {
 
     this.thrusterPct = Ship.THRUSTPOWER / Ship.DEFAULT_THRUSTPOWER;
 
-    // RCS rotation — consumes monergol
-    if (this.keys["ArrowRight"] && this.monergol > 0) {
-      this.angluarVel += Ship.RADIALPOWER;
-      this.monergol -= Ship.MONERGOL_RATE * dt;
-      this.headingLock = 'manual';
-    }
-    if (this.keys["ArrowLeft"] && this.monergol > 0) {
-      this.angluarVel -= Ship.RADIALPOWER;
-      this.monergol -= Ship.MONERGOL_RATE * dt;
-      this.headingLock = 'manual';
-    }
+    if (!this.dockingMode) {
+      // RCS rotation — consumes monergol
+      if (this.keys["ArrowRight"] && this.monergol > 0) {
+        this.angluarVel += Ship.RADIALPOWER;
+        this.monergol -= Ship.MONERGOL_RATE * dt;
+        this.headingLock = 'manual';
+      }
+      if (this.keys["ArrowLeft"] && this.monergol > 0) {
+        this.angluarVel -= Ship.RADIALPOWER;
+        this.monergol -= Ship.MONERGOL_RATE * dt;
+        this.headingLock = 'manual';
+      }
 
-    // Main engine — consumes liquid ergol
-    if (this.keys["ArrowUp"] && this.liquidErgol > 0) {
-      this.status = "thrusting";
-      const ax = Ship.THRUSTPOWER * Math.sin(this.angle);
-      const ay = -Ship.THRUSTPOWER * Math.cos(this.angle);
-      this.vel = this.vel.add(new Vec2(ax, ay));
-      this.liquidErgol -= Ship.LIQUID_ERGOL_RATE * dt;
-    } else {
-      this.status = "idle";
+      // Main engine — consumes liquid ergol
+      if (this.keys["ArrowUp"] && this.liquidErgol > 0) {
+        this.status = "thrusting";
+        const ax = Ship.THRUSTPOWER * Math.sin(this.angle);
+        const ay = -Ship.THRUSTPOWER * Math.cos(this.angle);
+        this.vel = this.vel.add(new Vec2(ax, ay));
+        this.liquidErgol -= Ship.LIQUID_ERGOL_RATE * dt;
+      } else {
+        this.status = "idle";
+      }
     }
 
     // Auto-stab — consumes monergol only while actively damping
     if (
       this.autoStab &&
+      !this.dockingMode &&
       !this.keys["ArrowRight"] &&
       !this.keys["ArrowLeft"] &&
       !this.retrogradeActive &&
@@ -301,6 +307,7 @@ export default class Ship {
     }
 
     this.updateHeadingLock(dt);
+    if (this.dockingMode) this.updateDockingMode(dt);
 
     this.liquidErgol = Math.max(
       0,
@@ -339,6 +346,50 @@ export default class Ship {
     const rate = Math.sign(diff) * Math.min(Math.abs(diff), Ship.RADIALPOWER);
     this.angluarVel = rate;
     this.monergol -= (Math.abs(rate) / Ship.RADIALPOWER) * Ship.MONERGOL_RATE * dt * 0.1;
+  }
+
+  private updateDockingMode(dt: number): void {
+    this.rcsForward = 0;
+    this.rcsSideways = 0;
+    this.status = "idle";
+    const t = Ship.THRUSTPOWER * 0.2;
+    const fwdX = Math.sin(this.angle);
+    const fwdY = -Math.cos(this.angle);
+    const rgtX = Math.cos(this.angle);
+    const rgtY = Math.sin(this.angle);
+
+    if (this.keys["ArrowUp"] && this.monergol > 0) {
+      this.vel = this.vel.add(new Vec2(fwdX * t, fwdY * t));
+      this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.rcsForward = 1;
+      this.status = "thrusting";
+    } else if (this.keys["ArrowDown"] && this.monergol > 0) {
+      this.vel = this.vel.add(new Vec2(-fwdX * t, -fwdY * t));
+      this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.rcsForward = -1;
+    }
+    if (this.keys["ArrowRight"] && this.monergol > 0) {
+      this.vel = this.vel.add(new Vec2(rgtX * t, rgtY * t));
+      this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.rcsSideways = 1;
+    } else if (this.keys["ArrowLeft"] && this.monergol > 0) {
+      this.vel = this.vel.add(new Vec2(-rgtX * t, -rgtY * t));
+      this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.rcsSideways = -1;
+    }
+    if (this.keys["e"] && this.monergol > 0) {
+      this.angluarVel += Ship.RADIALPOWER;
+      this.monergol -= Ship.MONERGOL_RATE * dt;
+    }
+    if (this.keys["q"] && this.monergol > 0) {
+      this.angluarVel -= Ship.RADIALPOWER;
+      this.monergol -= Ship.MONERGOL_RATE * dt;
+    }
+    if (!this.keys["q"] && !this.keys["e"] && Math.abs(this.angluarVel) > 0 && this.monergol > 0) {
+      const damping = Math.min(Math.abs(this.angluarVel), Ship.RADIALPOWER);
+      this.angluarVel -= damping * Math.sign(this.angluarVel);
+      this.monergol -= (damping / Ship.RADIALPOWER) * Ship.MONERGOL_RATE * dt;
+    }
   }
 
   collectFuel(type: "liquid-ergol" | "monergol", amount: number): void {

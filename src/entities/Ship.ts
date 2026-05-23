@@ -337,7 +337,7 @@ export default class Ship {
       const subDt = dt / sub;
       for (let s = 0; s < sub; s++) {
         vel = vel.add(this.getVelocity(subDt, pos));
-        pos = pos.add(new Vec2(vel.x / sub, vel.y / sub));
+        pos = pos.add(vel.multiply(subDt));
       }
 
       this.path.push(pos.clone());

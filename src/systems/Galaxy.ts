@@ -2,6 +2,7 @@ import { clamp } from "../core/Utils";
 import Vec2 from "../core/Vec2";
 import BlackHole from "../entities/BlackHole";
 import FuelDepot from "../entities/FuelDepot";
+import RelayStation from "../entities/RelayStation";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
 import {
@@ -49,6 +50,7 @@ export default class Galaxy {
   stars: Star[];
   blackholes: BlackHole[];
   fuelDepots: FuelDepot[] = [];
+  relayStations: RelayStation[] = [];
   ship?: Ship;
   size: number;
   shaderProgram: ShaderProgram;
@@ -60,7 +62,10 @@ export default class Galaxy {
     blackholes: BlackHole[],
     ship?: Ship,
     nStar: number = 100,
-    size: number = 0.7
+    size: number = 0.7,
+    relayCount: number = 1,
+    relayOrbitRadius: number = 0.30,
+    relayOrbitSpeed: number = 0.20
   ) {
     this.canvas2d = canvas2d;
     this.canvasWebGL = canvasWebGL;
@@ -105,6 +110,16 @@ export default class Galaxy {
     this.shaderProgram.compile();
 
     this.spawnFuelDepots();
+    this.spawnRelays(relayCount, relayOrbitRadius, relayOrbitSpeed);
+  }
+
+  private spawnRelays(count: number, orbitRadius: number, orbitSpeed: number): void {
+    const bh = this.blackholes[0];
+    if (!bh) return;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      this.relayStations.push(new RelayStation(bh.pos, orbitRadius, angle, orbitSpeed));
+    }
   }
 
   private spawnFuelDepots(): void {
@@ -182,6 +197,7 @@ export default class Galaxy {
       }
     }
     this.fuelDepots = this.fuelDepots.filter(d => !d.collected);
+    for (const relay of this.relayStations) relay.update(dt);
   }
 
   draw() {
@@ -199,6 +215,7 @@ export default class Galaxy {
     for (const depot of this.fuelDepots) {
       depot.draw(this.canvas2d, this.ship?.pos);
     }
+    for (const relay of this.relayStations) relay.draw(this.canvas2d);
     if (this.ship) this.ship.draw(this.canvas2d);
   }
 

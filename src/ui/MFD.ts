@@ -64,7 +64,10 @@ export default class MFD {
     bottomStrip.className = "mfd-btns-bottom";
 
     const osb1 = this.makeOSB(() => this.setView("home"));
-    const osb2 = this.makeOSB(() => this.setView("guide"));
+    const osb2 = this.makeOSB(() => {
+      if (this.currentViewKey === "guide") { this.views.guide.onOSB(2); this.updateOSBs(); }
+      else this.setView("guide");
+    });
     const osb3 = this.makeOSB(() => this.onOSB(3));
     const osb4 = this.makeOSB(() => this.onOSB(4));
     const osb5 = this.makeOSB(() => this.onOSB(5));
@@ -169,13 +172,23 @@ export default class MFD {
         lbl.classList.add("active");
       }
       if (i === 1) {
+        const inGuide = this.currentViewKey === "guide";
+        const guideTab = (this.views.guide as import("./mfd/views/GuideView").GuideView).tab;
         osb.className = "mfd-osb";
         lbl.className = "mfd-lbl";
-        lbl.textContent = "GUIDE";
-        if (this.currentViewKey === "guide") {
-          osb.classList.add("active");
-          lbl.classList.add("active");
+        if (inGuide) {
+          lbl.textContent = "APPR";
+          if (guideTab === "approach") { osb.classList.add("modifier-on"); lbl.classList.add("modifier-on"); }
+        } else {
+          lbl.textContent = "GUIDE";
         }
+      }
+      if (i === 2 && this.currentViewKey === "guide") {
+        const guideTab = (this.views.guide as import("./mfd/views/GuideView").GuideView).tab;
+        osb.className = "mfd-osb";
+        lbl.className = "mfd-lbl";
+        lbl.textContent = "ESC";
+        if (guideTab === "escape") { osb.classList.add("modifier-on"); lbl.classList.add("modifier-on"); }
       }
       if (i === 3 && this.currentViewKey === "tel") {
         osb.classList.add("active");

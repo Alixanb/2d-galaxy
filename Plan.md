@@ -75,9 +75,9 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 6 RelayStation entity + Galaxy spawning
 
-**Files:** `src/entities/RelayStation.ts` (new), `src/systems/Galaxy.ts`
-**What:** Create `RelayStation`: hex outline draw (6-sided polygon, `#50b6c9`), pulsing inner dot, orbit update (`orbitAngle += orbitSpeed * dt`), `projectPosition(steps, dt)` for encounter math. Galaxy spawns relay(s) from `SystemConfig.relayCount / relayOrbitRadius / relayOrbitSpeed`.
-**Test:** Hexagonal relay station visible, orbiting the black hole.
+**Files:** `src/entities/RelayStation.ts`, `src/systems/Galaxy.ts`
+**What:** Create `RelayStation`: orbit update (`orbitAngle += orbitSpeed * dt`), `projectPosition(steps, dt)` for encounter math. Draw using `drawRelayStation(ctx, size, tidalLevel)` from `src/sprites/relay.ts` cached to an offscreen canvas. Galaxy spawns relay(s) from `SystemConfig.relayCount / relayOrbitRadius / relayOrbitSpeed` and passes the system's `TidalRating` mapped to a `TidalLevel`.
+**Test:** Relay station visible, orbiting the black hole, using the correct sprite for the current system's tidal level.
 
 ---
 
@@ -204,8 +204,8 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 ### Step 22 Visual Evolution: Sprite variations
 
 **Files:** `src/entities/Ship.ts`
-**What:** In `Ship.draw()`, update sprite rendering logic to reflect upgrade tiers. Hull plating I/II/III changes color/detail. Thrust upgrades change exhaust size/intensity. External tanks appear when L-ERGOL I+ is purchased.
-**Test:** Buying HULL I changes ship appearance visibly. Refunding it reverts appearance.
+**What:** In `Ship.draw()`, use `drawProbeDynamic(ctx, t, size, upgrades)` from `src/sprites/probe.ts`. Implement an `onUpgradeChanged` handler (or re-render on demand) to update an offscreen canvas caching the probe sprite, passing the mapped tech tree state (hull, thrust, ergol, rcs, avionics) into the `ProbeUpgrades` interface.
+**Test:** Buying upgrades visibly changes the ship's sprite. Refunding them reverts appearance.
 
 ---
 

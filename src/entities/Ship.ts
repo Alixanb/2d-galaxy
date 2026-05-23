@@ -391,12 +391,12 @@ export default class Ship {
     }
     const rotRate = Math.max(Ship.RADIALPOWER, Ship.DEFAULT_RADIALPOWER) * 8;
     if (this.keys["e"] && this.monergol > 0 && Ship.RADIALPOWER > 0) {
-      this.angluarVel = Ship.RADIALPOWER * 8;
+      this.angluarVel = rotRate;
       this.monergol -= Ship.MONERGOL_RATE * dt;
       this.headingLock = 'manual';
     }
     if (this.keys["q"] && this.monergol > 0 && Ship.RADIALPOWER > 0) {
-      this.angluarVel = -Ship.RADIALPOWER * 8;
+      this.angluarVel = -rotRate;
       this.monergol -= Ship.MONERGOL_RATE * dt;
       this.headingLock = 'manual';
     }

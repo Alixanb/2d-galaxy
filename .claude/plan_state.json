@@ -127,6 +127,12 @@
       "title": "Tech upgrades apply to live ship",
       "status": "pending",
       "files": ["src/ui/TechTree.ts", "src/entities/Ship.ts"]
+    },
+    {
+      "n": 22,
+      "title": "Visual Evolution: Sprite variations",
+      "status": "pending",
+      "files": ["src/entities/Ship.ts", "src/sprites/probe.ts"]
     }
   ]
 }

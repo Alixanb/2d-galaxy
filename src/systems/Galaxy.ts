@@ -6,12 +6,18 @@ import RelayStation from "../entities/RelayStation";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
 import type { SystemConfig } from "../data/systems";
+import type { TidalLevel } from "../sprites/relay";
+import type { TidalRating } from "../core/GameState";
 import {
   Shader,
   ShaderProgram,
   type Canvas2d,
   type CanvasWebGL,
 } from "./Canvas";
+
+const RATING_TO_LEVEL: Record<TidalRating, TidalLevel> = {
+  None: 0, Low: 1, Medium: 2, High: 3, Extreme: 4
+};
 
 // Palette colors as [r, g, b] in 0-1 range
 const PALETTE = {
@@ -122,12 +128,12 @@ export default class Galaxy {
     }
   }
 
-  private spawnRelays(count: number, orbitRadius: number, orbitSpeed: number): void {
+  private spawnRelays(count: number, orbitRadius: number, orbitSpeed: number, tidalLevel: TidalLevel = 0): void {
     const bh = this.blackholes[0];
     if (!bh) return;
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
-      this.relayStations.push(new RelayStation(bh.pos, orbitRadius, angle, orbitSpeed));
+      this.relayStations.push(new RelayStation(bh.pos, orbitRadius, angle, orbitSpeed, tidalLevel));
     }
   }
 
@@ -200,7 +206,7 @@ export default class Galaxy {
     for (const bh of this.blackholes) bh.mass = 0;
     this.relayStations = [];
     this.dockedRelays = new Set();
-    this.spawnRelays(config.relayCount, config.relayOrbitRadius, config.relayOrbitSpeed);
+    this.spawnRelays(config.relayCount, config.relayOrbitRadius, config.relayOrbitSpeed, RATING_TO_LEVEL[config.tidalRating]);
     if (this.ship && this.relayStations.length > 0) this.ship.targetRelay = this.relayStations[0];
     if (this.ship) {
       const tmp = new BlackHole(new Vec2(0, 0), config.bhMass, false);

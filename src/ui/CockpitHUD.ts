@@ -48,8 +48,11 @@ export default class CockpitHUD {
     panel.appendChild(this.buildSimParams());
     panel.appendChild(this.buildPredictionSection());
     panel.appendChild(this.buildFlightCtrlSection());
-    panel.appendChild(this.buildHeadingSection());
-    panel.appendChild(this.buildStatusSection());
+    const lastCol = document.createElement("div");
+    lastCol.style.cssText = "display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)";
+    lastCol.appendChild(this.buildHeadingSection());
+    lastCol.appendChild(this.buildStatusSection());
+    panel.appendChild(lastCol);
     this.buildHelpButton();
 
     document.body.appendChild(panel);

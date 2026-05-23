@@ -1230,6 +1230,7 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .heading-rows {

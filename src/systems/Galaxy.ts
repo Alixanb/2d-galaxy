@@ -24,6 +24,7 @@ export default class Galaxy {
   size: number;
   transitMode = false;
   onDock: (relay: RelayStation) => void = () => {};
+  onDeath: () => void = () => {};
 
   private entityManager: EntityManager;
   private starRenderer: StarRenderer;
@@ -40,8 +41,7 @@ export default class Galaxy {
     nStar: number = 100,
     size: number = 0.7,
     relayCount: number = 1,
-    relayOrbitRadius: number = 0.30,
-    relayOrbitSpeed: number = 0.20
+    relayOrbitRadius: number = 0.30
   ) {
     this.canvas2d = canvas2d;
     this.canvasWebGL = canvasWebGL;
@@ -55,7 +55,7 @@ export default class Galaxy {
 
     this.entityManager.createStars(nStar, this.size, this.canvas2d, this.blackholes);
     this.entityManager.spawnFuelDepots(this.blackholes);
-    this.entityManager.spawnRelays(this.blackholes, relayCount, relayOrbitRadius, relayOrbitSpeed);
+    this.entityManager.spawnRelays(this.blackholes, relayCount, relayOrbitRadius);
     
     if (this.ship && this.entityManager.relayStations.length > 0) {
       this.ship.targetRelay = this.entityManager.relayStations[0];
@@ -101,7 +101,7 @@ export default class Galaxy {
     
     this.entityManager.relayStations = [];
     this.dockedRelays = new Set();
-    this.entityManager.spawnRelays(this.blackholes, config.relayCount, config.relayOrbitRadius, config.relayOrbitSpeed, RATING_TO_LEVEL[config.tidalRating as keyof typeof RATING_TO_LEVEL]);
+    this.entityManager.spawnRelays(this.blackholes, config.relayCount, config.relayOrbitRadius, RATING_TO_LEVEL[config.tidalRating as keyof typeof RATING_TO_LEVEL]);
     
     if (this.ship && this.entityManager.relayStations.length > 0) {
       this.ship.targetRelay = this.entityManager.relayStations[0];
@@ -131,7 +131,7 @@ export default class Galaxy {
     this.entityManager.stars = this.entityManager.stars.filter((star) => !star.shouldDestroy);
     Star.MAX_VELOCITY = this.physics.updateStars(this.entityManager.stars, this.blackholes, dt);
 
-    this.physics.updateEntities(dt, this.ship, this.entityManager.fuelDepots, this.entityManager.relayStations, this.dockedRelays, (relay) => this.onDock(relay));
+    this.physics.updateEntities(dt, this.ship, this.entityManager.fuelDepots, this.entityManager.relayStations, this.dockedRelays, (relay) => this.onDock(relay), () => this.onDeath());
     this.entityManager.fuelDepots = this.entityManager.fuelDepots.filter(d => !d.collected);
   }
 

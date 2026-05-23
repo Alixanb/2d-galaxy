@@ -200,6 +200,14 @@ The **heading lock unlock** only grants the _automation_ ship auto-rotates to fa
 
 ---
 
+### Step 19 (Prep) Galaxy System Modularization (Refactoring)
+
+**Files:** `src/systems/Galaxy.ts`, `src/systems/galaxy/`
+**What:** Subdivided monolithic Galaxy.ts into specialized components: `GalaxyPhysics` (simulation logic), `StarRenderer` (WebGL), and `EntityManager` (entity lifecycle).
+**Status:** DONE
+
+---
+
 ### Step 16 MFD Guide view Approach tab
 
 **Files:** `src/ui/MFD.ts`

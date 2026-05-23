@@ -14,12 +14,20 @@ export class EntityManager {
 
   constructor() {}
 
-  spawnRelays(blackholes: BlackHole[], count: number, orbitRadius: number, orbitSpeed: number, tidalLevel: TidalLevel = 0): void {
+  spawnRelays(blackholes: BlackHole[], count: number, orbitRadius: number, tidalLevel: TidalLevel = 0): void {
     const bh = blackholes[0];
     if (!bh) return;
+
+    // Calculate circular orbit speed: v = sqrt(G_eff * M / r)
+    // where G_eff = Galaxy.G * Star.kGravity
+    const G_eff = 6.6743e-11 * (8.5 * 10e4);
+    const orbitalVel = Math.sqrt((G_eff * bh.mass) / orbitRadius);
+    const angularVel = orbitalVel / orbitRadius;
+
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
-      this.relayStations.push(new RelayStation(bh.pos, orbitRadius, angle, orbitSpeed, tidalLevel));
+      // We use the calculated angularVel
+      this.relayStations.push(new RelayStation(bh.pos, orbitRadius, angle, angularVel, tidalLevel));
     }
   }
 

@@ -57,6 +57,11 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     console.log(`Docked! +${currentConfig.partsReward} parts. Total: ${gameState.upgrades.parts}`);
   };
 
+  galaxy.onDeath = () => {
+    // For now death can just be an empty function as requested.
+    // console.log("Collision detected! Game Over.");
+  };
+
   let currentConfig = SYSTEMS.find(s => s.id === gameState.currentSystemId)!;
   let decayMax: number | null = getDecaySeconds(currentConfig.tidalRating, gameState.upgrades.hullLevel);
   let decayTimer: number | null = decayMax;

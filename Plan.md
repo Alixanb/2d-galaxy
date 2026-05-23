@@ -81,6 +81,14 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ---
 
+### Step 6.5 Relay Station Physics & Collision
+
+**Files:** `src/entities/RelayStation.ts`, `src/systems/galaxy/GalaxyPhysics.ts`, `src/data/systems.ts`, `src/main.ts`
+**What:** Refactor `RelayStation` to compute a realistic orbital velocity using $v = \sqrt{GM/r}$ (similar to Star) instead of arbitrary fixed speeds, converting linear velocity to angular velocity for its orbit. Increase `relayOrbitRadius` for `SOL-0` in `systems.ts` so it sits further from the black hole. Add circle-collision detection between `Ship` and `RelayStation` in `GalaxyPhysics.updateEntities()`. Add an empty `onDeath()` callback to `main.ts` and `Galaxy.ts` triggered upon collision.
+**Test:** The relay station moves at a logical speed, is further out on level 1, and flying directly into the relay station visually triggers the collision check (can be verified with a console.log or observing the empty callback hit).
+
+---
+
 ### Step 7 Pe/Ap markers on trajectory
 
 **Files:** `src/entities/Ship.ts`

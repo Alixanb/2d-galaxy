@@ -1639,14 +1639,14 @@ input[type="range"]:hover::-webkit-slider-thumb {
 /* --- Documentation Site Styles --- */
 .docs-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: #130e0e;
   color: #ece7cd;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 body.is-docs {
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .docs-sidebar {
@@ -1655,10 +1655,9 @@ body.is-docs {
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
   height: 100vh;
   background: #0a0808;
+  flex-shrink: 0;
 }
 
 .docs-logo h1 {
@@ -1723,6 +1722,7 @@ body.is-docs {
   padding: 4rem 6rem;
   max-width: 900px;
   line-height: 1.6;
+  overflow-y: auto;
 }
 
 .docs-content h1 {

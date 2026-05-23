@@ -176,6 +176,14 @@ The **heading lock unlock** only grants the _automation_ ship auto-rotates to fa
 
 ---
 
+### Step 16 (Prep) MFD Modularization (Refactoring)
+
+**Files:** `src/ui/MFD.ts`, `src/ui/mfd/`
+**What:** Subdivided monolithic MFD.ts into feature-based view components (Home, Vel, Att, Tel, Fuel, Radar) using a modular TypeScript architecture. Each view is now a standalone component implementing the `MFDView` interface.
+**Status:** DONE
+
+---
+
 ### Step 16 MFD Guide view Approach tab
 
 **Files:** `src/ui/MFD.ts`

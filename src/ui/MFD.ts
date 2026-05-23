@@ -7,6 +7,7 @@ import { TelemetryView } from "./mfd/views/TelemetryView";
 import { FuelView } from "./mfd/views/FuelView";
 import { RadarView } from "./mfd/views/RadarView";
 import { GuideView } from "./mfd/views/GuideView";
+import { ApproachView } from "./mfd/views/ApproachView";
 
 export interface MFDData {
   vx: number;
@@ -23,7 +24,7 @@ export interface MFDData {
   isThrusting: boolean;
 }
 
-export type MFDViewKey = "home" | "vel" | "att" | "tel" | "fuel" | "radar" | "guide";
+export type MFDViewKey = "home" | "vel" | "att" | "tel" | "fuel" | "radar" | "guide" | "approach";
 
 export default class MFD {
   private root: HTMLElement;
@@ -44,7 +45,8 @@ export default class MFD {
       tel:   new TelemetryView(),
       fuel:  new FuelView(),
       radar: new RadarView(galaxy),
-      guide: new GuideView(galaxy),
+      guide:    new GuideView(galaxy),
+      approach: new ApproachView(galaxy),
     };
 
     this.root = document.createElement("div");
@@ -128,6 +130,7 @@ export default class MFD {
   }
 
   private onOSB(n: number): void {
+    if (n === 3 && this.currentViewKey === "home") { this.setView("approach"); return; }
     if (n === 4) { this.setView("tel");   return; }
     if (n === 5) { this.setView("fuel");  return; }
     if (n === 6) { this.setView("radar"); return; }
@@ -189,6 +192,13 @@ export default class MFD {
         lbl.className = "mfd-lbl";
         lbl.textContent = "ESC";
         if (guideTab === "escape") { osb.classList.add("modifier-on"); lbl.classList.add("modifier-on"); }
+      }
+      if (i === 2 && this.currentViewKey === "home") {
+        osb.className = "mfd-osb"; lbl.className = "mfd-lbl"; lbl.textContent = "APCH";
+      }
+      if (i === 2 && this.currentViewKey === "approach") {
+        osb.className = "mfd-osb"; lbl.className = "mfd-lbl"; lbl.textContent = "APCH";
+        osb.classList.add("active"); lbl.classList.add("active");
       }
       if (i === 3 && this.currentViewKey === "tel") {
         osb.classList.add("active");

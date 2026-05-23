@@ -27,7 +27,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 0 Install Preact + configure build
 
-**Files:** `vite.config.ts` (new), `tsconfig.json`
+**Files:** `vite.config.ts`, `tsconfig.json`
 **What:** `pnpm add preact`. Create `vite.config.ts` with `esbuild: { jsxImportSource: 'preact' }`. Add `"jsx": "react-jsx"` and `"jsxImportSource": "preact"` to `tsconfig.json` compilerOptions.
 **Test:** `npx tsc --noEmit` clean. No visible changes.
 
@@ -43,7 +43,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 2 Data layer: GameState + 10 systems
 
-**Files:** `src/core/GameState.ts` (new), `src/data/systems.ts` (new)
+**Files:** `src/core/GameState.ts`, `src/data/systems.ts`
 **What:** Create all types (`GameMode`, `TidalRating`, `HeadingLockMode`, `UpgradeState`, `GameState`) and helper functions (`getMaxLE`, `getMaxMono`, `getThrustFactor`, `getRCSFactor`, `canHeadingLock`, `createInitialState`). Create `SystemConfig` interface and all 10 system configs (SOL-0 through SINGULARITY) matching GAMEPLAY.md. Starting conditions per GAMEPLAY.md: thrust 20%, LE 100, RCS 40%, mono 40. FREE FLIGHT = max upgrades.
 **Test:** `npx tsc --noEmit` compiles clean. No render changes.
 
@@ -67,7 +67,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 5 Sim speed fader + pause button in cockpit
 
-**Files:** `src/ui/CockpitHUD.ts`, `src/main.ts`
+**Files:** `src/ui/CockpitHUD.ts`, `src/main.ts`, `src/ui/cockpit/SimParamsPanel.ts`, `src/ui/cockpit/FlightControlsPanel.ts`
 **What:** Add SIM SPEED fader to DRIVE SYS section (callbacks via constructor). Add PAUSE button to FLIGHT CTRL section toggles a `paused` boolean in main.ts that stops accumulator.
 **Test:** Sim speed slider changes speed visibly. PAUSE freezes stars and ship. RESUME continues.
 
@@ -75,15 +75,15 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 6 RelayStation entity + Galaxy spawning
 
-**Files:** `src/entities/RelayStation.ts`, `src/systems/Galaxy.ts`
-**What:** Create `RelayStation`: orbit update (`orbitAngle += orbitSpeed * dt`), `projectPosition(steps, dt)` for encounter math. Draw using `drawRelayStation(ctx, size, tidalLevel)` from `src/sprites/relay.ts` cached to an offscreen canvas. Galaxy spawns relay(s) from `SystemConfig.relayCount / relayOrbitRadius / relayOrbitSpeed` and passes the system's `TidalRating` mapped to a `TidalLevel`.
+**Files:** `src/entities/RelayStation.ts`, `src/systems/Galaxy.ts`, `src/systems/galaxy/EntityManager.ts`
+**What:** Create `RelayStation`: orbit update (`orbitAngle += orbitSpeed * dt`), `projectPosition(steps, dt)` for encounter math. Draw using `drawRelayStation(ctx, size, tidalLevel)` from `src/sprites/relay.ts` cached to an offscreen canvas. Galaxy spawns relay(s) from `SystemConfig.relayCount / relayOrbitRadius` and passes the system's `TidalRating` mapped to a `TidalLevel`.
 **Test:** Relay station visible, orbiting the black hole, using the correct sprite for the current system's tidal level.
 
 ---
 
 ### Step 6.5 Relay Station Physics & Collision
 
-**Files:** `src/entities/RelayStation.ts`, `src/systems/galaxy/GalaxyPhysics.ts`, `src/data/systems.ts`, `src/main.ts`
+**Files:** `src/entities/RelayStation.ts`, `src/systems/galaxy/GalaxyPhysics.ts`, `src/data/systems.ts`, `src/main.ts`, `src/systems/galaxy/EntityManager.ts`
 **What:** Refactor `RelayStation` to compute a realistic orbital velocity using $v = \sqrt{GM/r}$ (similar to Star) instead of arbitrary fixed speeds, converting linear velocity to angular velocity for its orbit. Increase `relayOrbitRadius` for `SOL-0` in `systems.ts` so it sits further from the black hole. Add circle-collision detection between `Ship` and `RelayStation` in `GalaxyPhysics.updateEntities()`. Add an empty `onDeath()` callback to `main.ts` and `Galaxy.ts` triggered upon collision.
 **Test:** The relay station moves at a logical speed, is further out on level 1, and flying directly into the relay station visually triggers the collision check (can be verified with a console.log or observing the empty callback hit).
 
@@ -91,7 +91,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 7 Pe/Ap markers on trajectory
 
-**Files:** `src/entities/Ship.ts`
+**Files:** `src/entities/ship/ShipNavigator.ts`, `src/entities/ship/ShipRenderer.ts`
 **What:** In `predictPath()`, scan path for min/max distance from `blackholes[0]` → store `pe` and `ap` (worldPos + dist). In `drawPath()`, draw ▼ (dim red) at `pe.worldPos` and ▲ (dim yellow) at `ap.worldPos` in world space.
 **Test:** Enable trajectory → ▼ appears at closest BH approach, ▲ at farthest point. Markers move when ship burns.
 
@@ -99,7 +99,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 8 Encounter marker
 
-**Files:** `src/entities/Ship.ts`
+**Files:** `src/entities/ship/ShipNavigator.ts`, `src/entities/ship/ShipRenderer.ts`, `src/entities/Ship.ts`
 **What:** Ship gains `targetRelay?: RelayStation`. In `predictPath()`, for each step project relay position via `targetRelay.projectPosition(i, dt)`, find minimum approach → store `encounterPoint` (worldPos, dist, timeToReach) when dist < 0.10 wu. In `drawPath()`, draw ◆ (cyan) at encounter worldPos with distance annotation. Galaxy sets `ship.targetRelay` after spawning.
 **Test:** Trajectory shows ◆ where ship path comes closest to the relay orbit.
 
@@ -107,7 +107,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 9 Escape trajectory coloring
 
-**Files:** `src/entities/Ship.ts`
+**Files:** `src/entities/ship/ShipNavigator.ts`, `src/entities/ship/ShipRenderer.ts`
 **What:** In `predictPath()`, flag `escapeTrajectory = true` and store `escapeStepIndex` when a path point exceeds `systemBoundaryRadius`. In `drawPath()`, draw path segments green from `escapeStepIndex` onward.
 **Test:** Burn strongly prograde → trajectory line turns green past the escape point.
 
@@ -115,7 +115,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 10 Orientation ring (visual, always on)
 
-**Files:** `src/entities/Ship.ts`
+**Files:** `src/entities/ship/ShipRenderer.ts`
 **What:** In `draw()`, call `drawOrientationRing(canvas)`: fixed screen-space ring (radius 40px × dpr) around ship. 4 markers at computed world angles: prograde (`atan2(vel.x, -vel.y)`), retrograde (+π), radial-in (toward nearest BH), anti-radial (+π). Small filled circle (4px) + glyph per marker. Prograde/retrograde = `#3dff7a`, radial = `#e9d628`. Only draw when `vel.length() > 0.0001`.
 **Test:** Markers visible around ship. Prograde marker always points in the direction of travel.
 
@@ -123,7 +123,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 11 Heading lock
 
-**Files:** `src/entities/Ship.ts`, `src/ui/CockpitHUD.ts`
+**Files:** `src/entities/Ship.ts`, `src/ui/cockpit/FlightControlsPanel.ts`, `src/ui/cockpit/HeadingPanel.ts`
 **What:** Ship gains `headingLock: HeadingLockMode = 'manual'`. In `updateFlightMode()`, if lock ≠ manual, compute target angle and apply angular correction impulse toward it (drains monergol). Rotation key disengages lock. Add 5-button row (MAN / PRO / RET / RDL / ANT) to FLIGHT CTRL section in cockpit. Buttons gray when tier not met (check `canHeadingLock` from upgrades pass upgrades ref to cockpit or check on ship). Active mode highlighted.
 **Test:** Click PRO → ship rotates automatically to face velocity direction. Pressing ← or → disengages to MAN.
 
@@ -131,7 +131,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 12 Docking mode (4-axis RCS)
 
-**Files:** `src/entities/Ship.ts`, `src/ui/CockpitHUD.ts`
+**Files:** `src/entities/Ship.ts`, `src/ui/cockpit/FlightControlsPanel.ts`
 **What:** Ship gains `dockingMode: boolean`, `rcsForward: number`, `rcsSideways: number`. In `updateDockingMode()`: arrows = translation in ship-local frame (20% thrust, drains monergol), Q/E = rotation, angular damping always on. Track `rcsForward`/`rcsSideways` for MFD. Add DOCK MODE button to FLIGHT CTRL.
 **Test:** Toggle DOCK MODE → arrow keys translate ship. Angular damping holds heading.
 
@@ -139,7 +139,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 13 Dock detection + parts reward
 
-**Files:** `src/systems/Galaxy.ts`, `src/main.ts`
+**Files:** `src/systems/Galaxy.ts`, `src/main.ts`, `src/systems/galaxy/GalaxyPhysics.ts`
 **What:** In `Galaxy.update()`, check ship distance to each relay. When `dist < relay.completionRadius` AND relative speed < 0.0002 wu/s: call `onDock(relay)`. Main.ts `onDock` grants `config.partsReward` to `gameState.upgrades.parts`, adds system to `completedSystems`. Wire `ship.targetRelay` to first relay on spawn.
 **Test:** Approach relay very slowly in docking mode → dock triggers (log or visible state change).
 
@@ -147,7 +147,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 14 Tidal decay timer
 
-**Files:** `src/main.ts`, `src/ui/CockpitHUD.ts`, `src/style.css`
+**Files:** `src/main.ts`, `src/ui/cockpit/StatusPanel.ts`, `src/scss/features/cockpit/_status.scss`
 **What:** `getDecaySeconds()` returns null if shielding sufficient, else seconds from gap table (gap 1 = 300s, gap 2 = 90s, gap 3 = 30s, gap 4 = 15s). Decrement by `rawDelta` in animate(). On zero in RELAY: respawn ship at system entry. Add red countdown bar to SHIP STATUS section (hidden when null, pulses with CSS animation when < 30s).
 **Test:** SOL-0 (no tidal) → bar hidden. Manually test with a high-tidal config → bar visible and depleting. At zero, ship respawns.
 
@@ -155,7 +155,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 15 Inter-system transit
 
-**Files:** `src/systems/Galaxy.ts`, `src/main.ts`
+**Files:** `src/systems/Galaxy.ts`, `src/main.ts`, `src/data/systems.ts`
 **What:** Galaxy gains `transitMode: boolean`, `enterTransitMode()` (sets flag, disables gravity), `transitionToSystem(config)` (re-spawns BHs/stars/relays, fades gravity in over 2s, resets flag). Main.ts: when ship exits boundary → `enterTransitMode()`. When ship reaches 1.5× boundary in transit → `loadSystem(nextConfig)`. `loadSystem()` resets decay timer, updates `currentSystemId`.
 **Test:** Fly past system boundary → gravity stops, stars sparse. Ship coasts. After crossing void → new system's BH appears, gravity resumes.
 
@@ -163,7 +163,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 16 Split MFD into Preact view components
 
-**Files:** `src/ui/MFD.ts` + `src/ui/mfd/views/` (exception to 2-file rule)
+**Files:** `src/ui/MFD.ts`, `src/ui/mfd/views/HomeView.tsx`, `src/ui/mfd/views/VelocityView.tsx`, `src/ui/mfd/views/RadarView.tsx`
 **What:** Create `src/ui/mfd/views/` with Preact components: `HomeView.tsx`, `VelView.tsx`, etc. MFD.ts becomes a thin shell for standard slots. Create a **dedicated** `TutorialMFD.ts` shell for the independent tutorial screen. Both use the same view-switching architecture.
 **Test:** Existing MFD views display in standard slots. New Tutorial MFD screen appears in its dedicated area.
 
@@ -171,7 +171,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 17 Tutorial MFD Dynamic Guide Logic
 
-**Files:** `src/ui/mfd/views/GuideView.tsx` (new), `src/ui/TutorialMFD.ts`
+**Files:** `src/ui/mfd/views/GuideView.tsx`, `src/ui/mfd/TutorialMFD.ts`
 **What:** Implement the GuideView Preact component. Logic to auto-switch between APPROACH and ESCAPE based on distance to relay. Dynamic instruction line: computes remaining delta-V needed for orbit, or distance to boundary. Steps (1-5) auto-tick based on live `MFDData`.
 **Test:** Tutorial MFD shows APPROACH steps when near relay, ESCAPE when far. Instructions update live as you burn.
 
@@ -179,7 +179,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 18 MFD Approach view & 2nd Slot logic
 
-**Files:** `src/ui/MFD.ts`, `src/ui/mfd/views/ApproachView.tsx` (new), `src/ui/CockpitHUD.ts`
+**Files:** `src/ui/MFD.ts`, `src/ui/mfd/views/ApproachView.tsx`, `src/ui/CockpitHUD.ts`, `src/core/GameState.ts`
 **What:** Add "approach" view. Update `CockpitHUD` to render two MFD slot containers, but keep the 2nd one hidden/disabled unless `gameState.upgrades.mfdSlots > 1`.
 **Test:** In docking mode → see relative speed/range. Buy 2nd slot upgrade → two independent MFDs become visible.
 
@@ -187,7 +187,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 19 Tech Tree: Purchase & Refund Logic
 
-**Files:** `src/ui/TechTree.tsx`, `src/core/GameState.ts`
+**Files:** `src/ui/TechTree.tsx`, `src/core/GameState.ts`, `src/main.ts`
 **What:** Implement `onPurchase(nodeId)` and `onRefund(nodeId)`. Refund returns 100% parts. Ensure tree dependency logic (cannot refund a node if a dependent node is still owned).
 **Test:** Buy node → parts decrease. Refund node → parts return to original value. Locked dependents stay locked.
 
@@ -195,7 +195,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 20 Galaxy Map overlay
 
-**Files:** `src/ui/GalaxyMap.ts` (new), `src/ui/CockpitHUD.ts`, `src/style.css`
+**Files:** `src/ui/GalaxyMap.tsx`, `src/ui/CockpitHUD.ts`, `src/scss/features/hud/_windows.scss`
 **What:** Canvas overlay for system nodes. Hover tooltip (Preact). Click sets `transitTargetId`. MAP button in cockpit opens it.
 **Test:** Click MAP → overlay. Hover shows tooltip.
 
@@ -203,7 +203,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 21 Tech upgrades apply to live ship
 
-**Files:** `src/entities/Ship.ts`, `src/main.ts`
+**Files:** `src/ui/TechTree.tsx`, `src/entities/Ship.ts`, `src/main.ts`
 **What:** On each upgrade change, re-calculate ship stats: `trajSteps`, `autoStab`, `thrustFactor`, `maxFuel`, etc. Call `ship.onUpgradeChanged(upgrades)`.
 **Test:** Stats update immediately in HUD after purchase/refund.
 
@@ -211,7 +211,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 
 ### Step 22 Visual Evolution: Sprite variations
 
-**Files:** `src/entities/Ship.ts`
+**Files:** `src/entities/ship/ShipRenderer.ts`, `src/sprites/probe.ts`, `src/entities/Ship.ts`
 **What:** In `Ship.draw()`, use `drawProbeDynamic(ctx, t, size, upgrades)` from `src/sprites/probe.ts`. Implement an `onUpgradeChanged` handler (or re-render on demand) to update an offscreen canvas caching the probe sprite, passing the mapped tech tree state (hull, thrust, ergol, rcs, avionics) into the `ProbeUpgrades` interface.
 **Test:** Buying upgrades visibly changes the ship's sprite. Refunding them reverts appearance.
 

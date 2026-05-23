@@ -43,6 +43,8 @@ export default class Ship {
   path: Vec2[] = [];
   pathColor = new Color(80, 182, 201); // cyan #50b6c9
   predictionInteration: number = 2000;
+  pe: { worldPos: Vec2; dist: number } | null = null;
+  ap: { worldPos: Vec2; dist: number } | null = null;
 
   constructor(
     pos: Vec2,
@@ -321,6 +323,8 @@ export default class Ship {
     let pos = this.pos.clone();
     let vel = this.vel.clone();
     this.path = [];
+    this.pe = null;
+    this.ap = null;
 
     for (let i = 0; i < steps; i++) {
       let minDist = Infinity;
@@ -341,6 +345,18 @@ export default class Ship {
       }
 
       this.path.push(pos.clone());
+    }
+
+    const bh0 = this.blackholes[0];
+    if (bh0 && this.path.length > 0) {
+      let peIdx = 0, apIdx = 0, minD = Infinity, maxD = 0;
+      for (let i = 0; i < this.path.length; i++) {
+        const d = this.path[i].distance(bh0.pos);
+        if (d < minD) { minD = d; peIdx = i; }
+        if (d > maxD) { maxD = d; apIdx = i; }
+      }
+      this.pe = { worldPos: this.path[peIdx], dist: minD };
+      this.ap = { worldPos: this.path[apIdx], dist: maxD };
     }
   }
 
@@ -368,6 +384,21 @@ export default class Ship {
       ctx.stroke();
     }
 
+    ctx.restore();
+
+    if (this.pe) this.drawOrbitalMarker(canvas, this.pe.worldPos, "▼", "rgba(236, 100, 100, 0.75)");
+    if (this.ap) this.drawOrbitalMarker(canvas, this.ap.worldPos, "▲", "rgba(233, 214, 40, 0.75)");
+  }
+
+  private drawOrbitalMarker(canvas: Canvas2d, worldPos: Vec2, glyph: string, color: string): void {
+    const s = canvas.place(worldPos);
+    const ctx = canvas.context;
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(glyph, s.x, s.y);
     ctx.restore();
   }
 }

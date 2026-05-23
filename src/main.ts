@@ -7,7 +7,8 @@ import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import LandingPage from "./ui/LandingPage";
 import CockpitHUD from "./ui/CockpitHUD";
-import { type GameMode, type TidalRating, createInitialState } from "./core/GameState";
+import { DebugPanel } from "./ui/DebugPanel";
+import { type GameMode, type TidalRating, createInitialState, getMaxLE, getMaxMono } from "./core/GameState";
 import { SYSTEMS, type SystemConfig } from "./data/systems";
 
 const spriteThrusterOffUrl = "/assets/ship.png";
@@ -67,6 +68,50 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     decayMax = getDecaySeconds(cfg.tidalRating, gameState.upgrades.hullLevel);
     decayTimer = decayMax;
     galaxy.transitionToSystem(cfg);
+  }
+
+  // Inject Debug UI if in dev mode
+  if (import.meta.env.VITE_ENV === "dev") {
+    new DebugPanel(
+      (systemId) => {
+        const sys = SYSTEMS.find((s) => s.id === systemId);
+        if (sys) loadSystem(sys);
+      },
+      () => {
+        const maxLE = getMaxLE(gameState.upgrades);
+        const maxMono = getMaxMono(gameState.upgrades);
+        gameState.liquidErgol = maxLE;
+        gameState.monergol = maxMono;
+        if (galaxy.ship) {
+          galaxy.ship.liquidErgol = maxLE;
+          galaxy.ship.monergol = maxMono;
+        }
+      },
+      () => {
+        // Apply max upgrades
+        gameState.upgrades = {
+          parts: gameState.upgrades.parts,
+          thrustLevel: 4,
+          autoStab: true,
+          hullLevel: 3,
+          lErgolLevel: 3,
+          headingLockTier: 3,
+          trajSteps: 5000,
+          retroBurn: true,
+          rcsBoostLevel: 2,
+          approachMfd: true,
+          emergRes: true,
+          secondMfd: true,
+          maneuverNode: true,
+          monoTankII: true,
+          tidalSensor: true,
+        };
+      },
+      () => {
+        gameState.upgrades.parts += 100;
+        console.log(`Added 100 parts. Total: ${gameState.upgrades.parts}`);
+      }
+    );
   }
 
   let lastTime = 0;

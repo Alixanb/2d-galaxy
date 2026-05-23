@@ -42,7 +42,7 @@ export default class Ship {
   retrogradePhase: 'align' | 'burn' | null = null;
   path: Vec2[] = [];
   pathColor = new Color(80, 182, 201); // cyan #50b6c9
-  predictionInteration: number = 1000;
+  predictionInteration: number = 2000;
 
   constructor(
     pos: Vec2,
@@ -337,7 +337,7 @@ export default class Ship {
       const subDt = dt / sub;
       for (let s = 0; s < sub; s++) {
         vel = vel.add(this.getVelocity(subDt, pos));
-        pos = pos.add(vel.multiply(subDt));
+        pos = pos.add(vel.multiply(1 / sub));
       }
 
       this.path.push(pos.clone());

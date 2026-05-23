@@ -11,9 +11,9 @@ pnpm dev
 
 ## Stack
 
-- **Vite + TypeScript** — strict mode
-- **Canvas2D** — ship, blackholes, UI overlays
-- **WebGL** — star field (custom shader)
+- **Vite + TypeScript** strict mode
+- **Canvas2D** ship, blackholes, UI overlays
+- **WebGL** star field (custom shader)
 
 ## Project structure
 

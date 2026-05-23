@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "steps": [
+    { "n": 0, "title": "Preact", "status": "done", "files": ["any"] },
+    {
+      "n": 1,
+      "title": "Fix orbit integration bug",
+      "status": "done",
+      "files": ["src/entities/Ship.ts"]
+    },
+    {
+      "n": 2,
+      "title": "Data layer: GameState + 10 systems",
+      "status": "done",
+      "files": ["src/core/GameState.ts", "src/data/systems.ts"]
+    },
+    {
+      "n": 3,
+      "title": "Landing page: 3 mode buttons",
+      "status": "done",
+      "files": ["src/ui/LandingPage.ts", "index.html"]
+    },
+    {
+      "n": 4,
+      "title": "Wire GameState into main.ts + remove floating windows",
+      "status": "done",
+      "files": ["src/main.ts"]
+    },
+    {
+      "n": 5,
+      "title": "Sim speed fader + pause button in cockpit",
+      "status": "done",
+      "files": ["src/ui/CockpitHUD.ts", "src/main.ts"]
+    },
+    {
+      "n": 6,
+      "title": "RelayStation entity + Galaxy spawning",
+      "status": "done",
+      "files": ["src/entities/RelayStation.ts", "src/systems/Galaxy.ts"]
+    },
+    {
+      "n": 7,
+      "title": "Pe/Ap markers on trajectory",
+      "status": "done",
+      "files": ["src/entities/Ship.ts"]
+    },
+    {
+      "n": 8,
+      "title": "Encounter marker",
+      "status": "done",
+      "files": ["src/entities/Ship.ts"]
+    },
+    {
+      "n": 9,
+      "title": "Escape trajectory coloring",
+      "status": "done",
+      "files": ["src/entities/Ship.ts"]
+    },
+    {
+      "n": 10,
+      "title": "Orientation ring (visual, always on)",
+      "status": "done",
+      "files": ["src/entities/Ship.ts"]
+    },
+    {
+      "n": 11,
+      "title": "Heading lock",
+      "status": "done",
+      "files": ["src/entities/Ship.ts", "src/ui/CockpitHUD.ts"]
+    },
+    {
+      "n": 12,
+      "title": "Docking mode (4-axis RCS)",
+      "status": "pending",
+      "files": ["src/entities/Ship.ts", "src/ui/CockpitHUD.ts"]
+    },
+    {
+      "n": 13,
+      "title": "Dock detection + parts reward",
+      "status": "pending",
+      "files": ["src/systems/Galaxy.ts", "src/main.ts"]
+    },
+    {
+      "n": 14,
+      "title": "Tidal decay timer",
+      "status": "pending",
+      "files": ["src/main.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
+    },
+    {
+      "n": 15,
+      "title": "Inter-system transit",
+      "status": "pending",
+      "files": ["src/systems/Galaxy.ts", "src/main.ts"]
+    },
+    {
+      "n": 16,
+      "title": "MFD Guide view Approach tab",
+      "status": "pending",
+      "files": ["src/ui/MFD.ts"]
+    },
+    {
+      "n": 17,
+      "title": "MFD Guide view Escape tab",
+      "status": "pending",
+      "files": ["src/ui/MFD.ts"]
+    },
+    {
+      "n": 18,
+      "title": "MFD Approach view",
+      "status": "pending",
+      "files": ["src/ui/MFD.ts", "src/main.ts", "src/entities/Ship.ts"]
+    },
+    {
+      "n": 19,
+      "title": "Galaxy Map overlay",
+      "status": "pending",
+      "files": ["src/ui/GalaxyMap.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
+    },
+    {
+      "n": 20,
+      "title": "Tech Tree overlay",
+      "status": "pending",
+      "files": ["src/ui/TechTree.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
+    },
+    {
+      "n": 21,
+      "title": "Tech upgrades apply to live ship",
+      "status": "pending",
+      "files": ["src/ui/TechTree.ts", "src/entities/Ship.ts"]
+    }
+  ]
+}

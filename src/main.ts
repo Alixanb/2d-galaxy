@@ -1,5 +1,13 @@
 import { loadImage } from "./core/Functions";
+import {
+  type GameMode,
+  type TidalRating,
+  createInitialState,
+  getMaxLE,
+  getMaxMono,
+} from "./core/GameState";
 import Vec2 from "./core/Vec2";
+import { SYSTEMS, type SystemConfig } from "./data/systems";
 import BlackHole from "./entities/BlackHole";
 import Ship from "./entities/Ship";
 import Star from "./entities/Star";
@@ -9,23 +17,30 @@ import CockpitHUD from "./ui/CockpitHUD";
 import { DebugPanel } from "./ui/DebugPanel";
 import { GalaxyMap } from "./ui/GalaxyMap";
 import { TechTree } from "./ui/TechTree";
-import { type GameMode, type TidalRating, createInitialState, getMaxLE, getMaxMono } from "./core/GameState";
-import { SYSTEMS, type SystemConfig } from "./data/systems";
 
 const spriteThrusterOffUrl = "/assets/ship.png";
 const spriteThrusterOnUrl = "/assets/ship-thrust.png";
 
-const TIDAL_LEVEL: Record<TidalRating, number> = { None: 0, Low: 1, Medium: 2, High: 3, Extreme: 4 };
+const TIDAL_LEVEL: Record<TidalRating, number> = {
+  None: 0,
+  Low: 1,
+  Medium: 2,
+  High: 3,
+  Extreme: 4,
+};
 const DECAY_TABLE = [0, 300, 90, 30, 15];
 
-function getDecaySeconds(tidalRating: TidalRating, hullLevel: number): number | null {
+function getDecaySeconds(
+  tidalRating: TidalRating,
+  hullLevel: number,
+): number | null {
   const gap = TIDAL_LEVEL[tidalRating] - hullLevel;
   return gap <= 0 ? null : DECAY_TABLE[Math.min(gap, 4)];
 }
 
 const params = new URLSearchParams(window.location.search);
-const modeFromUrl = params.get('mode') as GameMode || 'RELAY';
-const bhFromUrl = params.get('bh') !== 'false';
+const modeFromUrl = (params.get("mode") as GameMode) || "RELAY";
+const bhFromUrl = params.get("bh") !== "false";
 
 startSimulation(modeFromUrl, bhFromUrl);
 
@@ -37,7 +52,14 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
 
   const blackholes = [new BlackHole(new Vec2(0, 0), 10, showBlackholes)];
 
-  const galaxy = new Galaxy(canvas2d, canvasGl, blackholes, undefined, 5000, 0.7);
+  const galaxy = new Galaxy(
+    canvas2d,
+    canvasGl,
+    blackholes,
+    undefined,
+    5000,
+    0.7,
+  );
 
   canvas2d.enablePan();
 
@@ -45,7 +67,9 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   let paused = false;
   let transitTargetId: string | null = null;
 
-  const galaxyMap = new GalaxyMap(gameState, (id) => { transitTargetId = id; });
+  const galaxyMap = new GalaxyMap(gameState, (id) => {
+    transitTargetId = id;
+  });
   const techTree = new TechTree(gameState, () => {
     if (galaxy.ship) galaxy.ship.applyUpgrades(gameState.upgrades);
   });
@@ -53,10 +77,14 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   const cockpit = new CockpitHUD(
     galaxy,
     () => SIMULATION_SPEED,
-    (v) => { SIMULATION_SPEED = v; },
-    (p) => { paused = p; },
+    (v) => {
+      SIMULATION_SPEED = v;
+    },
+    (p) => {
+      paused = p;
+    },
     () => galaxyMap.toggle(),
-    () => techTree.toggle()
+    () => techTree.toggle(),
   );
 
   galaxy.onDock = () => {
@@ -64,7 +92,9 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     if (!gameState.completedSystems.includes(gameState.currentSystemId)) {
       gameState.completedSystems.push(gameState.currentSystemId);
     }
-    console.log(`Docked! +${currentConfig.partsReward} parts. Total: ${gameState.upgrades.parts}`);
+    console.log(
+      `Docked! +${currentConfig.partsReward} parts. Total: ${gameState.upgrades.parts}`,
+    );
   };
 
   galaxy.onDeath = () => {
@@ -72,8 +102,11 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     // console.log("Collision detected! Game Over.");
   };
 
-  let currentConfig = SYSTEMS.find(s => s.id === gameState.currentSystemId)!;
-  let decayMax: number | null = getDecaySeconds(currentConfig.tidalRating, gameState.upgrades.hullLevel);
+  let currentConfig = SYSTEMS.find((s) => s.id === gameState.currentSystemId)!;
+  let decayMax: number | null = getDecaySeconds(
+    currentConfig.tidalRating,
+    gameState.upgrades.hullLevel,
+  );
   let decayTimer: number | null = decayMax;
 
   function loadSystem(cfg: SystemConfig): void {
@@ -102,7 +135,6 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         }
       },
       () => {
-        // Apply max upgrades
         gameState.upgrades = {
           parts: gameState.upgrades.parts,
           thrustLevel: 4,
@@ -120,11 +152,12 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
           monoTankII: true,
           tidalSensor: true,
         };
+        if (galaxy.ship) galaxy.ship.applyUpgrades(gameState.upgrades);
       },
       () => {
-        gameState.upgrades.parts += 100;
-        console.log(`Added 100 parts. Total: ${gameState.upgrades.parts}`);
-      }
+        gameState.upgrades.parts += 1000;
+        console.log(`Added 1000 parts. Total: ${gameState.upgrades.parts}`);
+      },
     );
   }
 
@@ -158,7 +191,14 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
       spawnPos = new Vec2(Math.cos(angle) * radius, Math.sin(angle) * radius);
       spawnVel = Star.getVelocity(spawnPos, blackholes[0], 2.1 * 10e1);
 
-      const ship = new Ship(spawnPos, spriteOff, spriteOn, 30, true, blackholes);
+      const ship = new Ship(
+        spawnPos,
+        spriteOff,
+        spriteOn,
+        60,
+        true,
+        blackholes,
+      );
       ship.vel = spawnVel;
       ship.applyUpgrades(gameState.upgrades);
       ship.liquidErgol = gameState.liquidErgol;
@@ -176,7 +216,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
 
     if (!paused && decayTimer !== null) {
       decayTimer -= rawDelta;
-      if (decayTimer <= 0 && gameState.mode === 'RELAY') {
+      if (decayTimer <= 0 && gameState.mode === "RELAY") {
         decayTimer = decayMax;
         const ship = galaxy.ship;
         if (ship) {
@@ -195,8 +235,11 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
       if (!galaxy.transitMode && dist > boundary) {
         galaxy.enterTransitMode();
       } else if (galaxy.transitMode && dist > boundary * 1.5) {
-        const target = (transitTargetId ? SYSTEMS.find(s => s.id === transitTargetId) : null)
-          ?? SYSTEMS[(SYSTEMS.indexOf(currentConfig) + 1) % SYSTEMS.length];
+        const target =
+          (transitTargetId
+            ? SYSTEMS.find((s) => s.id === transitTargetId)
+            : null) ??
+          SYSTEMS[(SYSTEMS.indexOf(currentConfig) + 1) % SYSTEMS.length];
         transitTargetId = null;
         loadSystem(target);
       }
@@ -207,7 +250,9 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
       const activeStars = galaxy.stars.filter((s) => !s.shouldDestroy).length;
       const ship = galaxy.ship;
       const cam = canvas2d.camera;
-      const distFromCam = ship ? Math.hypot(ship.pos.x - cam.x, ship.pos.y - cam.y) : 0;
+      const distFromCam = ship
+        ? Math.hypot(ship.pos.x - cam.x, ship.pos.y - cam.y)
+        : 0;
 
       cockpit.update({
         fps: Math.round(1 / rawDelta),
@@ -238,7 +283,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         ship2.monergol,
         ship2.maxMonergol,
         decayTimer,
-        decayMax
+        decayMax,
       );
     }
 
@@ -253,4 +298,3 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
 
   requestAnimationFrame(animate);
 }
-

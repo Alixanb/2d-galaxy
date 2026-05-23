@@ -204,7 +204,7 @@ DOM-heavy components (MFD views, TechTree, GalaxyMap overlay) are built with **P
 ### Step 21 Tech upgrades apply to live ship
 
 **Files:** `src/ui/TechTree.tsx`, `src/entities/Ship.ts`, `src/main.ts`
-**What:** On each upgrade change, re-calculate ship stats: `trajSteps`, `autoStab`, `thrustFactor`, `maxFuel`, etc. Call `ship.onUpgradeChanged(upgrades)`.
+**What:** On each upgrade change, re-calculate ship stats:, `autoStab`, `thrustFactor`, `maxFuel`, etc. Call `ship.onUpgradeChanged(upgrades)`.
 **Test:** Stats update immediately in HUD after purchase/refund.
 
 ---

@@ -2,7 +2,7 @@ import Vec2 from "../../core/Vec2";
 import Color from "../../core/Color";
 import type { Canvas2d } from "../../systems/Canvas";
 import type { UpgradeState } from "../../core/GameState";
-import { drawProbeDynamic, PROBE_SIZE } from "../../sprites/probe";
+import { drawProbeDynamic, getEngineExitY, PROBE_SIZE } from "../../sprites/probe";
 import Ship from "../Ship";
 import { ShipNavigator } from "./ShipNavigator";
 
@@ -11,6 +11,7 @@ export class ShipRenderer {
   private navigator: ShipNavigator;
   private pathColor = new Color(80, 182, 201);
   private offscreen: HTMLCanvasElement;
+  private thrustStartY: number = 0;
 
   constructor(ship: Ship, navigator: ShipNavigator) {
     this.ship = ship;
@@ -18,17 +19,26 @@ export class ShipRenderer {
     this.offscreen = document.createElement('canvas');
     this.offscreen.width = PROBE_SIZE;
     this.offscreen.height = PROBE_SIZE;
-    drawProbeDynamic(this.offscreen.getContext('2d')!, 0, PROBE_SIZE, { hull: 0, thrust: 0, ergol: 0, rcs: 0, avionics: 0 });
+    const defaultUp = { hull: 0, thrust: 0, ergol: 0, rcs: 0, avionics: 0 };
+    drawProbeDynamic(this.offscreen.getContext('2d')!, 0, PROBE_SIZE, defaultUp);
+    this.thrustStartY = this.probeYToScreen(getEngineExitY(PROBE_SIZE, defaultUp));
   }
 
   refreshSprite(u: UpgradeState): void {
-    drawProbeDynamic(this.offscreen.getContext('2d')!, 0, PROBE_SIZE, {
+    const up = {
       hull:     u.hullLevel,
       thrust:   Math.min(u.thrustLevel, 3),
       ergol:    Math.min(u.lErgolLevel, 2),
       rcs:      u.rcsBoostLevel,
       avionics: Math.min(u.headingLockTier, 2),
-    });
+    };
+    drawProbeDynamic(this.offscreen.getContext('2d')!, 0, PROBE_SIZE, up);
+    this.thrustStartY = this.probeYToScreen(getEngineExitY(PROBE_SIZE, up));
+  }
+
+  private probeYToScreen(probeY: number): number {
+    const w = this.ship.size;
+    return (probeY / PROBE_SIZE) * w - w / 2;
   }
 
   draw(canvas: Canvas2d) {
@@ -100,19 +110,20 @@ export class ShipRenderer {
     ctx.restore();
   }
 
-  private drawThruster(canvas: Canvas2d, w: number, h: number, pct: number) {
+  private drawThruster(canvas: Canvas2d, w: number, _h: number, pct: number) {
     if (pct <= 0) return;
     const ctx = canvas.context;
-    const rearY = h * 0.5;
+    const rearY = this.thrustStartY;
 
     const flicker = 0.8 + Math.random() * 0.4;
-    const tipY = rearY + w * 1.6 * pct * flicker;
-    const sideW = w * 0.18 * (0.85 + Math.random() * 0.3);
+    const tipY = rearY + w * 0.45 * pct * flicker;
+    const sideW = w * 0.1 * (0.85 + Math.random() * 0.3);
 
     const grad = ctx.createLinearGradient(0, rearY, 0, tipY);
-    grad.addColorStop(0, "rgba(233, 214, 40, 0.9)");
-    grad.addColorStop(0.4, "rgba(236, 38, 38, 0.7)");
-    grad.addColorStop(1, "rgba(236, 38, 38, 0)");
+    grad.addColorStop(0,    "rgba(200, 240, 255, 1.0)");
+    grad.addColorStop(0.25, "rgba(80, 170, 255, 0.95)");
+    grad.addColorStop(0.65, "rgba(40, 90, 230, 0.7)");
+    grad.addColorStop(1,    "rgba(20, 50, 200, 0)");
 
     ctx.fillStyle = grad;
     ctx.beginPath();

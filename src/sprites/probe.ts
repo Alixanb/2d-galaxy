@@ -86,6 +86,19 @@ function drawAntenna(ctx: Ctx, cx: number, baseCy: number, w: number, h: number,
   rectC(ctx, cx, baseCy - h - dishR * 0.4, 4 * s, 4 * s, C_CYAN);
 }
 
+export function getEngineExitY(size: number, upgrades: ProbeUpgrades): number {
+  const s = size / 128;
+  const cy = size * 0.5 + 6 * s;
+  const coreBotY = upgrades.hull === 3 ? cy + 28 * s
+                 : upgrades.hull === 2 ? cy + 24 * s
+                 : upgrades.hull === 1 ? cy + 23 * s
+                 : cy + 20 * s;
+  const engY = coreBotY - 2 * s;
+  if (upgrades.thrust === 3) return engY + 24 * s;
+  if (upgrades.thrust >= 1) return engY + 18 * s;
+  return engY + 14 * s;
+}
+
 export function drawProbeDynamic(ctx: Ctx, _t: number, size: number, upgrades: ProbeUpgrades): void {
   const s = size / 128;
   const cx = size * 0.5;

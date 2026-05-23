@@ -15,8 +15,6 @@ dist-ssr
 
 # Claude working files (not for repo)
 CLAUDE.md
-Plan.md
-ORGA.md
 .claude/
 
 # Editor directories and files

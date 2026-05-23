@@ -48,8 +48,8 @@ export default class CockpitHUD {
     btn.className = "help-btn";
     btn.textContent = "?";
     btn.addEventListener("click", () => {
-      const isVisible = docPanel.style.display === "block";
-      docPanel.style.display = isVisible ? "none" : "block";
+      const isVisible = docPanel.style.display === "flex";
+      docPanel.style.display = isVisible ? "none" : "flex";
     });
     document.body.appendChild(btn);
   }

@@ -75,7 +75,7 @@ export default class SimulationHUD {
   }
 
   show() {
-    this.panel.style.display = "block";
+    this.panel.style.display = "flex";
     this.resizeChart();
   }
 

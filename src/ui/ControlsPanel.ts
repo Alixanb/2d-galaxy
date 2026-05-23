@@ -51,7 +51,7 @@ export function buildControlsPanel(
     )
   );
 
-  panel.style.display = "block";
+  panel.style.display = "flex";
   document.body.appendChild(panel);
 }
 

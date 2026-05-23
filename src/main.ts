@@ -199,7 +199,7 @@ function buildSimSpeedWindow(initial: number, _getSpeed: () => number, setSpeed:
   body.appendChild(header);
   body.appendChild(slider);
 
-  panel.style.display = "block";
+  panel.style.display = "flex";
   document.body.appendChild(panel);
 }
 
@@ -248,6 +248,6 @@ function buildSpawnWindow(galaxy: Galaxy) {
   body.appendChild(addBtn);
   body.appendChild(hint);
 
-  panel.style.display = "block";
+  panel.style.display = "flex";
   document.body.appendChild(panel);
 }

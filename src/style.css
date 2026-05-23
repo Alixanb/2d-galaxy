@@ -562,7 +562,8 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
   border: 2px solid var(--border);
   z-index: 300;
   overflow: hidden;
-  display: none;
+  display: flex;
+  flex-direction: column;
   max-width: calc(100vw - 40px);
   max-height: calc(100vh - 100px);
 }
@@ -584,6 +585,7 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
   cursor: grab;
   background: color-mix(in srgb, var(--text) 5%, transparent);
   user-select: none;
+  flex-shrink: 0;
 }
 
 .window-titlebar:active { cursor: grabbing; }
@@ -612,6 +614,9 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
 
 .window-body {
   padding: 12px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .window-resize-grip {
@@ -1351,7 +1356,6 @@ input[type="range"]:hover::-webkit-slider-thumb { background: var(--text); }
   flex-direction: column;
   gap: 20px;
   padding: 5px;
-  overflow-y: auto;
 }
 
 .doc-container h3 {

@@ -1,6 +1,7 @@
 import Vec2 from "../core/Vec2";
 import type { Canvas2d } from "../systems/Canvas";
-import type { HeadingLockMode } from "../core/GameState";
+import type { HeadingLockMode, UpgradeState } from "../core/GameState";
+import { getMaxLE, getMaxMono, getThrustFactor, getRCSFactor } from "../core/GameState";
 import BlackHole from "./BlackHole";
 import RelayStation from "./RelayStation";
 import { ShipNavigator } from "./ship/ShipNavigator";
@@ -294,6 +295,16 @@ export default class Ship {
       this.angluarVel -= damping * Math.sign(this.angluarVel);
       this.monergol -= Ship.MONERGOL_RATE * dt;
     }
+  }
+
+  applyUpgrades(u: UpgradeState): void {
+    this.maxLiquidErgol = getMaxLE(u);
+    this.maxMonergol = getMaxMono(u);
+    this.autoStab = u.autoStab;
+    this.headingLockTier = u.headingLockTier;
+    Ship.THRUSTPOWER = Ship.DEFAULT_THRUSTPOWER * getThrustFactor(u) * 5;
+    Ship.RADIALPOWER = Ship.DEFAULT_RADIALPOWER * (getRCSFactor(u) / 0.4);
+    this.navigator.maxSteps = u.trajSteps;
   }
 
   collectFuel(type: "liquid-ergol" | "monergol", amount: number): void {

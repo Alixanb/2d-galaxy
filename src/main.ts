@@ -46,7 +46,9 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   let transitTargetId: string | null = null;
 
   const galaxyMap = new GalaxyMap(gameState, (id) => { transitTargetId = id; });
-  const techTree = new TechTree(gameState, () => {});
+  const techTree = new TechTree(gameState, () => {
+    if (galaxy.ship) galaxy.ship.applyUpgrades(gameState.upgrades);
+  });
 
   const cockpit = new CockpitHUD(
     galaxy,
@@ -158,6 +160,9 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
 
       const ship = new Ship(spawnPos, spriteOff, spriteOn, 30, true, blackholes);
       ship.vel = spawnVel;
+      ship.applyUpgrades(gameState.upgrades);
+      ship.liquidErgol = gameState.liquidErgol;
+      ship.monergol = gameState.monergol;
       galaxy.ship = ship;
     })
     .catch(console.error);

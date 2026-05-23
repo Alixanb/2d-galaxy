@@ -24,6 +24,8 @@ export class ShipNavigator {
   escapeTrajectory: boolean = false;
   escapeStepIndex: number = -1;
 
+  maxSteps: number = 100;
+
   constructor(_ship: Ship) {}
 
   getGravityVelocity(dt: number, pos: Vec2, blackholes: BlackHole[]) {
@@ -62,9 +64,7 @@ export class ShipNavigator {
     const bh0c = blackholes[0];
     let totalAngle = 0;
     let previousAngle = bh0c ? Math.atan2(curPos.y - bh0c.pos.y, curPos.x - bh0c.pos.x) : 0;
-    const MAX_STEPS = 5000;
-
-    for (let i = 0; i < MAX_STEPS; i++) {
+    for (let i = 0; i < this.maxSteps; i++) {
       let minDist = Infinity;
       for (const bh of blackholes) {
         const d = curPos.distance(bh.pos);

@@ -48,6 +48,9 @@ export default class Ship {
   ap: { worldPos: Vec2; dist: number } | null = null;
   targetRelay?: RelayStation;
   encounterPoint: { worldPos: Vec2; dist: number; timeToReach: number } | null = null;
+  escapeTrajectory: boolean = false;
+  escapeStepIndex: number = -1;
+  systemBoundaryRadius: number = 1.0;
 
   constructor(
     pos: Vec2,
@@ -352,6 +355,8 @@ export default class Ship {
     this.pe = null;
     this.ap = null;
     this.encounterPoint = null;
+    this.escapeTrajectory = false;
+    this.escapeStepIndex = -1;
     let encMinDist = Infinity;
     let encIdx = -1;
 
@@ -377,6 +382,12 @@ export default class Ship {
         const relayPos = this.targetRelay.projectPosition(i, dt);
         const d = pos.distance(relayPos);
         if (d < encMinDist) { encMinDist = d; encIdx = i; }
+      }
+
+      const bh0c = this.blackholes[0];
+      if (!this.escapeTrajectory && bh0c && pos.distance(bh0c.pos) > this.systemBoundaryRadius) {
+        this.escapeTrajectory = true;
+        this.escapeStepIndex = i;
       }
     }
 
@@ -419,7 +430,8 @@ export default class Ship {
     for (let i = 0; i < total - 1; i += segmentSize) {
       const alpha = 1 - i / total;
       ctx.globalAlpha = alpha * 0.8;
-      ctx.strokeStyle = `rgb(${this.pathColor.r}, ${this.pathColor.g}, ${this.pathColor.b})`;
+      const escaped = this.escapeTrajectory && i >= this.escapeStepIndex;
+      ctx.strokeStyle = escaped ? "#3dff7a" : `rgb(${this.pathColor.r}, ${this.pathColor.g}, ${this.pathColor.b})`;
 
       const from = canvas.place(this.path[i]);
       const to = canvas.place(this.path[Math.min(i + segmentSize, total - 1)]);

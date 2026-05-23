@@ -184,6 +184,14 @@ The **heading lock unlock** only grants the _automation_ ship auto-rotates to fa
 
 ---
 
+### Step 17 (Prep) Ship Modularization (Refactoring)
+
+**Files:** `src/entities/Ship.ts`, `src/entities/ship/`
+**What:** Subdivided monolithic Ship.ts (600+ lines) into specialized components: `ShipControls` (input), `ShipNavigator` (physics/orbit prediction), and `ShipRenderer` (Canvas2D drawing).
+**Status:** DONE
+
+---
+
 ### Step 16 MFD Guide view Approach tab
 
 **Files:** `src/ui/MFD.ts`

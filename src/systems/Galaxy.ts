@@ -55,6 +55,8 @@ export default class Galaxy {
   size: number;
   shaderProgram: ShaderProgram;
   totalStarsSpawned = 0;
+  onDock: (relay: RelayStation) => void = () => {};
+  private dockedRelays = new Set<RelayStation>();
 
   constructor(
     canvas2d: Canvas2d,
@@ -200,7 +202,19 @@ export default class Galaxy {
       }
     }
     this.fuelDepots = this.fuelDepots.filter(d => !d.collected);
-    for (const relay of this.relayStations) relay.update(dt);
+    for (const relay of this.relayStations) {
+      relay.update(dt);
+      if (this.ship && !this.dockedRelays.has(relay)) {
+        const dist = this.ship.pos.distance(relay.pos);
+        const relVelX = -Math.sin(relay.orbitAngle) * relay.orbitRadius * relay.orbitSpeed;
+        const relVelY = Math.cos(relay.orbitAngle) * relay.orbitRadius * relay.orbitSpeed;
+        const relSpeed = Math.hypot(this.ship.vel.x - relVelX, this.ship.vel.y - relVelY);
+        if (dist < relay.completionRadius && relSpeed < 0.0002) {
+          this.dockedRelays.add(relay);
+          this.onDock(relay);
+        }
+      }
+    }
   }
 
   draw() {

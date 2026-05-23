@@ -8,6 +8,7 @@ import Galaxy from "./systems/Galaxy";
 import LandingPage from "./ui/LandingPage";
 import CockpitHUD from "./ui/CockpitHUD";
 import { type GameMode, createInitialState } from "./core/GameState";
+import { SYSTEMS } from "./data/systems";
 
 const spriteThrusterOffUrl = "/assets/ship.png";
 const spriteThrusterOnUrl = "/assets/ship-thrust.png";
@@ -40,7 +41,15 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     (p) => { paused = p; }
   );
 
-  void gameState;
+  galaxy.onDock = () => {
+    const config = SYSTEMS.find(s => s.id === gameState.currentSystemId);
+    if (!config) return;
+    gameState.upgrades.parts += config.partsReward;
+    if (!gameState.completedSystems.includes(gameState.currentSystemId)) {
+      gameState.completedSystems.push(gameState.currentSystemId);
+    }
+    console.log(`Docked! +${config.partsReward} parts. Total: ${gameState.upgrades.parts}`);
+  };
 
   let lastTime = 0;
   const UPDATE_INTERVAL_MS = 200;

@@ -7,6 +7,7 @@ import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import CockpitHUD from "./ui/CockpitHUD";
 import { DebugPanel } from "./ui/DebugPanel";
+import { GalaxyMap } from "./ui/GalaxyMap";
 import { type GameMode, type TidalRating, createInitialState, getMaxLE, getMaxMono } from "./core/GameState";
 import { SYSTEMS, type SystemConfig } from "./data/systems";
 
@@ -41,12 +42,16 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
 
   let SIMULATION_SPEED = 1;
   let paused = false;
+  let transitTargetId: string | null = null;
+
+  const galaxyMap = new GalaxyMap(gameState, (id) => { transitTargetId = id; });
 
   const cockpit = new CockpitHUD(
     galaxy,
     () => SIMULATION_SPEED,
     (v) => { SIMULATION_SPEED = v; },
-    (p) => { paused = p; }
+    (p) => { paused = p; },
+    () => galaxyMap.toggle()
   );
 
   galaxy.onDock = () => {
@@ -182,8 +187,10 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
       if (!galaxy.transitMode && dist > boundary) {
         galaxy.enterTransitMode();
       } else if (galaxy.transitMode && dist > boundary * 1.5) {
-        const idx = SYSTEMS.indexOf(currentConfig);
-        loadSystem(SYSTEMS[(idx + 1) % SYSTEMS.length]);
+        const target = (transitTargetId ? SYSTEMS.find(s => s.id === transitTargetId) : null)
+          ?? SYSTEMS[(SYSTEMS.indexOf(currentConfig) + 1) % SYSTEMS.length];
+        transitTargetId = null;
+        loadSystem(target);
       }
     }
 

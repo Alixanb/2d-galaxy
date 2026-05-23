@@ -1,0 +1,21 @@
+
+.gmap-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  canvas { display: block; }
+}
+
+.gmap-tip {
+  position: fixed;
+  background: rgba(19, 14, 14, 0.96);
+  border: 1px solid rgba(236, 223, 205, 0.2);
+  color: #ecdfcd;
+  font: 11px / 1.6 monospace;
+  padding: 8px 10px;
+  pointer-events: none;
+  z-index: 501;
+  display: none;
+
+  b { color: #50b6c9; }
+}

@@ -787,7 +787,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 220px;
+  height: 300px;
   background: var(--bg);
   border-top: 1px solid var(--border-strong);
   display: grid;
@@ -1447,7 +1447,7 @@ input[type="range"]:hover::-webkit-slider-thumb {
   flex: 1;
   padding: 6px 2px;
   font-size: 9px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -1455,11 +1455,19 @@ input[type="range"]:hover::-webkit-slider-thumb {
   border: 1px solid var(--border);
   color: var(--text-muted);
   cursor: pointer;
-  transition: border-color 0.1s, color 0.1s;
+  transition:
+    border-color 0.1s,
+    color 0.1s;
 }
 
-.hlk-btn:disabled { opacity: 0.22; cursor: not-allowed; }
-.hlk-btn.hlk-active { border-color: #3dff7a; color: #3dff7a; }
+.hlk-btn:disabled {
+  opacity: 0.22;
+  cursor: not-allowed;
+}
+.hlk-btn.hlk-active {
+  border-color: #3dff7a;
+  color: #3dff7a;
+}
 
 /* ─── Status Section ─────────────────────────────────── */
 
@@ -1570,4 +1578,51 @@ input[type="range"]:hover::-webkit-slider-thumb {
   transition: background-color 0.5s;
   background-color: rgba(80, 182, 201, 0.15) !important;
   border-radius: 4px;
+}
+
+/* ─── Tidal Decay Bar ───────────────────────────────────── */
+
+.decay-wrap {
+  width: 100%;
+  padding: 4px 6px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.decay-label {
+  font-family: "Inter", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.decay-track {
+  height: 4px;
+  background: rgba(236, 38, 38, 0.18);
+  width: 100%;
+}
+
+.decay-fill {
+  height: 100%;
+  background: var(--red);
+  transition: width 0.4s linear;
+}
+
+.decay-time {
+  font-family: "Inter", sans-serif;
+  font-size: 9px;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes decayPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.decay-fill.decay-urgent {
+  animation: decayPulse 0.7s ease-in-out infinite;
 }

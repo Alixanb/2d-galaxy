@@ -7,11 +7,19 @@ import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import LandingPage from "./ui/LandingPage";
 import CockpitHUD from "./ui/CockpitHUD";
-import { type GameMode, createInitialState } from "./core/GameState";
+import { type GameMode, type TidalRating, createInitialState } from "./core/GameState";
 import { SYSTEMS } from "./data/systems";
 
 const spriteThrusterOffUrl = "/assets/ship.png";
 const spriteThrusterOnUrl = "/assets/ship-thrust.png";
+
+const TIDAL_LEVEL: Record<TidalRating, number> = { None: 0, Low: 1, Medium: 2, High: 3, Extreme: 4 };
+const DECAY_TABLE = [0, 300, 90, 30, 15];
+
+function getDecaySeconds(tidalRating: TidalRating, hullLevel: number): number | null {
+  const gap = TIDAL_LEVEL[tidalRating] - hullLevel;
+  return gap <= 0 ? null : DECAY_TABLE[Math.min(gap, 4)];
+}
 
 const landing = new LandingPage();
 
@@ -51,6 +59,10 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     console.log(`Docked! +${config.partsReward} parts. Total: ${gameState.upgrades.parts}`);
   };
 
+  const config = SYSTEMS.find(s => s.id === gameState.currentSystemId)!;
+  const initialDecay = getDecaySeconds(config.tidalRating, gameState.upgrades.hullLevel);
+  let decayTimer: number | null = initialDecay;
+
   let lastTime = 0;
   const UPDATE_INTERVAL_MS = 200;
   let lastUpdate = Date.now();
@@ -79,6 +91,20 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     lastTime = time;
 
     if (!paused) accumulator += rawDelta * SIMULATION_SPEED;
+
+    if (!paused && decayTimer !== null) {
+      decayTimer -= rawDelta;
+      if (decayTimer <= 0 && gameState.mode === 'RELAY') {
+        decayTimer = initialDecay;
+        const ship = galaxy.ship;
+        if (ship) {
+          const r = 0.7;
+          const a = Math.random() * Math.PI * 2;
+          ship.pos = new Vec2(Math.cos(a) * r, Math.sin(a) * r);
+          ship.vel = Star.getVelocity(ship.pos, blackholes[0], 2.1 * 10e1);
+        }
+      }
+    }
 
     const now = Date.now();
     if (now - lastUpdate >= UPDATE_INTERVAL_MS) {
@@ -114,7 +140,9 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         ship2.liquidErgol,
         ship2.maxLiquidErgol,
         ship2.monergol,
-        ship2.maxMonergol
+        ship2.maxMonergol,
+        decayTimer,
+        initialDecay
       );
     }
 

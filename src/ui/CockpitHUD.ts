@@ -26,6 +26,9 @@ export default class CockpitHUD {
   private leCanvas!: HTMLCanvasElement;
   private moCanvas!: HTMLCanvasElement;
   private spCanvas!: HTMLCanvasElement;
+  private decayWrap!: HTMLElement;
+  private decayFill!: HTMLElement;
+  private decayTime!: HTMLSpanElement;
   private headingRows: { el: HTMLElement; delta: HTMLSpanElement }[] = [];
   private hlkBtns: { el: HTMLButtonElement; mode: HeadingLockMode; minTier: number }[] = [];
 
@@ -140,7 +143,7 @@ export default class CockpitHUD {
       (v) => `${v}%`,
       () => Math.round((Ship.THRUSTPOWER / thrustDefault) * 20)));
       
-    section.appendChild(this.makeFader("RCS (Q/E)", 20, 0, 100, 5, "cyan",
+    section.appendChild(this.makeFader("RCS", 20, 0, 100, 5, "cyan",
       (v) => { Ship.RADIALPOWER = rotDefault * (v / 20); },
       (v) => `${v}%`,
       () => Math.round((Ship.RADIALPOWER / rotDefault) * 20)));
@@ -422,6 +425,23 @@ export default class CockpitHUD {
     wrap.appendChild(this.moCanvas);
     section.appendChild(wrap);
 
+    const dw = document.createElement('div');
+    dw.className = 'decay-wrap';
+    dw.style.display = 'none';
+    dw.appendChild(Object.assign(document.createElement('span'), { className: 'decay-label', textContent: 'TIDAL DECAY' }));
+    const track = document.createElement('div');
+    track.className = 'decay-track';
+    const fill = document.createElement('div');
+    fill.className = 'decay-fill';
+    track.appendChild(fill);
+    dw.appendChild(track);
+    const dt = Object.assign(document.createElement('span'), { className: 'decay-time' });
+    dw.appendChild(dt);
+    this.decayWrap = dw;
+    this.decayFill = fill;
+    this.decayTime = dt;
+    section.appendChild(dw);
+
     return section;
   }
 
@@ -519,7 +539,7 @@ export default class CockpitHUD {
     ctx.fillText(label, cx, cy + r * 0.6);
   }
 
-  updateStatusGauges(vx: number, vy: number, liquidErgol: number, maxLE: number, monergol: number, maxM: number): void {
+  updateStatusGauges(vx: number, vy: number, liquidErgol: number, maxLE: number, monergol: number, maxM: number, decaySeconds: number | null = null, decayMax: number | null = null): void {
     const lePct = maxLE > 0 ? Math.max(0, liquidErgol / maxLE) : 0;
     const moPct = maxM  > 0 ? Math.max(0, monergol   / maxM)  : 0;
 
@@ -551,5 +571,14 @@ export default class CockpitHUD {
       Math.ceil(monergol).toString(),
       moPct < 0.2
     );
+
+    if (decaySeconds === null || decayMax === null) {
+      this.decayWrap.style.display = 'none';
+    } else {
+      this.decayWrap.style.display = 'block';
+      this.decayFill.style.width = `${Math.max(0, decaySeconds / decayMax) * 100}%`;
+      this.decayTime.textContent = `${Math.ceil(decaySeconds)}s`;
+      this.decayFill.classList.toggle('decay-urgent', decaySeconds < 30);
+    }
   }
 }

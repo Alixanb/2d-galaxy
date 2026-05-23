@@ -1,0 +1,25 @@
+/* ─── COCKPIT PANEL ──────────────────────────────────────── */
+
+.cockpit-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 300px;
+  background: var(--bg);
+  border-top: 1px solid var(--border-strong);
+  display: grid;
+  grid-template-columns: 250px 250px 170px 150px 170px 260px;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.cockpit-section-label {
+  font-family: "Satoshi", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}

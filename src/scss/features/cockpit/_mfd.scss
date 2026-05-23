@@ -1,0 +1,330 @@
+/* ─── MFD ────────────────────────────────────────────────── */
+
+.mfd {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mfd-btns-top,
+.mfd-btns-bottom {
+  display: flex;
+  flex-direction: row;
+  height: 32px;
+  flex-shrink: 0;
+  background: #0c180c;
+  padding: 4px 4px;
+  gap: 3px;
+}
+
+.mfd-btns-top {
+  border-bottom: 2px solid rgba(61, 255, 122, 0.28);
+}
+.mfd-btns-bottom {
+  border-top: 2px solid rgba(61, 255, 122, 0.28);
+}
+
+.mfd-osb {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, #1c2e1c, #0e1e0e);
+  border: 1px solid rgba(61, 255, 122, 0.2);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition:
+    background 0.08s,
+    border-color 0.08s;
+  padding: 0;
+  user-select: none;
+  min-height: 0;
+
+  &::before {
+    content: "";
+    display: block;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid color-mix(in srgb, var(--text) 22%, transparent);
+    background: color-mix(in srgb, var(--text) 4%, transparent);
+    transition:
+      border-color 0.12s,
+      background 0.12s,
+      box-shadow 0.12s;
+  }
+
+  &:hover:not(.unused) {
+    background: linear-gradient(to bottom, #243824, #122212);
+    border-color: rgba(61, 255, 122, 0.35);
+
+    &::before {
+      border-color: color-mix(in srgb, var(--text) 42%, transparent);
+    }
+  }
+
+  &:active:not(.unused) {
+    background: linear-gradient(to bottom, #080e08, #0e1e0e);
+    border-top: 2px solid rgba(0, 0, 0, 0.55);
+    border-bottom: 1px solid rgba(61, 255, 122, 0.18);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  &.active::before {
+    border-color: var(--cyan);
+    background: color-mix(in srgb, var(--cyan) 55%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--cyan) 45%, transparent);
+  }
+
+  &.modifier-on::before {
+    border-color: var(--green);
+    background: color-mix(in srgb, var(--green) 55%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--green) 45%, transparent);
+  }
+
+  &.unused {
+    opacity: 0.15;
+    pointer-events: none;
+    border-color: rgba(61, 255, 122, 0.05);
+  }
+}
+
+/* ─── Label strips ────────────────────────────────────────── */
+
+.mfd-labels-top,
+.mfd-labels-bottom {
+  display: flex;
+  flex-direction: row;
+  height: 15px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.mfd-labels-top {
+  border-bottom: 1px solid rgba(61, 255, 122, 0.1);
+}
+.mfd-labels-bottom {
+  border-top: 1px solid rgba(61, 255, 122, 0.1);
+}
+
+.mfd-lbl {
+  flex: 1;
+  font-family: "Courier New", monospace;
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(61, 255, 122, 0.35);
+  text-align: center;
+  line-height: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+
+  &.active {
+    color: var(--cyan);
+  }
+  &.modifier-on {
+    color: var(--green);
+  }
+  &.unused {
+    opacity: 0.18;
+  }
+}
+
+.mfd-screen {
+  flex: 1;
+  background: #030a04;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-height: 0;
+}
+
+/* ─── MFD view containers ────────────────────────────────── */
+
+.mfd-view {
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: "Courier New", monospace;
+}
+
+/* Home */
+.mfd-view-home {
+  align-items: stretch;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 10px;
+}
+
+.mfd-home-row {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  width: 100%;
+}
+
+.mfd-home-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  border: 1px solid rgba(61, 255, 122, 0.12);
+  cursor: pointer;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(61, 255, 122, 0.7);
+  text-transform: uppercase;
+  text-align: center;
+  transition:
+    border-color 0.1s,
+    background 0.1s;
+
+  &:hover {
+    border-color: rgba(61, 255, 122, 0.38);
+    background: rgba(61, 255, 122, 0.04);
+  }
+}
+
+/* Shared data rows */
+.mfd-header {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(61, 255, 122, 0.45);
+  text-transform: uppercase;
+  padding: 8px 14px 4px;
+  flex-shrink: 0;
+}
+
+.mfd-sep {
+  height: 1px;
+  background: rgba(61, 255, 122, 0.15);
+  margin: 4px 14px;
+  flex-shrink: 0;
+}
+
+.mfd-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 14px;
+  flex-shrink: 0;
+}
+
+.mfd-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(61, 255, 122, 0.5);
+  width: 42px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mfd-arrow {
+  font-size: 11px;
+  color: #3dff7a;
+  width: 14px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.mfd-val {
+  font-size: 11px;
+  color: #3dff7a;
+  letter-spacing: 0.04em;
+  margin-left: auto;
+  transition: opacity 0.2s;
+}
+
+.mfd-val-spd {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mfd-unit {
+  font-size: 8px;
+  color: rgba(61, 255, 122, 0.4);
+  letter-spacing: 0.06em;
+}
+
+/* Attitude canvas */
+.mfd-view-att {
+  align-items: stretch;
+}
+
+.mfd-att-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Telemetry chart */
+.mfd-chart-wrap {
+  flex: 1;
+  margin: 4px 8px 6px;
+  min-height: 40px;
+  overflow: hidden;
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* ─── Fuel (ERGOL) view ─────────────────────────────────── */
+
+.mfd-fuel-row {
+  flex-shrink: 0;
+}
+
+.mfd-fuel-bar-wrap {
+  height: 4px;
+  background: rgba(61, 255, 122, 0.1);
+  margin: 1px 14px 4px;
+  flex-shrink: 0;
+}
+
+.mfd-fuel-bar-fill {
+  height: 100%;
+  transition:
+    width 0.2s ease,
+    background-color 0.3s;
+
+  &.mfd-fuel-le {
+    background: var(--cyan);
+  }
+  &.mfd-fuel-mo {
+    background: #b06fd8;
+  }
+
+  &.mfd-fuel-critical {
+    background: var(--red) !important;
+    animation: fuelPulse 0.5s ease-in-out infinite;
+  }
+}
+
+.mfd-fuel-amount {
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Radar view ─────────────────────────────────────────── */
+
+.mfd-view-radar {
+  align-items: stretch;
+}
+
+.mfd-radar-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

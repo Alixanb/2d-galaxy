@@ -47,7 +47,7 @@ export default class BlackHole extends Star {
     // Core filled with background color to "erase" stars behind it
     ctx.beginPath();
     ctx.arc(screenPos.x, screenPos.y, this.size, 0, Math.PI * 2);
-    ctx.fillStyle = "#2b201f";
+    ctx.fillStyle = "#000000";
     ctx.fill();
 
     ctx.restore();

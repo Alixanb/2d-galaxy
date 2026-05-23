@@ -53,87 +53,30 @@
         <!-- Right: settings panel -->
         <div class="landing-panel">
           <div class="landing-panel-body">
-            <div class="landing-panel-label">Configure</div>
+            <div class="landing-panel-label">Select Mode</div>
 
-            <div class="settings-grid">
-              <div class="setting" style="--delay: 0">
-                <div class="setting-header">
-                  <span class="setting-label">Stars</span>
-                  <span class="setting-value" id="val-stars">5000</span>
-                </div>
-                <input
-                  type="range"
-                  id="inp-stars"
-                  min="100"
-                  max="10000"
-                  value="5000"
-                  step="100"
-                />
-              </div>
-
-              <div class="setting" style="--delay: 1">
-                <div class="setting-header">
-                  <span class="setting-label">Galaxy size</span>
-                  <span class="setting-value" id="val-galaxy-size">0.70</span>
-                </div>
-                <input
-                  type="range"
-                  id="inp-galaxy-size"
-                  min="10"
-                  max="200"
-                  value="70"
-                  step="5"
-                />
-              </div>
-
-              <div class="setting" style="--delay: 2">
-                <div class="setting-header">
-                  <span class="setting-label">Sim speed</span>
-                  <span class="setting-value" id="val-sim-speed">1×</span>
-                </div>
-                <input
-                  type="range"
-                  id="inp-sim-speed"
-                  min="1"
-                  max="10"
-                  value="1"
-                  step="1"
-                />
-              </div>
-
-              <div class="setting" style="--delay: 3">
-                <div class="setting-header">
-                  <span class="setting-label">Black holes</span>
-                  <span class="setting-value" id="val-blackholes">2</span>
-                </div>
-                <input
-                  type="range"
-                  id="inp-blackholes"
-                  min="0"
-                  max="3"
-                  value="1"
-                  step="1"
-                />
-              </div>
-
-              <div class="setting setting--toggle" style="--delay: 4">
-                <span class="setting-label">Ship path</span>
-                <label class="toggle">
-                  <input type="checkbox" id="inp-show-path" />
-                  <span class="toggle-track"></span>
-                </label>
-              </div>
-
-              <div class="setting setting--toggle" style="--delay: 5">
-                <span class="setting-label">Black holes</span>
-                <label class="toggle">
-                  <input type="checkbox" id="inp-show-blackholes" checked />
-                  <span class="toggle-track"></span>
-                </label>
-              </div>
+            <div class="mode-list">
+              <button class="mode-btn" data-mode="RELAY">
+                <span class="mode-name">RELAY</span>
+                <span class="mode-desc">Career · deliver signal packets · earn parts · unlock upgrades</span>
+              </button>
+              <button class="mode-btn" data-mode="FREE_FLIGHT">
+                <span class="mode-name">FREE FLIGHT</span>
+                <span class="mode-desc">Creative sandbox · no failure state · full upgrades</span>
+              </button>
+              <button class="mode-btn" data-mode="DEAD_SIGNAL">
+                <span class="mode-name">DEAD SIGNAL</span>
+                <span class="mode-desc">Hardcore · fuel out = game over · no respawn</span>
+              </button>
             </div>
 
-            <button id="start-btn" style="--delay: 6">Start Simulation</button>
+            <div class="setting setting--toggle" style="--delay: 0">
+              <span class="setting-label">Black holes</span>
+              <label class="toggle">
+                <input type="checkbox" id="inp-show-blackholes" checked />
+                <span class="toggle-track"></span>
+              </label>
+            </div>
           </div>
         </div>
 

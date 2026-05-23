@@ -15,8 +15,8 @@ const spriteThrusterOnUrl = "/assets/ship-thrust.png";
 
 const landing = new LandingPage();
 
-landing.onStart = (config: SimulationConfig) => {
-  startSimulation(config);
+landing.onStart = (_mode, showBlackholes) => {
+  startSimulation({ nStars: 5000, galaxySize: 0.7, simulationSpeed: 1, nBlackHoles: 1, showPath: true, showBlackholes });
 };
 
 function buildBlackHoles(n: number, showBlackholes: boolean): BlackHole[] {

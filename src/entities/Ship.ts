@@ -254,7 +254,7 @@ export default class Ship {
         const safeRad = Math.max(Ship.RADIALPOWER, Ship.DEFAULT_RADIALPOWER * 0.1);
         const damping = Math.min(Math.abs(this.angluarVel), safeRad);
         this.angluarVel -= damping * Math.sign(this.angluarVel);
-        this.monergol -= (damping / safeRad) * Ship.MONERGOL_RATE * dt;
+        this.monergol -= Ship.MONERGOL_RATE * dt;
       }
     }
 
@@ -405,7 +405,7 @@ export default class Ship {
       const safeRad = Math.max(Ship.RADIALPOWER, Ship.DEFAULT_RADIALPOWER * 0.1);
       const damping = Math.min(Math.abs(this.angluarVel), safeRad);
       this.angluarVel -= damping * Math.sign(this.angluarVel);
-      this.monergol -= (damping / safeRad) * Ship.MONERGOL_RATE * dt;
+      this.monergol -= Ship.MONERGOL_RATE * dt;
     }
   }
 

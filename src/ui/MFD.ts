@@ -18,7 +18,7 @@ export interface MFDData {
 type MFDView = "home" | "vel" | "att" | "tel" | "fuel" | "radar";
 
 const CHART_MAX_POINTS = 120;
-const SCALE = 10000;
+const SCALE = 2000;
 const VEL_THRESHOLD = 0.00008;
 
 export default class MFD {

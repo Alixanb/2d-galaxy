@@ -5,7 +5,6 @@ import Ship from "./entities/Ship";
 import Star from "./entities/Star";
 import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
-import LandingPage from "./ui/LandingPage";
 import CockpitHUD from "./ui/CockpitHUD";
 import { DebugPanel } from "./ui/DebugPanel";
 import { type GameMode, type TidalRating, createInitialState, getMaxLE, getMaxMono } from "./core/GameState";
@@ -22,11 +21,11 @@ function getDecaySeconds(tidalRating: TidalRating, hullLevel: number): number | 
   return gap <= 0 ? null : DECAY_TABLE[Math.min(gap, 4)];
 }
 
-const landing = new LandingPage();
+const params = new URLSearchParams(window.location.search);
+const modeFromUrl = params.get('mode') as GameMode || 'RELAY';
+const bhFromUrl = params.get('bh') !== 'false';
 
-landing.onStart = (mode, showBlackholes) => {
-  startSimulation(mode, showBlackholes);
-};
+startSimulation(modeFromUrl, bhFromUrl);
 
 function startSimulation(mode: GameMode, showBlackholes: boolean) {
   const gameState = createInitialState(mode);
@@ -121,6 +120,19 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   const FIXED_STEP = 1 / 60;
   let accumulator = 0;
 
+  // Handle tab visibility to auto-pause and prevent "catch-up" freeze
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      paused = true;
+      cockpit.setPaused(true);
+    } else {
+      // Reset lastTime to current performance.now() to avoid huge delta
+      lastTime = performance.now();
+      paused = false;
+      cockpit.setPaused(false);
+    }
+  });
+
   Promise.all([loadImage(spriteThrusterOffUrl), loadImage(spriteThrusterOnUrl)])
     .then(([spriteOff, spriteOn]) => {
       let spawnPos = new Vec2(0, 0);
@@ -138,7 +150,8 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     .catch(console.error);
 
   function animate(time: number) {
-    const rawDelta = (time - lastTime) / 1000;
+    // Clamp rawDelta to 0.1s to prevent massive catch-up loops if rAF skips many frames
+    const rawDelta = Math.min((time - lastTime) / 1000, 0.1);
     lastTime = time;
 
     if (!paused) accumulator += rawDelta * SIMULATION_SPEED;

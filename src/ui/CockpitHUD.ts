@@ -2,7 +2,6 @@ import Ship from "../entities/Ship";
 import Galaxy from "../systems/Galaxy";
 import type { HeadingLockMode } from "../core/GameState";
 import MFD, { type MFDData } from "./MFD";
-import { buildDocPanel } from "./DocPanel";
 
 export default class CockpitHUD {
   private galaxy: Galaxy;
@@ -22,6 +21,8 @@ export default class CockpitHUD {
   private decayTime!: HTMLSpanElement;
   private headingRows: { el: HTMLElement; delta: HTMLSpanElement }[] = [];
   private hlkBtns: { el: HTMLButtonElement; mode: HeadingLockMode; minTier: number }[] = [];
+  private pauseBtn!: HTMLButtonElement;
+  private isPaused = false;
 
   constructor(
     galaxy: Galaxy,
@@ -55,15 +56,28 @@ export default class CockpitHUD {
   }
 
   private buildHelpButton() {
-    const docPanel = buildDocPanel();
-    const btn = document.createElement("button");
-    btn.className = "help-btn";
-    btn.textContent = "?";
-    btn.addEventListener("click", () => {
-      const isVisible = docPanel.style.display === "flex";
-      docPanel.style.display = isVisible ? "none" : "flex";
+    const btnContainer = document.createElement("div");
+    btnContainer.className = "floating-btns";
+
+    const homeBtn = document.createElement("button");
+    homeBtn.className = "floating-btn home-btn";
+    homeBtn.textContent = "H";
+    homeBtn.title = "Return Home";
+    homeBtn.addEventListener("click", () => {
+      window.location.href = "/index.html";
     });
-    document.body.appendChild(btn);
+
+    const helpBtn = document.createElement("button");
+    helpBtn.className = "floating-btn help-btn";
+    helpBtn.textContent = "?";
+    helpBtn.title = "Open Manual";
+    helpBtn.addEventListener("click", () => {
+      window.open("/docs.html", "_blank");
+    });
+
+    btnContainer.appendChild(homeBtn);
+    btnContainer.appendChild(helpBtn);
+    document.body.appendChild(btnContainer);
   }
 
   update(data: MFDData): void {
@@ -112,6 +126,14 @@ export default class CockpitHUD {
     } else {
       this.retroBtn.classList.remove("retro-active", "retro-align", "retro-burn");
       this.retroBtn.textContent = "RETRO BURN";
+    }
+  }
+
+  setPaused(paused: boolean): void {
+    this.isPaused = paused;
+    if (this.pauseBtn) {
+      this.pauseBtn.classList.toggle("autostab-active", paused);
+      this.pauseBtn.textContent = paused ? "RESUME" : "PAUSE";
     }
   }
 
@@ -272,15 +294,14 @@ export default class CockpitHUD {
       }
     });
 
-    const pauseBtn = document.createElement("button");
-    pauseBtn.className = "autostab-btn";
-    pauseBtn.textContent = "PAUSE";
-    let isPaused = false;
-    pauseBtn.addEventListener("click", () => {
-      isPaused = !isPaused;
-      pauseBtn.classList.toggle("autostab-active", isPaused);
-      pauseBtn.textContent = isPaused ? "RESUME" : "PAUSE";
-      this.onPauseCb(isPaused);
+    this.pauseBtn = document.createElement("button");
+    this.pauseBtn.className = "autostab-btn";
+    this.pauseBtn.textContent = "PAUSE";
+    this.pauseBtn.addEventListener("click", () => {
+      this.isPaused = !this.isPaused;
+      this.pauseBtn.classList.toggle("autostab-active", this.isPaused);
+      this.pauseBtn.textContent = this.isPaused ? "RESUME" : "PAUSE";
+      this.onPauseCb(this.isPaused);
     });
 
     const dockBtn = document.createElement("button");
@@ -295,7 +316,7 @@ export default class CockpitHUD {
 
     wrap.appendChild(this.autoStabBtn);
     wrap.appendChild(this.retroBtn);
-    wrap.appendChild(pauseBtn);
+    wrap.appendChild(this.pauseBtn);
     wrap.appendChild(dockBtn);
     section.appendChild(wrap);
 
@@ -514,8 +535,8 @@ export default class CockpitHUD {
     const lePct = maxLE > 0 ? Math.max(0, liquidErgol / maxLE) : 0;
     const moPct = maxM  > 0 ? Math.max(0, monergol   / maxM)  : 0;
 
-    const speed = Math.hypot(vx, vy) * 10000;
-    const speedPct = Math.min(1, speed / 500); // 500 m/s as max for gauge
+    const speed = Math.hypot(vx, vy) * 2000;
+    const speedPct = Math.min(1, speed / 100); // 100 units as max for gauge
     this.drawGauge(
       this.spCanvas,
       speedPct,

@@ -1493,10 +1493,17 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 /* ─── Documentation Panel ───────────────────────────────── */
 
-.help-btn {
+.floating-btns {
   position: absolute;
   bottom: 175px;
   right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 400;
+}
+
+.floating-btn {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -1509,18 +1516,20 @@ input[type="range"]:hover::-webkit-slider-thumb {
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
-  z-index: 400;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.help-btn:hover {
+.floating-btn:hover {
   border-color: var(--cyan);
   color: var(--cyan);
   background: var(--bg);
   transform: scale(1.1);
 }
+
+.help-btn { }
+.home-btn { font-size: 12px; }
 
 .doc-container {
   font-family: "Inter", sans-serif;
@@ -1625,4 +1634,211 @@ input[type="range"]:hover::-webkit-slider-thumb {
 
 .decay-fill.decay-urgent {
   animation: decayPulse 0.7s ease-in-out infinite;
+}
+
+/* --- Documentation Site Styles --- */
+.docs-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #130e0e;
+  color: #ece7cd;
+  overflow-y: auto;
+}
+
+body.is-docs {
+  overflow-y: auto;
+}
+
+.docs-sidebar {
+  width: 280px;
+  border-right: 1px solid rgba(236, 223, 205, 0.1);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  background: #0a0808;
+}
+
+.docs-logo h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #50b6c9;
+  letter-spacing: 2px;
+}
+
+.docs-logo span {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+.docs-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 3rem 0;
+  flex-grow: 1;
+}
+
+.docs-nav-list li {
+  padding: 0.8rem 0;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  border-bottom: 1px solid transparent;
+}
+
+.docs-nav-list li:hover {
+  opacity: 1;
+  color: #50b6c9;
+}
+
+.docs-nav-list li.active {
+  opacity: 1;
+  color: #50b6c9;
+  font-weight: 600;
+  padding-left: 0.5rem;
+  border-left: 2px solid #50b6c9;
+}
+
+.docs-sidebar-footer a {
+  color: #e9d628;
+  text-decoration: none;
+  font-size: 0.9rem;
+  display: block;
+  padding: 1rem;
+  border: 1px solid rgba(233, 214, 40, 0.2);
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.docs-sidebar-footer a:hover {
+  background: rgba(233, 214, 40, 0.1);
+}
+
+.docs-content {
+  flex-grow: 1;
+  padding: 4rem 6rem;
+  max-width: 900px;
+  line-height: 1.6;
+}
+
+.docs-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: #ece7cd;
+}
+
+.docs-content h2 {
+  font-size: 1.8rem;
+  margin: 3rem 0 1.5rem;
+  color: #50b6c9;
+  border-bottom: 1px solid rgba(80, 182, 201, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.docs-content p.lead {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  margin-bottom: 3rem;
+}
+
+.doc-card {
+  background: rgba(236, 223, 205, 0.03);
+  border: 1px solid rgba(236, 223, 205, 0.08);
+  padding: 2rem;
+  border-radius: 4px;
+  margin: 2rem 0;
+}
+
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.doc-box {
+  background: rgba(255,255,255,0.02);
+  padding: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+.doc-box h3 {
+  color: #50b6c9;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.doc-box.hazard {
+  border-left: 4px solid #ec2626;
+}
+
+.marker-list {
+  list-style: none;
+  padding: 0;
+}
+
+.marker-list li {
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.marker-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-size: 0.8rem;
+}
+
+.marker-icon.pe { color: #ec2626; }
+.marker-icon.ap { color: #e9d628; }
+.marker-icon.enc { color: #50b6c9; }
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+}
+
+.doc-table th, .doc-table td {
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.doc-table th {
+  color: #50b6c9;
+  font-weight: 600;
+}
+
+@media (max-width: 1000px) {
+  .docs-sidebar { width: 200px; padding: 1rem; }
+  .docs-content { padding: 2rem; }
+}
+
+.doc-tip {
+  background: rgba(233, 214, 40, 0.05);
+  border-left: 4px solid #e9d628;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.check-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+.check-list li::before {
+  content: "✓";
+  color: #3dff7a;
+  margin-right: 0.5rem;
 }

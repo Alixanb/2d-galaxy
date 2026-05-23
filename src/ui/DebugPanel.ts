@@ -2,15 +2,25 @@ import { SYSTEMS } from "../data/systems";
 
 export class DebugPanel {
   private container: HTMLDivElement;
-  private content: HTMLDivElement;
+  private content!: HTMLDivElement;
   private isCollapsed = false;
 
+  private onWarp: (systemId: string) => void;
+  private onRefill: () => void;
+  private onMaxUpgrades: () => void;
+  private onAddParts: () => void;
+
   constructor(
-    private onWarp: (systemId: string) => void,
-    private onRefill: () => void,
-    private onMaxUpgrades: () => void,
-    private onAddParts: () => void
+    onWarp: (systemId: string) => void,
+    onRefill: () => void,
+    onMaxUpgrades: () => void,
+    onAddParts: () => void
   ) {
+    this.onWarp = onWarp;
+    this.onRefill = onRefill;
+    this.onMaxUpgrades = onMaxUpgrades;
+    this.onAddParts = onAddParts;
+
     this.container = document.createElement("div");
     this.setupStyles();
     this.buildUI();

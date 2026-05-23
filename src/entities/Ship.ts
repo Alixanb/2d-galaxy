@@ -336,7 +336,7 @@ export default class Ship {
     while (diff > Math.PI) diff -= 2 * Math.PI;
     while (diff < -Math.PI) diff += 2 * Math.PI;
     if (Math.abs(diff) < 0.005) { this.angle = targetAngle; this.angluarVel = 0; return; }
-    const rate = Math.sign(diff) * Math.min(Math.abs(diff) * 3, Ship.RADIALPOWER * 4);
+    const rate = Math.sign(diff) * Math.min(Math.abs(diff), Ship.RADIALPOWER);
     this.angluarVel = rate;
     this.monergol -= (Math.abs(rate) / Ship.RADIALPOWER) * Ship.MONERGOL_RATE * dt * 0.1;
   }

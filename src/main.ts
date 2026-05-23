@@ -8,6 +8,7 @@ import Galaxy from "./systems/Galaxy";
 import CockpitHUD from "./ui/CockpitHUD";
 import { DebugPanel } from "./ui/DebugPanel";
 import { GalaxyMap } from "./ui/GalaxyMap";
+import { TechTree } from "./ui/TechTree";
 import { type GameMode, type TidalRating, createInitialState, getMaxLE, getMaxMono } from "./core/GameState";
 import { SYSTEMS, type SystemConfig } from "./data/systems";
 
@@ -45,13 +46,15 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   let transitTargetId: string | null = null;
 
   const galaxyMap = new GalaxyMap(gameState, (id) => { transitTargetId = id; });
+  const techTree = new TechTree(gameState, () => {});
 
   const cockpit = new CockpitHUD(
     galaxy,
     () => SIMULATION_SPEED,
     (v) => { SIMULATION_SPEED = v; },
     (p) => { paused = p; },
-    () => galaxyMap.toggle()
+    () => galaxyMap.toggle(),
+    () => techTree.toggle()
   );
 
   galaxy.onDock = () => {

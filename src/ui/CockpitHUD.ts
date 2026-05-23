@@ -20,7 +20,8 @@ export default class CockpitHUD {
     getSimSpeed: () => number = () => 1,
     setSimSpeed: (v: number) => void = () => {},
     onPause: (paused: boolean) => void = () => {},
-    onOpenMap: () => void = () => {}
+    onOpenMap: () => void = () => {},
+    onOpenTech: () => void = () => {}
   ) {
     const panel = document.createElement("div");
     panel.className = "cockpit-panel";
@@ -45,11 +46,11 @@ export default class CockpitHUD {
     lastCol.appendChild(this.status.getRoot());
     panel.appendChild(lastCol);
 
-    this.buildHelpButton(onOpenMap);
+    this.buildHelpButton(onOpenMap, onOpenTech);
     document.body.appendChild(panel);
   }
 
-  private buildHelpButton(onOpenMap: () => void) {
+  private buildHelpButton(onOpenMap: () => void, onOpenTech: () => void) {
     const btnContainer = document.createElement("div");
     btnContainer.className = "floating-btns";
 
@@ -67,6 +68,12 @@ export default class CockpitHUD {
     mapBtn.title = "Galaxy Map";
     mapBtn.addEventListener("click", onOpenMap);
 
+    const techBtn = document.createElement("button");
+    techBtn.className = "floating-btn";
+    techBtn.textContent = "T";
+    techBtn.title = "Tech Tree";
+    techBtn.addEventListener("click", onOpenTech);
+
     const helpBtn = document.createElement("button");
     helpBtn.className = "floating-btn help-btn";
     helpBtn.textContent = "?";
@@ -77,6 +84,7 @@ export default class CockpitHUD {
 
     btnContainer.appendChild(homeBtn);
     btnContainer.appendChild(mapBtn);
+    btnContainer.appendChild(techBtn);
     btnContainer.appendChild(helpBtn);
     document.body.appendChild(btnContainer);
   }

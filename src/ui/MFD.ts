@@ -6,6 +6,7 @@ import { AttitudeView } from "./mfd/views/AttitudeView";
 import { TelemetryView } from "./mfd/views/TelemetryView";
 import { FuelView } from "./mfd/views/FuelView";
 import { RadarView } from "./mfd/views/RadarView";
+import { GuideView } from "./mfd/views/GuideView";
 
 export interface MFDData {
   vx: number;
@@ -22,7 +23,7 @@ export interface MFDData {
   isThrusting: boolean;
 }
 
-export type MFDViewKey = "home" | "vel" | "att" | "tel" | "fuel" | "radar";
+export type MFDViewKey = "home" | "vel" | "att" | "tel" | "fuel" | "radar" | "guide";
 
 export default class MFD {
   private root: HTMLElement;
@@ -43,6 +44,7 @@ export default class MFD {
       tel:   new TelemetryView(),
       fuel:  new FuelView(),
       radar: new RadarView(galaxy),
+      guide: new GuideView(galaxy),
     };
 
     this.root = document.createElement("div");
@@ -62,7 +64,7 @@ export default class MFD {
     bottomStrip.className = "mfd-btns-bottom";
 
     const osb1 = this.makeOSB(() => this.setView("home"));
-    const osb2 = this.makeOSB(() => this.onOSB(2));
+    const osb2 = this.makeOSB(() => this.setView("guide"));
     const osb3 = this.makeOSB(() => this.onOSB(3));
     const osb4 = this.makeOSB(() => this.onOSB(4));
     const osb5 = this.makeOSB(() => this.onOSB(5));
@@ -165,6 +167,15 @@ export default class MFD {
       if (i === 0 && this.currentViewKey === "home") {
         osb.classList.add("active");
         lbl.classList.add("active");
+      }
+      if (i === 1) {
+        osb.className = "mfd-osb";
+        lbl.className = "mfd-lbl";
+        lbl.textContent = "GUIDE";
+        if (this.currentViewKey === "guide") {
+          osb.classList.add("active");
+          lbl.classList.add("active");
+        }
       }
       if (i === 3 && this.currentViewKey === "tel") {
         osb.classList.add("active");

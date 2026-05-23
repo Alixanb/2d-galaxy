@@ -1,4 +1,4 @@
-/* ─── MFD ────────────────────────────────────────────────── */
+
 
 .mfd {
   display: flex;
@@ -92,7 +92,7 @@
   }
 }
 
-/* ─── Label strips ────────────────────────────────────────── */
+
 
 .mfd-labels-top,
 .mfd-labels-bottom {
@@ -144,7 +144,7 @@
   min-height: 0;
 }
 
-/* ─── MFD view containers ────────────────────────────────── */
+
 
 .mfd-view {
   flex: 1;
@@ -153,7 +153,7 @@
   font-family: "Courier New", monospace;
 }
 
-/* Home */
+
 .mfd-view-home {
   align-items: stretch;
   justify-content: center;
@@ -192,7 +192,7 @@
   }
 }
 
-/* Shared data rows */
+
 .mfd-header {
   font-size: 8px;
   font-weight: 700;
@@ -255,7 +255,7 @@
   letter-spacing: 0.06em;
 }
 
-/* Attitude canvas */
+
 .mfd-view-att {
   align-items: stretch;
 }
@@ -266,7 +266,7 @@
   height: 100%;
 }
 
-/* Telemetry chart */
+
 .mfd-chart-wrap {
   flex: 1;
   margin: 4px 8px 6px;
@@ -280,7 +280,7 @@
   }
 }
 
-/* ─── Fuel (ERGOL) view ─────────────────────────────────── */
+
 
 .mfd-fuel-row {
   flex-shrink: 0;
@@ -317,7 +317,7 @@
   letter-spacing: 0.02em;
 }
 
-/* ─── Radar view ─────────────────────────────────────────── */
+
 
 .mfd-view-radar {
   align-items: stretch;

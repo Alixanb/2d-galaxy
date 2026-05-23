@@ -9,7 +9,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Noise ──────────────────────────────────────────────── */
+
 body::after {
   content: "";
   position: fixed;
@@ -21,7 +21,7 @@ body::after {
   background-size: 300px 300px;
 }
 
-/* ─── Canvases ───────────────────────────────────────────── */
+
 #canvas-2d,
 #canvas-web-gl {
   display: block;

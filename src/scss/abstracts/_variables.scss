@@ -1,6 +1,6 @@
-/* ─── Variables ──────────────────────────────────────────── */
+
 :root {
-  /* Base */
+  
   --bg: #130e0e;
   --text: #ecdfcd;
   --cyan: #50b6c9;
@@ -8,13 +8,13 @@
   --yellow: #e9d628;
   --red: #ec2626;
 
-  /* Derived never repeat a hex value in rules */
+  
   --text-muted: color-mix(in srgb, var(--text) 42%, transparent);
   --text-dim: color-mix(in srgb, var(--text) 22%, transparent);
   --border: color-mix(in srgb, var(--text) 18%, transparent);
   --border-strong: color-mix(in srgb, var(--text) 32%, transparent);
 
-  /* Stripe used in exactly ONE place */
+  
   --stripe: linear-gradient(
     90deg,
     var(--cyan) 0% 25%,

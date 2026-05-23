@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint:scss": "sass src/scss/main.scss --no-source-map --quiet"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.5",

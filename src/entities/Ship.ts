@@ -44,7 +44,6 @@ export default class Ship {
   retrogradePhase: "align" | "burn" | null = null;
   path: Vec2[] = [];
   pathColor = new Color(80, 182, 201); // cyan #50b6c9
-  predictionInteration: number = 2000;
   pe: { worldPos: Vec2; dist: number } | null = null;
   ap: { worldPos: Vec2; dist: number } | null = null;
   targetRelay?: RelayStation;
@@ -323,7 +322,7 @@ export default class Ship {
     while (this.angle < -Math.PI) this.angle += 2 * Math.PI;
 
     if (this.showPath) {
-      this.predictPath(this.predictionInteration, dt);
+      this.predictPath(dt);
     }
   }
 
@@ -444,7 +443,7 @@ export default class Ship {
     return addedVelocities.multiply(dt);
   }
 
-  predictPath(steps: number, dt: number) {
+  predictPath(dt: number) {
     // Adaptive sub-stepping: use many fine steps when close to a black hole
     // (where the gravitational gradient is steep), fewer steps when far away.
     // Each sub-step applies force/sub and moves position by vel/sub,
@@ -461,7 +460,12 @@ export default class Ship {
     let encMinDist = Infinity;
     let encIdx = -1;
 
-    for (let i = 0; i < steps; i++) {
+    const bh0c = this.blackholes[0];
+    let totalAngle = 0;
+    let previousAngle = bh0c ? Math.atan2(pos.y - bh0c.pos.y, pos.x - bh0c.pos.x) : 0;
+    const MAX_STEPS = 5000;
+
+    for (let i = 0; i < MAX_STEPS; i++) {
       let minDist = Infinity;
       for (const bh of this.blackholes) {
         const d = pos.distance(bh.pos);
@@ -485,10 +489,29 @@ export default class Ship {
         if (d < encMinDist) { encMinDist = d; encIdx = i; }
       }
 
-      const bh0c = this.blackholes[0];
-      if (!this.escapeTrajectory && bh0c && pos.distance(bh0c.pos) > this.systemBoundaryRadius) {
-        this.escapeTrajectory = true;
-        this.escapeStepIndex = i;
+      if (bh0c) {
+        const currentAngle = Math.atan2(pos.y - bh0c.pos.y, pos.x - bh0c.pos.x);
+        let deltaAngle = currentAngle - previousAngle;
+        while (deltaAngle > Math.PI) deltaAngle -= 2 * Math.PI;
+        while (deltaAngle < -Math.PI) deltaAngle += 2 * Math.PI;
+        totalAngle += deltaAngle;
+        previousAngle = currentAngle;
+
+        // Loop detection: completed one full revolution
+        if (Math.abs(totalAngle) >= 2 * Math.PI - 0.05) {
+          break;
+        }
+
+        const distToPrimary = pos.distance(bh0c.pos);
+        if (!this.escapeTrajectory && distToPrimary > this.systemBoundaryRadius) {
+          this.escapeTrajectory = true;
+          this.escapeStepIndex = i;
+        }
+
+        // Truncate path if escaping to prevent excessive nodes
+        if (this.escapeTrajectory && distToPrimary > this.systemBoundaryRadius * 1.5) {
+          break;
+        }
       }
     }
 

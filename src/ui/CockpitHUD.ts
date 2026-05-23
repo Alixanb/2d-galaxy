@@ -4,21 +4,12 @@ import type { HeadingLockMode } from "../core/GameState";
 import MFD, { type MFDData } from "./MFD";
 import { buildDocPanel } from "./DocPanel";
 
-const PATH_PRESETS = [
-  { label: "100", value: 100 },
-  { label: "500", value: 500 },
-  { label: "1K",  value: 1000 },
-  { label: "5K",  value: 5000 },
-];
-const DEFAULT_PRED_STEPS = 1000;
-
 export default class CockpitHUD {
   private galaxy: Galaxy;
   private mfd1: MFD;
   private mfd2: MFD;
   private autoStabBtn!: HTMLButtonElement;
   private retroBtn!: HTMLButtonElement;
-  private presetBtns: HTMLButtonElement[] = [];
   private getSpeedCb: () => number;
   private setSpeedCb: (v: number) => void;
   private onPauseCb: (p: boolean) => void;
@@ -227,26 +218,6 @@ export default class CockpitHUD {
     });
     section.appendChild(btn);
 
-    const presets = document.createElement("div");
-    presets.className = "pred-presets";
-
-    PATH_PRESETS.forEach(({ label, value }, i) => {
-      const pb = document.createElement("button");
-      pb.className = "pred-preset";
-      pb.textContent = label;
-      if (value === DEFAULT_PRED_STEPS) pb.classList.add("pred-preset-active");
-
-      pb.addEventListener("click", () => {
-        if (this.galaxy.ship) this.galaxy.ship.predictionInteration = value;
-        this.presetBtns.forEach(b => b.classList.remove("pred-preset-active"));
-        pb.classList.add("pred-preset-active");
-      });
-
-      this.presetBtns[i] = pb;
-      presets.appendChild(pb);
-    });
-
-    section.appendChild(presets);
     return section;
   }
 

@@ -44,13 +44,6 @@ export function buildControlsPanel(
     )
   );
 
-  body.appendChild(
-    makeSliderRow("PATH STEPS", 3000, 500, 8000, 500, "cyan",
-      (v) => { if (galaxy.ship) galaxy.ship.predictionInteration = v; },
-      (v) => `${Math.round(v)}`
-    )
-  );
-
   panel.style.display = "flex";
   document.body.appendChild(panel);
 }

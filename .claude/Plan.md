@@ -192,6 +192,14 @@ The **heading lock unlock** only grants the _automation_ ship auto-rotates to fa
 
 ---
 
+### Step 18 (Prep) Cockpit HUD Modularization (Refactoring)
+
+**Files:** `src/ui/CockpitHUD.ts`, `src/ui/cockpit/`
+**What:** Subdivided monolithic CockpitHUD.ts into modular UI panels: `SimParamsPanel`, `PredictionPanel`, `FlightControlsPanel`, `HeadingPanel`, and `StatusPanel`.
+**Status:** DONE
+
+---
+
 ### Step 16 MFD Guide view Approach tab
 
 **Files:** `src/ui/MFD.ts`

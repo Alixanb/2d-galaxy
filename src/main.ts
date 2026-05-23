@@ -8,7 +8,7 @@ import Galaxy from "./systems/Galaxy";
 import LandingPage from "./ui/LandingPage";
 import CockpitHUD from "./ui/CockpitHUD";
 import { type GameMode, type TidalRating, createInitialState } from "./core/GameState";
-import { SYSTEMS } from "./data/systems";
+import { SYSTEMS, type SystemConfig } from "./data/systems";
 
 const spriteThrusterOffUrl = "/assets/ship.png";
 const spriteThrusterOnUrl = "/assets/ship-thrust.png";
@@ -50,18 +50,24 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   );
 
   galaxy.onDock = () => {
-    const config = SYSTEMS.find(s => s.id === gameState.currentSystemId);
-    if (!config) return;
-    gameState.upgrades.parts += config.partsReward;
+    gameState.upgrades.parts += currentConfig.partsReward;
     if (!gameState.completedSystems.includes(gameState.currentSystemId)) {
       gameState.completedSystems.push(gameState.currentSystemId);
     }
-    console.log(`Docked! +${config.partsReward} parts. Total: ${gameState.upgrades.parts}`);
+    console.log(`Docked! +${currentConfig.partsReward} parts. Total: ${gameState.upgrades.parts}`);
   };
 
-  const config = SYSTEMS.find(s => s.id === gameState.currentSystemId)!;
-  const initialDecay = getDecaySeconds(config.tidalRating, gameState.upgrades.hullLevel);
-  let decayTimer: number | null = initialDecay;
+  let currentConfig = SYSTEMS.find(s => s.id === gameState.currentSystemId)!;
+  let decayMax: number | null = getDecaySeconds(currentConfig.tidalRating, gameState.upgrades.hullLevel);
+  let decayTimer: number | null = decayMax;
+
+  function loadSystem(cfg: SystemConfig): void {
+    gameState.currentSystemId = cfg.id;
+    currentConfig = cfg;
+    decayMax = getDecaySeconds(cfg.tidalRating, gameState.upgrades.hullLevel);
+    decayTimer = decayMax;
+    galaxy.transitionToSystem(cfg);
+  }
 
   let lastTime = 0;
   const UPDATE_INTERVAL_MS = 200;
@@ -95,7 +101,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     if (!paused && decayTimer !== null) {
       decayTimer -= rawDelta;
       if (decayTimer <= 0 && gameState.mode === 'RELAY') {
-        decayTimer = initialDecay;
+        decayTimer = decayMax;
         const ship = galaxy.ship;
         if (ship) {
           const r = 0.7;
@@ -103,6 +109,18 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
           ship.pos = new Vec2(Math.cos(a) * r, Math.sin(a) * r);
           ship.vel = Star.getVelocity(ship.pos, blackholes[0], 2.1 * 10e1);
         }
+      }
+    }
+
+    const shipForBoundary = galaxy.ship;
+    if (shipForBoundary) {
+      const dist = Math.hypot(shipForBoundary.pos.x, shipForBoundary.pos.y);
+      const boundary = currentConfig.systemBoundaryRadius;
+      if (!galaxy.transitMode && dist > boundary) {
+        galaxy.enterTransitMode();
+      } else if (galaxy.transitMode && dist > boundary * 1.5) {
+        const idx = SYSTEMS.indexOf(currentConfig);
+        loadSystem(SYSTEMS[(idx + 1) % SYSTEMS.length]);
       }
     }
 
@@ -142,7 +160,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         ship2.monergol,
         ship2.maxMonergol,
         decayTimer,
-        initialDecay
+        decayMax
       );
     }
 

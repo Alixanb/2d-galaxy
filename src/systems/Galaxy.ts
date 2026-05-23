@@ -5,6 +5,7 @@ import FuelDepot from "../entities/FuelDepot";
 import RelayStation from "../entities/RelayStation";
 import Ship from "../entities/Ship";
 import Star from "../entities/Star";
+import type { SystemConfig } from "../data/systems";
 import {
   Shader,
   ShaderProgram,
@@ -55,8 +56,11 @@ export default class Galaxy {
   size: number;
   shaderProgram: ShaderProgram;
   totalStarsSpawned = 0;
+  transitMode = false;
   onDock: (relay: RelayStation) => void = () => {};
   private dockedRelays = new Set<RelayStation>();
+  private bhTargetMasses: number[] = [];
+  private gravityFadeTimer = 2;
 
   constructor(
     canvas2d: Canvas2d,
@@ -175,7 +179,49 @@ export default class Galaxy {
     this.createStars(n);
   }
 
+  enterTransitMode(): void {
+    this.transitMode = true;
+    for (const bh of this.blackholes) bh.mass = 0;
+    this.stars = this.stars.filter((_, i) => i % 10 === 0);
+  }
+
+  transitionToSystem(config: SystemConfig): void {
+    this.blackholes.length = 0;
+    this.bhTargetMasses = [];
+    for (let i = 0; i < config.bhCount; i++) {
+      const bh = new BlackHole(new Vec2(0, 0), config.bhMass, true);
+      this.bhTargetMasses.push(bh.mass);
+      bh.mass = 0;
+      this.blackholes.push(bh);
+    }
+    for (let i = 0; i < this.blackholes.length; i++) this.blackholes[i].mass = this.bhTargetMasses[i];
+    this.stars = [];
+    this.createStars(5000);
+    for (const bh of this.blackholes) bh.mass = 0;
+    this.relayStations = [];
+    this.dockedRelays = new Set();
+    this.spawnRelays(config.relayCount, config.relayOrbitRadius, config.relayOrbitSpeed);
+    if (this.ship && this.relayStations.length > 0) this.ship.targetRelay = this.relayStations[0];
+    if (this.ship) {
+      const tmp = new BlackHole(new Vec2(0, 0), config.bhMass, false);
+      const angle = Math.random() * Math.PI * 2;
+      const r = config.relayOrbitRadius * 2;
+      this.ship.pos = new Vec2(Math.cos(angle) * r, Math.sin(angle) * r);
+      this.ship.vel = Star.getVelocity(this.ship.pos, tmp, 2.1 * 10e1);
+    }
+    this.gravityFadeTimer = 0;
+    this.transitMode = false;
+  }
+
   update(dt: number) {
+    if (this.gravityFadeTimer < 2) {
+      this.gravityFadeTimer = Math.min(this.gravityFadeTimer + dt, 2);
+      const t = this.gravityFadeTimer / 2;
+      for (let i = 0; i < this.blackholes.length; i++) {
+        this.blackholes[i].mass = t * this.bhTargetMasses[i];
+      }
+    }
+
     if (this.ship) {
       this.ship.update(dt);
     }

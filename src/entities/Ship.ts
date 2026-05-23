@@ -1,6 +1,7 @@
 import Color from "../core/Color";
 import Vec2 from "../core/Vec2";
 import type { Canvas2d } from "../systems/Canvas";
+import type { HeadingLockMode } from "../core/GameState";
 import Galaxy from "../systems/Galaxy";
 import BlackHole from "./BlackHole";
 import RelayStation from "./RelayStation";
@@ -51,6 +52,8 @@ export default class Ship {
   escapeTrajectory: boolean = false;
   escapeStepIndex: number = -1;
   systemBoundaryRadius: number = 1.0;
+  headingLock: HeadingLockMode = 'manual';
+  headingLockTier: 0 | 1 | 2 | 3 = 2;
 
   constructor(
     pos: Vec2,
@@ -216,10 +219,12 @@ export default class Ship {
     if (this.keys["ArrowRight"] && this.monergol > 0) {
       this.angluarVel += Ship.RADIALPOWER;
       this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.headingLock = 'manual';
     }
     if (this.keys["ArrowLeft"] && this.monergol > 0) {
       this.angluarVel -= Ship.RADIALPOWER;
       this.monergol -= Ship.MONERGOL_RATE * dt;
+      this.headingLock = 'manual';
     }
 
     // Main engine — consumes liquid ergol
@@ -238,7 +243,8 @@ export default class Ship {
       this.autoStab &&
       !this.keys["ArrowRight"] &&
       !this.keys["ArrowLeft"] &&
-      !this.retrogradeActive
+      !this.retrogradeActive &&
+      this.headingLock === 'manual'
     ) {
       if (this.monergol > 0 && Math.abs(this.angluarVel) > 0) {
         const damping = Math.min(Math.abs(this.angluarVel), Ship.RADIALPOWER);
@@ -294,6 +300,8 @@ export default class Ship {
       }
     }
 
+    this.updateHeadingLock(dt);
+
     this.liquidErgol = Math.max(
       0,
       Math.min(this.maxLiquidErgol, this.liquidErgol),
@@ -307,6 +315,30 @@ export default class Ship {
     if (this.showPath) {
       this.predictPath(this.predictionInteration, dt);
     }
+  }
+
+  private updateHeadingLock(dt: number): void {
+    if (this.headingLock === 'manual' || this.monergol <= 0 || this.retrogradeActive) return;
+    let targetAngle: number;
+    const bh = this.blackholes[0];
+    if (this.headingLock === 'prograde' || this.headingLock === 'retrograde') {
+      if (this.vel.length() < 0.0001) return;
+      const pro = Math.atan2(this.vel.x, -this.vel.y);
+      targetAngle = this.headingLock === 'prograde' ? pro : pro + Math.PI;
+    } else {
+      if (!bh) return;
+      const dx = bh.pos.x - this.pos.x;
+      const dy = bh.pos.y - this.pos.y;
+      const rdl = Math.atan2(dx, -dy);
+      targetAngle = this.headingLock === 'radial' ? rdl : rdl + Math.PI;
+    }
+    let diff = targetAngle - this.angle;
+    while (diff > Math.PI) diff -= 2 * Math.PI;
+    while (diff < -Math.PI) diff += 2 * Math.PI;
+    if (Math.abs(diff) < 0.005) { this.angle = targetAngle; this.angluarVel = 0; return; }
+    const rate = Math.sign(diff) * Math.min(Math.abs(diff) * 3, Ship.RADIALPOWER * 4);
+    this.angluarVel = rate;
+    this.monergol -= (Math.abs(rate) / Ship.RADIALPOWER) * Ship.MONERGOL_RATE * dt * 0.1;
   }
 
   collectFuel(type: "liquid-ergol" | "monergol", amount: number): void {

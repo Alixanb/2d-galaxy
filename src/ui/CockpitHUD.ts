@@ -1,5 +1,6 @@
 import Ship from "../entities/Ship";
 import Galaxy from "../systems/Galaxy";
+import type { HeadingLockMode } from "../core/GameState";
 import MFD, { type MFDData } from "./MFD";
 import { buildDocPanel } from "./DocPanel";
 
@@ -26,6 +27,7 @@ export default class CockpitHUD {
   private moCanvas!: HTMLCanvasElement;
   private spCanvas!: HTMLCanvasElement;
   private headingRows: { el: HTMLElement; delta: HTMLSpanElement }[] = [];
+  private hlkBtns: { el: HTMLButtonElement; mode: HeadingLockMode; minTier: number }[] = [];
 
   constructor(
     galaxy: Galaxy,
@@ -98,6 +100,11 @@ export default class CockpitHUD {
         row.delta.textContent = "---";
         row.el.classList.remove("heading-aligned");
       }
+    }
+
+    for (const { el, mode, minTier } of this.hlkBtns) {
+      el.disabled = ship.headingLockTier < minTier;
+      el.classList.toggle('hlk-active', ship.headingLock === mode);
     }
 
     if (ship.retrogradePhase === "align") {
@@ -278,6 +285,7 @@ export default class CockpitHUD {
       const on = !this.galaxy.ship.retrogradeActive;
       this.galaxy.ship.retrogradeActive = on;
       this.galaxy.ship.retrogradePhase = on ? "align" : null;
+      if (on) this.galaxy.ship.headingLock = 'manual';
       if (on) {
         this.galaxy.ship.autoStab = false;
         this.autoStabBtn.classList.remove("autostab-active");
@@ -305,6 +313,30 @@ export default class CockpitHUD {
     wrap.appendChild(this.retroBtn);
     wrap.appendChild(pauseBtn);
     section.appendChild(wrap);
+
+    const hlkDefs: { label: string; mode: HeadingLockMode; minTier: number }[] = [
+      { label: 'MAN', mode: 'manual',     minTier: 0 },
+      { label: 'PRO', mode: 'prograde',   minTier: 1 },
+      { label: 'RET', mode: 'retrograde', minTier: 1 },
+      { label: 'RDL', mode: 'radial',     minTier: 2 },
+      { label: 'ANT', mode: 'anti-radial',minTier: 2 },
+    ];
+    const hlkRow = document.createElement('div');
+    hlkRow.className = 'hlk-row';
+    for (const { label, mode, minTier } of hlkDefs) {
+      const btn = document.createElement('button');
+      btn.className = 'hlk-btn';
+      btn.textContent = label;
+      btn.addEventListener('click', () => {
+        const ship = this.galaxy.ship;
+        if (!ship) return;
+        ship.headingLock = mode;
+        if (mode !== 'manual') { ship.retrogradeActive = false; ship.retrogradePhase = null; }
+      });
+      hlkRow.appendChild(btn);
+      this.hlkBtns.push({ el: btn, mode, minTier });
+    }
+    section.appendChild(hlkRow);
     return section;
   }
 

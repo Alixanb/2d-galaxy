@@ -18,13 +18,24 @@ export default class CockpitHUD {
   private autoStabBtn!: HTMLButtonElement;
   private retroBtn!: HTMLButtonElement;
   private presetBtns: HTMLButtonElement[] = [];
+  private getSpeedCb: () => number;
+  private setSpeedCb: (v: number) => void;
+  private onPauseCb: (p: boolean) => void;
 
   private leCanvas!: HTMLCanvasElement;
   private moCanvas!: HTMLCanvasElement;
   private spCanvas!: HTMLCanvasElement;
 
-  constructor(galaxy: Galaxy) {
+  constructor(
+    galaxy: Galaxy,
+    getSimSpeed: () => number = () => 1,
+    setSimSpeed: (v: number) => void = () => {},
+    onPause: (paused: boolean) => void = () => {}
+  ) {
     this.galaxy = galaxy;
+    this.getSpeedCb = getSimSpeed;
+    this.setSpeedCb = setSimSpeed;
+    this.onPauseCb = onPause;
     const panel = document.createElement("div");
     panel.className = "cockpit-panel";
 
@@ -95,9 +106,14 @@ export default class CockpitHUD {
       () => Math.round((Ship.THRUSTPOWER / thrustDefault) * 20)));
       
     section.appendChild(this.makeFader("RCS (Q/E)", 20, 0, 100, 5, "cyan",
-      (v) => { Ship.RADIALPOWER = rotDefault * (v / 20); }, 
+      (v) => { Ship.RADIALPOWER = rotDefault * (v / 20); },
       (v) => `${v}%`,
       () => Math.round((Ship.RADIALPOWER / rotDefault) * 20)));
+
+    section.appendChild(this.makeFader("SIM SPEED", 10, 1, 100, 1, "yellow",
+      (v) => { this.setSpeedCb(v / 10); },
+      (v) => `${(v / 10).toFixed(1)}×`,
+      () => Math.round(this.getSpeedCb() * 10)));
 
     return section;
   }
@@ -246,8 +262,20 @@ export default class CockpitHUD {
       }
     });
 
+    const pauseBtn = document.createElement("button");
+    pauseBtn.className = "autostab-btn";
+    pauseBtn.textContent = "PAUSE";
+    let isPaused = false;
+    pauseBtn.addEventListener("click", () => {
+      isPaused = !isPaused;
+      pauseBtn.classList.toggle("autostab-active", isPaused);
+      pauseBtn.textContent = isPaused ? "RESUME" : "PAUSE";
+      this.onPauseCb(isPaused);
+    });
+
     wrap.appendChild(this.autoStabBtn);
     wrap.appendChild(this.retroBtn);
+    wrap.appendChild(pauseBtn);
     section.appendChild(wrap);
     return section;
   }

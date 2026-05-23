@@ -31,8 +31,14 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   canvas2d.enablePan();
 
   let SIMULATION_SPEED = 1;
+  let paused = false;
 
-  const cockpit = new CockpitHUD(galaxy);
+  const cockpit = new CockpitHUD(
+    galaxy,
+    () => SIMULATION_SPEED,
+    (v) => { SIMULATION_SPEED = v; },
+    (p) => { paused = p; }
+  );
 
   void gameState;
 
@@ -63,7 +69,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     const rawDelta = (time - lastTime) / 1000;
     lastTime = time;
 
-    accumulator += rawDelta * SIMULATION_SPEED;
+    if (!paused) accumulator += rawDelta * SIMULATION_SPEED;
 
     const now = Date.now();
     if (now - lastUpdate >= UPDATE_INTERVAL_MS) {

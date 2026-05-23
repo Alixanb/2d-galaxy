@@ -304,6 +304,7 @@ export default class Ship {
     this.headingLockTier = u.headingLockTier;
     Ship.THRUSTPOWER = Ship.DEFAULT_THRUSTPOWER * getThrustFactor(u) * 5;
     Ship.RADIALPOWER = Ship.DEFAULT_RADIALPOWER * (getRCSFactor(u) / 0.4);
+    this.renderer.refreshSprite(u);
   }
 
   collectFuel(type: "liquid-ergol" | "monergol", amount: number): void {

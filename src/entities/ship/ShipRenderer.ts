@@ -1,17 +1,34 @@
 import Vec2 from "../../core/Vec2";
 import Color from "../../core/Color";
 import type { Canvas2d } from "../../systems/Canvas";
+import type { UpgradeState } from "../../core/GameState";
+import { drawProbeDynamic, PROBE_SIZE } from "../../sprites/probe";
 import Ship from "../Ship";
 import { ShipNavigator } from "./ShipNavigator";
 
 export class ShipRenderer {
   private ship: Ship;
   private navigator: ShipNavigator;
-  private pathColor = new Color(80, 182, 201); // cyan #50b6c9
+  private pathColor = new Color(80, 182, 201);
+  private offscreen: HTMLCanvasElement;
 
   constructor(ship: Ship, navigator: ShipNavigator) {
     this.ship = ship;
     this.navigator = navigator;
+    this.offscreen = document.createElement('canvas');
+    this.offscreen.width = PROBE_SIZE;
+    this.offscreen.height = PROBE_SIZE;
+    drawProbeDynamic(this.offscreen.getContext('2d')!, 0, PROBE_SIZE, { hull: 0, thrust: 0, ergol: 0, rcs: 0, avionics: 0 });
+  }
+
+  refreshSprite(u: UpgradeState): void {
+    drawProbeDynamic(this.offscreen.getContext('2d')!, 0, PROBE_SIZE, {
+      hull:     u.hullLevel,
+      thrust:   Math.min(u.thrustLevel, 3),
+      ergol:    Math.min(u.lErgolLevel, 2),
+      rcs:      u.rcsBoostLevel,
+      avionics: Math.min(u.headingLockTier, 2),
+    });
   }
 
   draw(canvas: Canvas2d) {
@@ -27,13 +44,7 @@ export class ShipRenderer {
       this.drawThruster(canvas, width, height, this.ship.thrusterPct);
     }
 
-    canvas.context.drawImage(
-      this.ship.sprites["idle"],
-      -width / 2,
-      -height / 2,
-      width,
-      height,
-    );
+    canvas.context.drawImage(this.offscreen, -width / 2, -width / 2, width, width);
 
     canvas.context.restore();
 

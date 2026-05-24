@@ -1,22 +1,4 @@
 {
   "version": 1,
-  "steps": [
-    { "n": 1,  "title": "Setup: signals, Sass includePaths, ARCHITECTURE.md", "status": "done",    "files": ["vite.config.ts", ".claude/ARCHITECTURE.md"] },
-    { "n": 2,  "title": "gameSignals.ts",                                       "status": "done",    "files": ["src/core/gameSignals.ts"] },
-    { "n": 3,  "title": "LandingPage → TSX",                                   "status": "done",    "files": ["src/ui/LandingPage.tsx", "src/home.tsx"] },
-    { "n": 4,  "title": "FloatingWindow → TSX",                                "status": "done",    "files": ["src/systems/FloatingWindow.tsx"] },
-    { "n": 5,  "title": "StatusPanel → TSX",                                   "status": "done",    "files": ["src/ui/cockpit/StatusPanel.tsx"] },
-    { "n": 6,  "title": "HeadingPanel → TSX",                                  "status": "done",    "files": ["src/ui/cockpit/HeadingPanel.tsx"] },
-    { "n": 7,  "title": "FlightControlsPanel → TSX",                           "status": "done",    "files": ["src/ui/cockpit/FlightControlsPanel.tsx"] },
-    { "n": 8,  "title": "PredictionPanel + SimParamsPanel → TSX",              "status": "done",    "files": ["src/ui/cockpit/PredictionPanel.tsx", "src/ui/cockpit/SimParamsPanel.tsx"] },
-    { "n": 9,  "title": "CockpitHUD → TSX",                                    "status": "pending", "files": ["src/ui/CockpitHUD.tsx"] },
-    { "n": 10, "title": "MFD views: HomeView + TelemetryView → TSX",           "status": "pending", "files": ["src/ui/mfd/views/HomeView.tsx", "src/ui/mfd/views/TelemetryView.tsx"] },
-    { "n": 11, "title": "MFD views: VelocityView + AttitudeView → TSX",        "status": "pending", "files": ["src/ui/mfd/views/VelocityView.tsx", "src/ui/mfd/views/AttitudeView.tsx"] },
-    { "n": 12, "title": "MFD views: FuelView + RadarView + GuideView + ApproachView → TSX", "status": "pending", "files": ["src/ui/mfd/views/FuelView.tsx", "src/ui/mfd/views/RadarView.tsx", "src/ui/mfd/views/GuideView.tsx", "src/ui/mfd/views/ApproachView.tsx"] },
-    { "n": 13, "title": "MFD → TSX",                                           "status": "pending", "files": ["src/ui/MFD.tsx"] },
-    { "n": 14, "title": "DebugPanel → TSX",                                    "status": "pending", "files": ["src/ui/DebugPanel.tsx"] },
-    { "n": 15, "title": "GalaxyMap → TSX",                                     "status": "pending", "files": ["src/ui/GalaxyMap.tsx"] },
-    { "n": 16, "title": "TechTree → TSX",                                      "status": "pending", "files": ["src/ui/TechTree.tsx"] },
-    { "n": 17, "title": "main.ts + SCSS cleanup",                              "status": "pending", "files": ["src/main.ts", "src/scss/main.scss"] }
-  ]
+  "steps": []
 }

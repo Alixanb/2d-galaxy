@@ -5,32 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/scss/main.scss" />
     <title>2D Galaxy | Advanced Gravitational N-Body Simulation</title>
     <meta name="description" content="Experience a realistic 2D gravitational N-body simulation. Explore galaxies, interact with black holes, and pilot your ship through complex orbital mechanics." />
     <meta name="keywords" content="gravitational simulation, n-body simulation, galaxy simulator, webgl physics, space exploration game, black hole simulation" />
     <link rel="canonical" href="https://2d-galaxy.com/" />
-
-    <!-- Favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <link rel="shortcut icon" href="/favicon.ico">
     <meta name="theme-color" content="#130e0e">
-
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://2d-galaxy.com/">
     <meta property="og:title" content="2D Galaxy | Advanced Gravitational Simulation">
     <meta property="og:description" content="Experience a realistic 2D gravitational N-body simulation. Explore galaxies, interact with black holes, and pilot your ship.">
     <meta property="og:image" content="https://2d-galaxy.com/assets/og-image.png">
-
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://2d-galaxy.com/">
     <meta property="twitter:title" content="2D Galaxy | Advanced Gravitational Simulation">
@@ -38,111 +29,7 @@
     <meta property="twitter:image" content="https://2d-galaxy.com/assets/og-image.png">
   </head>
   <body>
-    <!-- Landing page -->
-    <div id="landing">
-      <div class="landing-hero">
-        <!-- Left: title as graphic element -->
-        <div class="landing-left">
-          <h1 class="landing-title">2D<br />Galaxy</h1>
-          <p class="landing-sub">Gravitational Simulation</p>
-        </div>
-
-        <!-- Right: settings panel -->
-        <div class="landing-panel">
-          <div class="landing-panel-body">
-            <div class="landing-panel-label">Select Mode</div>
-
-            <div class="mode-list">
-              <button class="mode-btn" data-mode="RELAY">
-                <span class="mode-name">RELAY</span>
-                <span class="mode-desc">Career · deliver signal packets · earn parts · unlock upgrades</span>
-              </button>
-              <button class="mode-btn" data-mode="FREE_FLIGHT">
-                <span class="mode-name">FREE FLIGHT</span>
-                <span class="mode-desc">Creative sandbox · no failure state · full upgrades</span>
-              </button>
-              <button class="mode-btn" data-mode="DEAD_SIGNAL">
-                <span class="mode-name">DEAD SIGNAL</span>
-                <span class="mode-desc">Hardcore · fuel out = game over · no respawn</span>
-              </button>
-            </div>
-
-            <div class="setting setting--toggle" style="--delay: 0">
-              <span class="setting-label">Black holes</span>
-              <label class="toggle">
-                <input type="checkbox" id="inp-show-blackholes" checked />
-                <span class="toggle-track"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Scroll Indicator -->
-        <div class="scroll-indicator">
-          <span class="scroll-text">Scroll to explore simulation details</span>
-          <div class="scroll-icon"></div>
-        </div>
-      </div>
-
-      <div class="landing-seo">
-        <section class="seo-section">
-          <h2>Advanced N-Body Simulation</h2>
-          <p>Experience the beauty of orbital mechanics through our highly optimized 2D gravitational simulator. Powered by WebGL, it can handle thousands of stars in real-time, creating stunning visual patterns that emerge from simple physical laws of universal gravitation.</p>
-        </section>
-        
-        <section class="seo-section">
-          <h2>Interactive Galactic Exploration</h2>
-          <p>Customize your universe by adjusting stellar density, galactic scale, and temporal flow. Add supermassive black holes to observe how they warp spacetime and dictate the movement of entire star systems within your simulation.</p>
-        </section>
-
-        <section class="seo-section">
-          <h2>Precision Flight Mechanics</h2>
-          <p>Take command of a sophisticated spacecraft. Our simulation features a real-time prediction engine that calculates your future trajectory, allowing you to execute complex gravity assists and navigate the treacherous proximity of singularities.</p>
-        </section>
-
-        <section class="seo-section">
-          <h2>Simulation Features</h2>
-          <div class="feature-grid">
-            <div class="feature-card">
-              <h3>High-Performance WebGL</h3>
-              <p>Utilizing custom shaders to render massive star fields at 60 FPS.</p>
-            </div>
-            <div class="feature-card">
-              <h3>Dynamic N-Body Physics</h3>
-              <p>Every star and body exerts gravitational force on every other body.</p>
-            </div>
-            <div class="feature-card">
-              <h3>Integrated MFD Systems</h3>
-              <p>Multi-Function Displays providing radar, telemetry, and attitude data.</p>
-            </div>
-            <div class="feature-card">
-              <h3>Trajectory Prediction</h3>
-              <p>Advanced orbital forecasting for precise navigation in deep space.</p>
-            </div>
-          </div>
-        </section>
-
-        <footer class="landing-footer">
-          <div class="footer-crosslink">
-            <span class="crosslink-label">Explore More Simulations</span>
-            <a href="https://evolution.alixan.dev" target="_blank" rel="noopener" class="crosslink-card">
-              <div class="crosslink-content">
-                <h3>Evolution Simulator</h3>
-                <p>Digital ecosystem where artificial life forms compete, survive, and evolve through generations.</p>
-              </div>
-              <div class="crosslink-arrow">→</div>
-            </a>
-          </div>
-          <p class="footer-copy">&copy; 2026 2D Galaxy Project. An open-source gravitational experiment.</p>
-        </footer>
-      </div>
-    </div>
-
-    <script type="module" src="/src/main.ts"></script>
-  </body>
-</html>
-div>
-
-    <script type="module" src="/src/home.ts"></script>
+    <div id="landing-root"></div>
+    <script type="module" src="/src/home.tsx"></script>
   </body>
 </html>

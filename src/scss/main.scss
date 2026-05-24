@@ -7,10 +7,6 @@
 @use "base/reset";
 @use "base/global";
 
-// Features - Landing
-@use "features/landing/landing";
-@use "features/landing/seo";
-
 // Features - Cockpit
 @use "features/cockpit/layout" as cockpit_layout;
 @use "features/cockpit/mfd";

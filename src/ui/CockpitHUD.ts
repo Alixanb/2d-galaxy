@@ -2,7 +2,7 @@ import Galaxy from "../systems/Galaxy";
 import MFD, { type MFDData } from "./MFD";
 import { SimParamsPanel } from "./cockpit/SimParamsPanel";
 import { PredictionPanel } from "./cockpit/PredictionPanel";
-import { FlightControlsPanel } from "./cockpit/FlightControlsPanel";
+import { mountFlightControlsPanel, type FlightControlsPanelRef } from "./cockpit/FlightControlsPanel";
 import { mountHeadingPanel } from "./cockpit/HeadingPanel";
 import { mountStatusPanel, type StatusPanelRef } from "./cockpit/StatusPanel";
 import { velSignal, headingSignal } from "../core/gameSignals";
@@ -13,7 +13,7 @@ export default class CockpitHUD {
   private mfd2: MFD;
   private simParams: SimParamsPanel;
   private prediction: PredictionPanel;
-  private flightCtrl: FlightControlsPanel;
+  private flightCtrlRef: RefObject<FlightControlsPanelRef>;
   private statusRef: RefObject<StatusPanelRef>;
   private topBarMeta: HTMLElement;
   private startTime = Date.now();
@@ -46,12 +46,13 @@ export default class CockpitHUD {
     this.mfd2 = new MFD(galaxy);
     this.simParams = new SimParamsPanel(getSimSpeed, setSimSpeed);
     this.prediction = new PredictionPanel(galaxy);
-    this.flightCtrl = new FlightControlsPanel(galaxy, onPause);
     panel.appendChild(this.mfd1.getRoot());
     panel.appendChild(this.mfd2.getRoot());
     panel.appendChild(this.simParams.getRoot());
     panel.appendChild(this.prediction.getRoot());
-    panel.appendChild(this.flightCtrl.getRoot());
+    const flightWrap = document.createElement("div");
+    panel.appendChild(flightWrap);
+    this.flightCtrlRef = mountFlightControlsPanel(flightWrap, galaxy, onPause);
 
     const lastCol = document.createElement("div");
     lastCol.style.cssText = "display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)";
@@ -113,7 +114,7 @@ export default class CockpitHUD {
     this.topBarMeta.textContent = `FLIGHT · ${data.systemId}  ·  ${mm}:${ss}  ·  PKT ${data.completedCount}/${data.totalSystems}`;
     this.mfd1.update(data);
     this.mfd2.update(data);
-    this.flightCtrl.update();
+    this.flightCtrlRef.current?.update();
     const ship = this.galaxy.ship;
     if (ship) {
       velSignal.value = { x: ship.vel.x, y: ship.vel.y };
@@ -122,7 +123,7 @@ export default class CockpitHUD {
   }
 
   setPaused(paused: boolean): void {
-    this.flightCtrl.setPaused(paused);
+    this.flightCtrlRef.current?.setPaused(paused);
   }
 
   updateStatusGauges(vx: number, vy: number, liquidErgol: number, maxLE: number, monergol: number, maxM: number, decaySeconds: number | null = null, decayMax: number | null = null): void {

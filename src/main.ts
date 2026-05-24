@@ -6,6 +6,7 @@ import {
   getMaxLE,
   getMaxMono,
 } from "./core/GameState";
+import { loadSave, saveGame } from "./core/SaveGame";
 import Vec2 from "./core/Vec2";
 import { SYSTEMS, type SystemConfig } from "./data/systems";
 import BlackHole from "./entities/BlackHole";
@@ -28,7 +29,7 @@ const TIDAL_LEVEL: Record<TidalRating, number> = {
   High: 3,
   Extreme: 4,
 };
-const DECAY_TABLE = [0, 300, 90, 30, 15];
+const DECAY_TABLE = [0, 90, 30, 15, 5];
 
 function getDecaySeconds(
   tidalRating: TidalRating,
@@ -45,7 +46,7 @@ const bhFromUrl = params.get("bh") !== "false";
 startSimulation(modeFromUrl, bhFromUrl);
 
 function startSimulation(mode: GameMode, showBlackholes: boolean) {
-  const gameState = createInitialState(mode);
+  const gameState = loadSave(mode) ?? createInitialState(mode);
 
   const canvas2d = new Canvas2d("#canvas-2d");
   const canvasGl = new CanvasWebGL("#canvas-web-gl");
@@ -72,6 +73,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   });
   const techTree = new TechTree(gameState, () => {
     if (galaxy.ship) galaxy.ship.applyUpgrades(gameState.upgrades);
+    saveGame(gameState);
   });
 
   const cockpit = new CockpitHUD(
@@ -92,6 +94,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     if (!gameState.completedSystems.includes(gameState.currentSystemId)) {
       gameState.completedSystems.push(gameState.currentSystemId);
     }
+    saveGame(gameState);
     console.log(
       `Docked! +${currentConfig.partsReward} parts. Total: ${gameState.upgrades.parts}`,
     );
@@ -115,6 +118,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     decayMax = getDecaySeconds(cfg.tidalRating, gameState.upgrades.hullLevel);
     decayTimer = decayMax;
     galaxy.transitionToSystem(cfg);
+    saveGame(gameState);
   }
 
   // Inject Debug UI if in dev mode
@@ -153,9 +157,11 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
           tidalSensor: true,
         };
         if (galaxy.ship) galaxy.ship.applyUpgrades(gameState.upgrades);
+        saveGame(gameState);
       },
       () => {
         gameState.upgrades.parts += 1000;
+        saveGame(gameState);
         console.log(`Added 1000 parts. Total: ${gameState.upgrades.parts}`);
       },
     );
@@ -164,6 +170,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   let lastTime = 0;
   const UPDATE_INTERVAL_MS = 200;
   let lastUpdate = Date.now();
+  let lastSave = Date.now();
 
   const FIXED_STEP = 1 / 60;
   let accumulator = 0;
@@ -246,6 +253,10 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     }
 
     const now = Date.now();
+    if (now - lastSave >= 10_000) {
+      saveGame(gameState);
+      lastSave = now;
+    }
     if (now - lastUpdate >= UPDATE_INTERVAL_MS) {
       const activeStars = galaxy.stars.filter((s) => !s.shouldDestroy).length;
       const ship = galaxy.ship;
@@ -267,6 +278,9 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         monergol: ship?.monergol ?? 0,
         maxMonergol: ship?.maxMonergol ?? 100,
         isThrusting: ship?.status === "thrusting",
+        completedCount: gameState.completedSystems.length,
+        systemId: gameState.currentSystemId,
+        totalSystems: SYSTEMS.length,
       });
 
       lastUpdate = now;

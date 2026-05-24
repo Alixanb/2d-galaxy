@@ -14,6 +14,8 @@ export default class CockpitHUD {
   private flightCtrl: FlightControlsPanel;
   private heading: HeadingPanel;
   private status: StatusPanel;
+  private topBarMeta: HTMLElement;
+  private startTime = Date.now();
 
   constructor(
     galaxy: Galaxy,
@@ -23,6 +25,17 @@ export default class CockpitHUD {
     onOpenMap: () => void = () => {},
     onOpenTech: () => void = () => {}
   ) {
+    const topBar = document.createElement("div");
+    topBar.className = "top-bar";
+    const dot = document.createElement("span");
+    dot.className = "top-bar__dot";
+    dot.textContent = "●";
+    this.topBarMeta = document.createElement("span");
+    this.topBarMeta.className = "top-bar__meta";
+    topBar.appendChild(dot);
+    topBar.appendChild(this.topBarMeta);
+    document.body.appendChild(topBar);
+
     const panel = document.createElement("div");
     panel.className = "cockpit-panel";
 
@@ -90,6 +103,10 @@ export default class CockpitHUD {
   }
 
   update(data: MFDData): void {
+    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+    const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
+    const ss = String(elapsed % 60).padStart(2, "0");
+    this.topBarMeta.textContent = `FLIGHT · ${data.systemId}  ·  ${mm}:${ss}  ·  PKT ${data.completedCount}/${data.totalSystems}`;
     this.mfd1.update(data);
     this.mfd2.update(data);
     this.flightCtrl.update();

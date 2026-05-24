@@ -17,7 +17,7 @@ import Galaxy from "./systems/Galaxy";
 import { mountCockpitHUD, type CockpitHUDRef } from "./ui/CockpitHUD";
 import type { RefObject } from "preact";
 import { mountDebugPanel } from "./ui/DebugPanel";
-import { GalaxyMap } from "./ui/GalaxyMap";
+import { mountGalaxyMap } from "./ui/GalaxyMap";
 import { TechTree } from "./ui/TechTree";
 
 const spriteThrusterOffUrl = "/assets/ship.png";
@@ -69,7 +69,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   let paused = false;
   let transitTargetId: string | null = null;
 
-  const galaxyMap = new GalaxyMap(gameState, (id) => {
+  const galaxyMap = mountGalaxyMap(gameState, (id) => {
     transitTargetId = id;
   });
   const techTree = new TechTree(gameState, () => {

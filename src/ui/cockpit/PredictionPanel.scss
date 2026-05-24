@@ -1,52 +1,61 @@
-.pred-section {
-  border-right: 1px solid var(--border);
-  padding: 14px 12px 12px;
+.pred-bar {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  border: none;
+  border-top: 1px solid var(--border-strong);
+  cursor: pointer;
+  padding: 0;
+  gap: 0;
+  font-family: "Satoshi", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: color 0.15s;
+
+  &:hover { color: var(--yellow); }
+
+  &--active {
+    color: var(--yellow);
+
+    .pred-bar__stripe {
+      background: repeating-linear-gradient(
+        45deg,
+        var(--yellow) 0px,
+        var(--yellow) 5px,
+        transparent 5px,
+        transparent 10px
+      );
+      opacity: 1;
+    }
+  }
 }
 
-.pred-btn {
-  width: 100%;
-  padding: 14px 6px;
-  background:
-    repeating-linear-gradient(
-      -45deg,
-      rgba(233, 214, 40, 0.12) 0px 8px,
-      transparent 8px 16px
-    ),
-    rgba(233, 214, 40, 0.06);
-  border: 1px solid var(--yellow);
+.pred-bar__stripe {
+  flex: 0 0 28px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--text-dim) 0px,
+    var(--text-dim) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+  opacity: 0.3;
+  border-right: 1px solid var(--border-strong);
+  transition: opacity 0.15s;
+}
+
+.pred-bar__text {
+  flex: 1;
+  text-align: center;
+}
+
+.pred-bar__eta {
   color: var(--yellow);
-  font-family: "Satoshi", sans-serif;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition:
-    border-color 0.1s,
-    color 0.1s,
-    background 0.1s;
-
-  &:hover {
-    background:
-      repeating-linear-gradient(
-        -45deg,
-        rgba(233, 214, 40, 0.2) 0px 8px,
-        transparent 8px 16px
-      ),
-      rgba(233, 214, 40, 0.1);
-  }
-
-  &.pred-active {
-    background:
-      repeating-linear-gradient(
-        -45deg,
-        rgba(0, 0, 0, 0.15) 0px 8px,
-        transparent 8px 16px
-      ),
-      var(--yellow);
-    color: var(--bg);
-  }
+  font-variant-numeric: tabular-nums;
 }

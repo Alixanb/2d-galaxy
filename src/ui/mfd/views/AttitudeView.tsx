@@ -3,7 +3,7 @@ import { signal } from '@preact/signals';
 import { forwardRef, useImperativeHandle } from 'preact/compat';
 import { useRef, useEffect, useState } from 'preact/hooks';
 import { velSignal, headingSignal } from '../../../core/gameSignals';
-import { VEL_THRESHOLD } from '../MFDUtils';
+const VEL_THRESHOLD = 0.00008;
 import type Ship from '../../../entities/Ship';
 import type Galaxy from '../../../systems/Galaxy';
 import type { MFDData } from '../../MFD';

@@ -3,7 +3,7 @@ import { signal } from '@preact/signals';
 import { forwardRef, useImperativeHandle } from 'preact/compat';
 import { useRef, useState } from 'preact/hooks';
 import { velSignal } from '../../../core/gameSignals';
-import { SCALE, VEL_THRESHOLD } from '../MFDUtils';
+const SCALE = 2000, VEL_THRESHOLD = 0.00008;
 import type { MFDData } from '../../MFD';
 import type { MFDView } from '../MFDView';
 import './VelocityView.scss';

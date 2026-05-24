@@ -7,6 +7,13 @@ export default defineConfig({
   esbuild: {
     jsxImportSource: 'preact',
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        includePaths: ['src/scss'],
+      },
+    },
+  },
   build: {
     rollupOptions: {
       input: {

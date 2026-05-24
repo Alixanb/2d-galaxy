@@ -63,7 +63,7 @@ function drawGauge(canvas: HTMLCanvasElement, pct: number, color: string, label:
   const textPulse = critical ? pulse : 1;
   ctx.fillStyle = critical ? `rgba(236, 38, 38, ${0.6 + 0.4 * pulse})` : 'rgba(236, 223, 205, 0.92)';
   ctx.globalAlpha = textPulse;
-  ctx.font = `bold ${11 * dpr}px Inter, sans-serif`;
+  ctx.font = `bold ${12 * dpr}px Inter, sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(pct < 0.005 ? '!!!' : value, cx, cy - 4 * dpr);
@@ -77,7 +77,6 @@ function drawGauge(canvas: HTMLCanvasElement, pct: number, color: string, label:
 }
 
 const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
-  const spRef = useRef<HTMLCanvasElement>(null);
   const leRef = useRef<HTMLCanvasElement>(null);
   const moRef = useRef<HTMLCanvasElement>(null);
   const decayWrapRef = useRef<HTMLDivElement>(null);
@@ -86,25 +85,23 @@ const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
 
   useEffect(() => {
     const dpr = window.devicePixelRatio;
-    for (const c of [spRef.current, leRef.current, moRef.current]) {
-      if (c) { c.width = 80 * dpr; c.height = 80 * dpr; }
+    for (const c of [leRef.current, moRef.current]) {
+      if (c) { c.width = 100 * dpr; c.height = 100 * dpr; }
     }
   }, []);
 
   useImperativeHandle(ref, () => ({
-    draw(vx, vy, le, leMax, mo, moMax, decay, decayMax) {
-      if (!spRef.current || !leRef.current || !moRef.current) return;
+    draw(_vx, _vy, le, leMax, mo, moMax, decay, decayMax) {
+      if (!leRef.current || !moRef.current) return;
       const lePct = leMax > 0 ? Math.max(0, le / leMax) : 0;
       const moPct = moMax > 0 ? Math.max(0, mo / moMax) : 0;
-      const speed = Math.hypot(vx, vy) * 2000;
-      drawGauge(spRef.current, Math.min(1, speed / 100), 'rgba(233, 214, 40, 0.9)', 'SPEED', speed.toFixed(1), false);
       drawGauge(leRef.current, lePct, 'rgba(80, 182, 201, 0.9)', 'L-ERGOL', Math.ceil(le).toString(), lePct < 0.2);
       drawGauge(moRef.current, moPct, 'rgba(176, 111, 216, 0.9)', 'MONO', Math.ceil(mo).toString(), moPct < 0.2);
       if (!decayWrapRef.current || !decayFillRef.current || !decayTimeRef.current) return;
       if (decay === null || decayMax === null) {
         decayWrapRef.current.style.display = 'none';
       } else {
-        decayWrapRef.current.style.display = 'block';
+        decayWrapRef.current.style.display = 'flex';
         decayFillRef.current.style.width = `${Math.max(0, decay / decayMax) * 100}%`;
         decayTimeRef.current.textContent = `${Math.ceil(decay)}s`;
         decayFillRef.current.classList.toggle('decay-urgent', decay < 30);
@@ -114,11 +111,9 @@ const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
 
   return (
     <div class="status-section">
-      <div class="cockpit-section-label">SHIP STATUS</div>
       <div class="status-gauges">
-        <canvas ref={spRef} style={{ width: '80px', height: '80px' }} />
-        <canvas ref={leRef} style={{ width: '80px', height: '80px' }} />
-        <canvas ref={moRef} style={{ width: '80px', height: '80px' }} />
+        <canvas ref={leRef} style={{ width: '100px', height: '100px' }} />
+        <canvas ref={moRef} style={{ width: '100px', height: '100px' }} />
       </div>
       <div ref={decayWrapRef} class="decay-wrap" style={{ display: 'none' }}>
         <span class="decay-label">TIDAL DECAY</span>

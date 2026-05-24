@@ -7,13 +7,6 @@
 @use "base/reset";
 @use "base/global";
 
-// Features - Cockpit
-@use "features/cockpit/layout" as cockpit_layout;
-@use "features/cockpit/mfd";
-@use "features/cockpit/map";
-
-// Features - HUD
-
 // Features - Docs
 @use "features/docs/layout" as docs_layout;
 @use "features/docs/components";

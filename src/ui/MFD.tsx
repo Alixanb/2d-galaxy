@@ -20,6 +20,7 @@ export interface MFDData {
   monergol: number; maxMonergol: number;
   isThrusting: boolean; completedCount: number;
   systemId: string; totalSystems: number;
+  posX: number; posY: number; bhAlt: number; heading: number;
 }
 
 export type MFDViewKey = 'home' | 'vel' | 'att' | 'tel' | 'fuel' | 'radar' | 'guide' | 'approach';

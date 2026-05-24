@@ -1,0 +1,81 @@
+.vel-panel {
+  padding: 14px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vel-speed {
+  line-height: 1;
+}
+
+.vel-number {
+  font-family: "Satoshi", sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.vel-unit {
+  font-family: "Satoshi", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.vel-delta {
+  font-family: "Satoshi", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.vel-bar-track {
+  height: 3px;
+  background: color-mix(in srgb, var(--yellow) 18%, transparent);
+  margin: 6px 0 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.vel-bar-fill {
+  height: 100%;
+  background: var(--yellow);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.15s linear;
+}
+
+.vel-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.vel-label {
+  font-family: "Satoshi", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.vel-value {
+  font-family: "Satoshi", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cyan);
+  letter-spacing: 0.04em;
+}

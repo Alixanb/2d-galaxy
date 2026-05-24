@@ -7,6 +7,7 @@ import { mountPredictionPanel } from './cockpit/PredictionPanel';
 import { mountFlightControlsPanel, type FlightControlsPanelRef } from './cockpit/FlightControlsPanel';
 import { mountHeadingPanel } from './cockpit/HeadingPanel';
 import { mountStatusPanel, type StatusPanelRef } from './cockpit/StatusPanel';
+import { mountVelocityPanel, type VelocityPanelRef } from './cockpit/VelocityPanel';
 import { velSignal, headingSignal } from '../core/gameSignals';
 import type Galaxy from '../systems/Galaxy';
 import type { RefObject } from 'preact';
@@ -40,6 +41,8 @@ const CockpitHUD = forwardRef<CockpitHUDRef, Props>(
     const mfd = useRef<{ update(d: MFDData): void } | null>(null);
     const flightRef = useRef<RefObject<FlightControlsPanelRef> | null>(null);
     const statusRef = useRef<RefObject<StatusPanelRef> | null>(null);
+    const velRef = useRef<RefObject<VelocityPanelRef> | null>(null);
+    const velEl = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
       if (mfdEl.current) mfd.current = mountMFD(mfdEl.current, galaxy);
@@ -48,6 +51,7 @@ const CockpitHUD = forwardRef<CockpitHUDRef, Props>(
       if (flightEl.current) flightRef.current = mountFlightControlsPanel(flightEl.current, galaxy, onPause);
       if (headEl.current) mountHeadingPanel(headEl.current, galaxy);
       if (statEl.current) statusRef.current = mountStatusPanel(statEl.current);
+      if (velEl.current) velRef.current = mountVelocityPanel(velEl.current);
     }, []);
 
     useImperativeHandle(ref, () => ({
@@ -57,6 +61,7 @@ const CockpitHUD = forwardRef<CockpitHUDRef, Props>(
         const ss = String(secs % 60).padStart(2, '0');
         if (metaRef.current) metaRef.current.textContent = `FLIGHT · ${data.systemId}  ·  ${mm}:${ss}  ·  PKT ${data.completedCount}/${data.totalSystems}`;
         mfd.current?.update(data);
+        velRef.current?.current?.update(data);
         flightRef.current?.current?.update();
         const ship = galaxy.ship;
         if (ship) { velSignal.value = { x: ship.vel.x, y: ship.vel.y }; headingSignal.value = ship.angle; }
@@ -75,7 +80,7 @@ const CockpitHUD = forwardRef<CockpitHUDRef, Props>(
         </div>
 
         <div class="left-panel">
-          <div class="left-top" />
+          <div class="left-top" ref={velEl} />
           <div class="left-bottom">
             <div ref={mfdEl} class="left-mfd" />
             <div ref={simEl} class="left-sim" />

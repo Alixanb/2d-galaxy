@@ -264,6 +264,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         ? Math.hypot(ship.pos.x - cam.x, ship.pos.y - cam.y)
         : 0;
 
+      const bh0 = blackholes[0];
       cockpitRef.current?.update({
         fps: Math.round(1 / rawDelta),
         starCount: activeStars,
@@ -280,6 +281,10 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         completedCount: gameState.completedSystems.length,
         systemId: gameState.currentSystemId,
         totalSystems: SYSTEMS.length,
+        posX: ship ? (ship.pos.x * 1000) | 0 : 0,
+        posY: ship ? (ship.pos.y * 1000) | 0 : 0,
+        bhAlt: ship && bh0 ? Math.hypot(ship.pos.x - bh0.pos.x, ship.pos.y - bh0.pos.y) * 1000 : 0,
+        heading: ship ? (ship.angle * 180 / Math.PI) : 0,
       });
 
       lastUpdate = now;

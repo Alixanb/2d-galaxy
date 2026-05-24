@@ -4,7 +4,8 @@ import { SimParamsPanel } from "./cockpit/SimParamsPanel";
 import { PredictionPanel } from "./cockpit/PredictionPanel";
 import { FlightControlsPanel } from "./cockpit/FlightControlsPanel";
 import { HeadingPanel } from "./cockpit/HeadingPanel";
-import { StatusPanel } from "./cockpit/StatusPanel";
+import { mountStatusPanel, type StatusPanelRef } from "./cockpit/StatusPanel";
+import type { RefObject } from "preact";
 
 export default class CockpitHUD {
   private mfd1: MFD;
@@ -13,7 +14,7 @@ export default class CockpitHUD {
   private prediction: PredictionPanel;
   private flightCtrl: FlightControlsPanel;
   private heading: HeadingPanel;
-  private status: StatusPanel;
+  private statusRef: RefObject<StatusPanelRef>;
   private topBarMeta: HTMLElement;
   private startTime = Date.now();
 
@@ -45,8 +46,6 @@ export default class CockpitHUD {
     this.prediction = new PredictionPanel(galaxy);
     this.flightCtrl = new FlightControlsPanel(galaxy, onPause);
     this.heading = new HeadingPanel(galaxy);
-    this.status = new StatusPanel();
-
     panel.appendChild(this.mfd1.getRoot());
     panel.appendChild(this.mfd2.getRoot());
     panel.appendChild(this.simParams.getRoot());
@@ -56,7 +55,9 @@ export default class CockpitHUD {
     const lastCol = document.createElement("div");
     lastCol.style.cssText = "display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)";
     lastCol.appendChild(this.heading.getRoot());
-    lastCol.appendChild(this.status.getRoot());
+    const statusWrap = document.createElement("div");
+    lastCol.appendChild(statusWrap);
+    this.statusRef = mountStatusPanel(statusWrap);
     panel.appendChild(lastCol);
 
     this.buildHelpButton(onOpenMap, onOpenTech);
@@ -118,6 +119,6 @@ export default class CockpitHUD {
   }
 
   updateStatusGauges(vx: number, vy: number, liquidErgol: number, maxLE: number, monergol: number, maxM: number, decaySeconds: number | null = null, decayMax: number | null = null): void {
-    this.status.update(vx, vy, liquidErgol, maxLE, monergol, maxM, decaySeconds, decayMax);
+    this.statusRef.current?.draw(vx, vy, liquidErgol, maxLE, monergol, maxM, decaySeconds, decayMax);
   }
 }

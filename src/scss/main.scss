@@ -10,3 +10,30 @@
 // Features - Docs
 @use "features/docs/layout" as docs_layout;
 @use "features/docs/components";
+
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-text: var(--text);
+  --color-cyan: var(--cyan);
+  --color-green: var(--green);
+  --color-yellow: var(--yellow);
+  --color-red: var(--red);
+  
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --font-satoshi: "Satoshi", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --spacing-left-col: var(--left-col);
+  --spacing-right-col: var(--right-col);
+  --spacing-topbar-h: var(--topbar-h);
+  --spacing-pred-h: var(--pred-h);
+  --spacing-stripe-h: var(--stripe-h);
+
+  --background-image-stripe: var(--stripe);
+}

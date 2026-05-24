@@ -14,7 +14,8 @@ import Ship from "./entities/Ship";
 import Star from "./entities/Star";
 import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
-import CockpitHUD from "./ui/CockpitHUD";
+import { mountCockpitHUD, type CockpitHUDRef } from "./ui/CockpitHUD";
+import type { RefObject } from "preact";
 import { DebugPanel } from "./ui/DebugPanel";
 import { GalaxyMap } from "./ui/GalaxyMap";
 import { TechTree } from "./ui/TechTree";
@@ -76,15 +77,13 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     saveGame(gameState);
   });
 
-  const cockpit = new CockpitHUD(
+  const uiRoot = document.getElementById('ui-root')!;
+  const cockpitRef: RefObject<CockpitHUDRef> = mountCockpitHUD(
+    uiRoot,
     galaxy,
     () => SIMULATION_SPEED,
-    (v) => {
-      SIMULATION_SPEED = v;
-    },
-    (p) => {
-      paused = p;
-    },
+    (v) => { SIMULATION_SPEED = v; },
+    (p) => { paused = p; },
     () => galaxyMap.toggle(),
     () => techTree.toggle(),
   );
@@ -179,12 +178,12 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       paused = true;
-      cockpit.setPaused(true);
+      cockpitRef.current?.setPaused(true);
     } else {
       // Reset lastTime to current performance.now() to avoid huge delta
       lastTime = performance.now();
       paused = false;
-      cockpit.setPaused(false);
+      cockpitRef.current?.setPaused(false);
     }
   });
 
@@ -265,7 +264,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         ? Math.hypot(ship.pos.x - cam.x, ship.pos.y - cam.y)
         : 0;
 
-      cockpit.update({
+      cockpitRef.current?.update({
         fps: Math.round(1 / rawDelta),
         starCount: activeStars,
         totalStars: galaxy.totalStarsSpawned,
@@ -289,7 +288,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     // Redraw status gauges every frame for smooth pulse animation and high speed refresh
     const ship2 = galaxy.ship;
     if (ship2) {
-      cockpit.updateStatusGauges(
+      cockpitRef.current?.updateStatusGauges(
         ship2.vel.x,
         ship2.vel.y,
         ship2.liquidErgol,

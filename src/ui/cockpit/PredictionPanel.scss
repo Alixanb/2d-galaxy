@@ -1,0 +1,52 @@
+.pred-section {
+  border-right: 1px solid var(--border);
+  padding: 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pred-btn {
+  width: 100%;
+  padding: 14px 6px;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(233, 214, 40, 0.12) 0px 8px,
+      transparent 8px 16px
+    ),
+    rgba(233, 214, 40, 0.06);
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  font-family: "Satoshi", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.1s,
+    color 0.1s,
+    background 0.1s;
+
+  &:hover {
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        rgba(233, 214, 40, 0.2) 0px 8px,
+        transparent 8px 16px
+      ),
+      rgba(233, 214, 40, 0.1);
+  }
+
+  &.pred-active {
+    background:
+      repeating-linear-gradient(
+        -45deg,
+        rgba(0, 0, 0, 0.15) 0px 8px,
+        transparent 8px 16px
+      ),
+      var(--yellow);
+    color: var(--bg);
+  }
+}

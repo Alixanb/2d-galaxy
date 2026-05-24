@@ -1,7 +1,7 @@
 import Galaxy from "../systems/Galaxy";
 import MFD, { type MFDData } from "./MFD";
-import { SimParamsPanel } from "./cockpit/SimParamsPanel";
-import { PredictionPanel } from "./cockpit/PredictionPanel";
+import { mountSimParamsPanel } from "./cockpit/SimParamsPanel";
+import { mountPredictionPanel } from "./cockpit/PredictionPanel";
 import { mountFlightControlsPanel, type FlightControlsPanelRef } from "./cockpit/FlightControlsPanel";
 import { mountHeadingPanel } from "./cockpit/HeadingPanel";
 import { mountStatusPanel, type StatusPanelRef } from "./cockpit/StatusPanel";
@@ -11,8 +11,6 @@ import type { RefObject } from "preact";
 export default class CockpitHUD {
   private mfd1: MFD;
   private mfd2: MFD;
-  private simParams: SimParamsPanel;
-  private prediction: PredictionPanel;
   private flightCtrlRef: RefObject<FlightControlsPanelRef>;
   private statusRef: RefObject<StatusPanelRef>;
   private topBarMeta: HTMLElement;
@@ -44,12 +42,14 @@ export default class CockpitHUD {
     this.galaxy = galaxy;
     this.mfd1 = new MFD(galaxy);
     this.mfd2 = new MFD(galaxy);
-    this.simParams = new SimParamsPanel(getSimSpeed, setSimSpeed);
-    this.prediction = new PredictionPanel(galaxy);
     panel.appendChild(this.mfd1.getRoot());
     panel.appendChild(this.mfd2.getRoot());
-    panel.appendChild(this.simParams.getRoot());
-    panel.appendChild(this.prediction.getRoot());
+    const simWrap = document.createElement("div");
+    panel.appendChild(simWrap);
+    mountSimParamsPanel(simWrap, getSimSpeed, setSimSpeed);
+    const predWrap = document.createElement("div");
+    panel.appendChild(predWrap);
+    mountPredictionPanel(predWrap, galaxy);
     const flightWrap = document.createElement("div");
     panel.appendChild(flightWrap);
     this.flightCtrlRef = mountFlightControlsPanel(flightWrap, galaxy, onPause);

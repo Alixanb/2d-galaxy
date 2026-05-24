@@ -1,3 +1,25 @@
+.corner {
+  position: fixed;
+  width: 18px;
+  height: 18px;
+  z-index: 400;
+  pointer-events: none;
+
+  &--tl {
+    top: 4px;
+    left: 4px;
+    border-top: 1.5px solid var(--cyan);
+    border-left: 1.5px solid var(--cyan);
+  }
+
+  &--tr {
+    top: 4px;
+    right: 4px;
+    border-top: 1.5px solid var(--cyan);
+    border-right: 1.5px solid var(--cyan);
+  }
+}
+
 .top-bar {
   position: fixed;
   top: 0;

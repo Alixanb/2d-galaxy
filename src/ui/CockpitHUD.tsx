@@ -74,6 +74,8 @@ const CockpitHUD = forwardRef<CockpitHUDRef, Props>(
 
     return (
       <>
+        <div class="corner corner--tl" />
+        <div class="corner corner--tr" />
         <div class="top-bar">
           <span class="top-bar__dot">●</span>
           <span class="top-bar__meta" ref={metaRef} />

@@ -251,7 +251,7 @@ The **heading lock unlock** only grants the _automation_ ship auto-rotates to fa
 ### Step 21 Tech upgrades apply to live ship
 
 **Files:** `src/ui/TechTree.ts`, `src/entities/Ship.ts`
-**What:** On each unlock, apply to live ship via an `onUpgrade()` callback from main.ts: `trajSteps`, `autoStab`, heading lock tier (ungray buttons), `maxLiquidErgol`, `maxMonergol`, thrust/RCS factors. Ship reads its own caps from the same `UpgradeState` reference (passed at construction or via setter). Heading lock buttons in cockpit auto-gray/ungray based on `headingLockTier`.
+**What:** On each unlock, apply to live ship via an `onUpgrade()` callback from main.ts: `autoStab`, heading lock tier (ungray buttons), `maxLiquidErgol`, `maxMonergol`, thrust/RCS factors. Trajectory always runs full 5000 steps regardless of upgrades. Ship reads its own caps from the same `UpgradeState` reference (passed at construction or via setter). Heading lock buttons in cockpit auto-gray/ungray based on `headingLockTier`.
 **Test:** Buy PROGRADE LOCK → PRO/RET buttons activate immediately. Buy L-ERGOL I → fuel cap increases (visible in gauge).
 
 ---

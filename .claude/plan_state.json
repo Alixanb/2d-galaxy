@@ -89,49 +89,49 @@
     {
       "n": 15,
       "title": "Inter-system transit",
-      "status": "pending",
+      "status": "done",
       "files": ["src/systems/Galaxy.ts", "src/main.ts"]
     },
     {
       "n": 16,
       "title": "MFD Guide view Approach tab",
-      "status": "pending",
+      "status": "done",
       "files": ["src/ui/MFD.ts"]
     },
     {
       "n": 17,
       "title": "MFD Guide view Escape tab",
-      "status": "pending",
+      "status": "done",
       "files": ["src/ui/MFD.ts"]
     },
     {
       "n": 18,
       "title": "MFD Approach view",
-      "status": "pending",
+      "status": "done",
       "files": ["src/ui/MFD.ts", "src/main.ts", "src/entities/Ship.ts"]
     },
     {
       "n": 19,
       "title": "Galaxy Map overlay",
-      "status": "pending",
+      "status": "done",
       "files": ["src/ui/GalaxyMap.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
     },
     {
       "n": 20,
       "title": "Tech Tree overlay",
-      "status": "pending",
+      "status": "done",
       "files": ["src/ui/TechTree.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
     },
     {
       "n": 21,
       "title": "Tech upgrades apply to live ship",
-      "status": "pending",
+      "status": "done",
       "files": ["src/ui/TechTree.ts", "src/entities/Ship.ts"]
     },
     {
       "n": 22,
       "title": "Visual Evolution: Sprite variations",
-      "status": "pending",
+      "status": "done",
       "files": ["src/entities/Ship.ts", "src/sprites/probe.ts"]
     }
   ]

@@ -1,5 +1,5 @@
 .heading-section {
-  padding: 14px 12px 12px;
+  padding: 10px 10px 8px;
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid var(--border);
@@ -9,17 +9,17 @@
 .heading-rows {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  margin-top: 8px;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .heading-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-family: "Inter", sans-serif;
-  opacity: 0.6;
+  gap: 6px;
+  font-size: 10px;
+  font-family: "Satoshi", sans-serif;
+  opacity: 0.55;
   transition: opacity 0.15s;
 
   &.heading-aligned {
@@ -34,12 +34,14 @@
 .heading-label {
   color: var(--text-muted);
   letter-spacing: 0.06em;
+  font-weight: 600;
   flex: 1;
 }
 
 .heading-delta {
   color: var(--text);
   font-variant-numeric: tabular-nums;
-  min-width: 56px;
+  font-weight: 700;
+  min-width: 60px;
   text-align: right;
 }

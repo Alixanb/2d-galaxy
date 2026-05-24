@@ -16,7 +16,7 @@ import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import { mountCockpitHUD, type CockpitHUDRef } from "./ui/CockpitHUD";
 import type { RefObject } from "preact";
-import { DebugPanel } from "./ui/DebugPanel";
+import { mountDebugPanel } from "./ui/DebugPanel";
 import { GalaxyMap } from "./ui/GalaxyMap";
 import { TechTree } from "./ui/TechTree";
 
@@ -122,7 +122,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
 
   // Inject Debug UI if in dev mode
   if (import.meta.env.VITE_ENV === "dev") {
-    new DebugPanel(
+    mountDebugPanel(
       (systemId) => {
         const sys = SYSTEMS.find((s) => s.id === systemId);
         if (sys) loadSystem(sys);

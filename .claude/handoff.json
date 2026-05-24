@@ -1,23 +1,38 @@
 {
-  "generated_at": "2026-05-23T00:00:00Z",
-  "current_step": 12,
-  "step_title": "Docking mode (4-axis RCS)",
+  "generated_at": "2026-05-24T11:05:00Z",
+  "current_step": 5,
+  "step_title": "StatusPanel → TSX",
   "step_status": "pending",
-  "uncommitted_changes": " M .gitignore\n M Plan.md\n M README.md\n M docs/GAMEPLAY.md\n M src/entities/BlackHole.ts\n?? .claude/",
+  "uncommitted_changes": " M .claude/Plan.md\n M .claude/plan_state.json\n?? .claude/ARCHITECTURE.md",
   "files_modified": [
-    "src/entities/Ship.ts",
-    "src/ui/CockpitHUD.ts",
-    "src/style.css",
-    "src/systems/Galaxy.ts"
+    "vite.config.ts",
+    "package.json",
+    "pnpm-lock.yaml",
+    "src/core/gameSignals.ts",
+    "src/ui/LandingPage.tsx",
+    "src/ui/LandingPage.scss",
+    "src/home.tsx",
+    "src/scss/main.scss",
+    "index.html",
+    "src/systems/FloatingWindow.tsx (deleted)",
+    "src/systems/FloatingWindow.ts (deleted)",
+    "src/systems/FloatingWindow.scss (deleted)",
+    "src/ui/SimulationHUD.ts (deleted)",
+    "src/ui/ControlsPanel.ts (deleted)",
+    "src/scss/features/hud/_windows.scss (deleted)",
+    "src/scss/features/hud/_simulation.scss (deleted)",
+    "src/scss/features/landing/_landing.scss (deleted)",
+    "src/scss/features/landing/_seo.scss (deleted)"
   ],
   "decisions_made": [
-    "Step 8: targetRelay wired in Galaxy constructor after spawnRelays(); encounterPoint stores worldPos+dist+timeToReach; ◆ cyan glyph drawn at closest approach with distance annotation in 'wu'.",
-    "Step 9: escapeTrajectory/escapeStepIndex fields on Ship; boundary check uses this.blackholes[0] inside path loop; segments from escapeStepIndex onward drawn as #3dff7a green.",
-    "Step 10 (modified by user): orientation markers moved from canvas to DOM cockpit panel as HEADING REF section showing PRO/RET/RDL/ANT rows with delta angle from ship heading; 'ALIGNED' shown when within ~15°; hidden/--- when vel < 0.0001.",
-    "Step 10 layout fix: HEADING REF + SHIP STATUS wrapped in a shared div (lastCol) to share the 6th grid column — adding HEADING REF as a 7th direct child broke the 6-column grid.",
-    "Step 11: headingLock: HeadingLockMode = 'manual' and headingLockTier: 0|1|2|3 = 2 (default fully unlocked) added to Ship; updateHeadingLock() called after retrograde block, skips if retrogradeActive; MAN/PRO/RET/RDL/ANT buttons added to FLIGHT CTRL below existing buttons; rotation keys disengage lock; autoStab guarded with && headingLock === 'manual'.",
-    "Step 11 fix: alignment rate capped at Ship.RADIALPOWER (not *4) so heading lock speed scales with Q/E RCS adjustment."
+    "FloatingWindow removed entirely — SimulationHUD and ControlsPanel were dead code (not imported anywhere), so all three deleted rather than migrated",
+    "Plan renumbered: old Step 14 (SimulationHUD) removed, old Step 15 (DebugPanel+ControlsPanel) → new Step 14 (DebugPanel only), steps 16-18 → 15-17",
+    "FloatingWindow.ts survived Step 4 commit because its callers still compiled; both deleted together in the follow-up cleanup commit",
+    "index.html was malformed (duplicate </body></html> with both main.ts and home.ts scripts) — fixed to single mount #landing-root + /src/home.tsx",
+    "LandingPage renders INTO #landing-root (Preact pattern); component itself renders <div id=landing> as its root so CSS #landing selector still applies",
+    "CSS variables are CSS custom properties — no Sass additionalData injection needed; components use var() directly",
+    "gameSignals.ts created with 16 typed signals covering speed, fuel, heading, vel, system, elapsed, progress, fps, star counts — not yet wired to game loop (wired in Step 17)"
   ],
   "blockers": [],
-  "next_action": "Run /step to implement step 12: add dockingMode boolean + rcsForward/rcsSideways fields to Ship, implement updateDockingMode() where arrow keys translate in ship-local frame at 20% thrust draining monergol and Q/E rotate with angular damping always on, add DOCK MODE toggle button to FLIGHT CTRL section in CockpitHUD."
+  "next_action": "Run /step to implement Step 5: convert src/ui/cockpit/StatusPanel.ts → StatusPanel.tsx with three canvas useRefs, drawGauge verbatim, useImperativeHandle exposing draw(), mountStatusPanel() helper; update CockpitHUD.ts to call mountStatusPanel(); move _status.scss to StatusPanel.scss."
 }

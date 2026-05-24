@@ -1,278 +1,123 @@
-# Plan: SIGNAL RELAY Full Gameplay Integration
+# Plan: Preact UI Migration
 
-## Progress read this first
-
-| #   | Step                                                  | Status |
-| --- | ----------------------------------------------------- | ------ |
-| 1   | Fix orbit integration bug                             | `[ ]`  |
-| 2   | Data layer: GameState + 10 systems                    | `[ ]`  |
-| 3   | Landing page: 3 mode buttons                          | `[ ]`  |
-| 4   | Wire GameState into main.ts + remove floating windows | `[ ]`  |
-| 5   | Sim speed fader + pause button in cockpit             | `[ ]`  |
-| 6   | RelayStation entity + Galaxy spawning                 | `[ ]`  |
-| 7   | Pe/Ap markers on trajectory                           | `[ ]`  |
-| 8   | Encounter marker                                      | `[ ]`  |
-| 9   | Escape trajectory coloring                            | `[ ]`  |
-| 10  | Orientation ring (visual, always on)                  | `[ ]`  |
-| 11  | Heading lock                                          | `[ ]`  |
-| 12  | Docking mode (4-axis RCS)                             | `[ ]`  |
-| 13  | Dock detection + parts reward                         | `[ ]`  |
-| 14  | Tidal decay timer                                     | `[ ]`  |
-| 15  | Inter-system transit                                  | `[ ]`  |
-| 16  | MFD Guide view Approach tab                           | `[ ]`  |
-| 17  | MFD Guide view Escape tab                             | `[ ]`  |
-| 18  | MFD Approach view                                     | `[ ]`  |
-| 19  | Galaxy Map overlay                                    | `[ ]`  |
-| 20  | Tech Tree overlay                                     | `[ ]`  |
-| 21  | Tech upgrades apply to live ship                      | `[ ]`  |
-| 22  | Visual Evolution: Sprite variations                   | `[ ]`  |
+> Migrate all imperative DOM-manipulation UI to Preact components with co-located SCSS.
+> Steps execute via `/step`. Each step: ≤ 2 source files + its `.scss` sibling.
 
 ---
 
-## Context
-
-The game is a working sandbox gravity simulation. This plan converts it into a structured career game: 10 fixed blackhole systems of escalating difficulty, a relay-station rendezvous as the core objective each system, a tech tree gated by earned "parts", tidal shielding as a hard gate on harder systems, heading-lock orientation modes (auto-rotation toward prograde/retrograde/radial), fully-simulated inter-system transit, Tutorial + Approach MFD screens, Pe/Ap + encounter orbital markers, docking mode with 4-axis RCS, and a redesigned landing page. Two floating UI windows are deleted.
-
-Reference document: `GAMEPLAY.md` authoritative on all game design decisions.
-
----
-
-## Key Design Clarification: Visual Markers vs Heading Lock
-
-Orbital markers (prograde ⊙, retrograde ⊙, radial ⊙, anti-radial ⊙) are **always drawn on canvas** around the ship no unlock required. Without them, "burn prograde at Pe" is unactionable.
-
-The **heading lock unlock** only grants the _automation_ ship auto-rotates to face the selected mode (costs monergol). The visual markers exist from the first frame regardless of tech tree state.
+### Step 1
+**Files**: `vite.config.ts`, `.claude/ARCHITECTURE.md`
+**What**: Install `@preact/signals`. Add `includePaths: ['src/scss']` to vite CSS config. Create `.claude/ARCHITECTURE.md` documenting component tree, signal file, SCSS convention, mounting entry points. Replace Plan.md + plan_state.json.
+**Test**: `tsc --noEmit` clean; `pnpm dev` starts without error.
 
 ---
 
-## Rules for each iteration
-
-- One step at a time. Do not start the next step until the current one is tested in the browser.
-- Each step touches at most 2 files.
-- After each step: `tsc --noEmit` clean, then visual test, then commit.
-- Never commit without launching `npm run dev` and verifying the test criterion.
+### Step 2
+**Files**: `src/core/gameSignals.ts`
+**What**: Create `src/core/gameSignals.ts`. Export `signal()` instances for all live game data the UI reads: `speedSignal`, `leSignal`, `leMaxSignal`, `moSignal`, `moMaxSignal`, `decaySecondsSignal` (number|null), `decayMaxSignal` (number|null), `headingSignal` (radians), `velSignal` ({x,y}), `systemIdSignal`, `elapsedSignal` (ms), `progressSignal` (0–1), `fpsSignal`, `starCountSignal`, `totalStarsSignal`. Type all signals explicitly (no `any`).
+**Test**: `tsc --noEmit` clean (file exists but is not imported anywhere yet).
 
 ---
 
-## Implementation Atomic Steps
-
-### Step 1 Fix orbit integration bug
-
-**Files:** `src/entities/Ship.ts`
-**What:** In `integrateStep()`, fix position update: `pos += vel / sub` is wrong should be `pos += vel * subDt` (where `subDt = dt / sub`). This makes prediction and reality use identical physics.
-**Test:** Enable trajectory. Coast for 60 s without input. Pe/Ap stay fixed no drift. Orbit is a clean ellipse, no corners.
+### Step 3
+**Files**: `src/ui/LandingPage.tsx` + `src/ui/LandingPage.scss`, `src/home.tsx`
+**What**: Convert `LandingPage.ts` → `LandingPage.tsx`. Functional component accepting `onStart(mode: GameMode, showBlackholes: boolean) => void`. Renders existing HTML structure (mode buttons, BH toggle, START button) as JSX. Move styles from `src/scss/features/landing/` into `LandingPage.scss`. Update `src/home.ts` → `src/home.tsx`: `render(<LandingPage onStart={…} />, el)`. Delete `src/ui/LandingPage.ts`, `src/home.ts`, `src/scss/features/landing/`.
+**Test**: Landing page loads; clicking START button navigates to simulation with correct `?mode=` + `?bh=` params.
 
 ---
 
-### Step 2 Data layer: GameState + 10 systems
-
-**Files:** `src/core/GameState.ts` (new), `src/data/systems.ts` (new)
-**What:** Create all types (`GameMode`, `TidalRating`, `HeadingLockMode`, `UpgradeState`, `GameState`) and helper functions (`getMaxLE`, `getMaxMono`, `getThrustFactor`, `getRCSFactor`, `canHeadingLock`, `createInitialState`). Create `SystemConfig` interface and all 10 system configs (SOL-0 through SINGULARITY) matching GAMEPLAY.md. Starting conditions per GAMEPLAY.md: thrust 20%, LE 100, RCS 40%, mono 40. FREE FLIGHT = max upgrades.
-**Test:** `npx tsc --noEmit` compiles clean. No render changes.
-
----
-
-### Step 3 Landing page: 3 mode buttons
-
-**Files:** `src/ui/LandingPage.ts`, `index.html`
-**What:** Replace the 6 config sliders with 3 mode buttons: RELAY / FREE FLIGHT / DEAD SIGNAL. Each has a 1-line description (from GAMEPLAY.md). Keep "show black holes" toggle. Change `onStart` signature to `(mode: GameMode, showBlackholes: boolean) => void`.
-**Test:** Landing page shows 3 buttons with descriptions. Click each → simulation starts. Old sliders gone.
+### Step 4
+**Files**: `src/systems/FloatingWindow.tsx` + `src/systems/FloatingWindow.scss`
+**What**: Replace `createFloatingWindow()` factory with a `<FloatingWindow title minWidth? minHeight? onClose?>` Preact component. Draggable via `onPointerDown/Move/Up` on the titlebar and `useState` for position. Resizable via grip element. Renders `{children}` in the window body. Move styles from `src/scss/features/hud/_windows.scss` into `FloatingWindow.scss`. Delete `FloatingWindow.ts`.
+**Test**: `tsc --noEmit` clean; a `<FloatingWindow>` instance can be rendered without errors.
 
 ---
 
-### Step 4 Wire GameState into main.ts + remove floating windows
-
-**Files:** `src/main.ts`
-**What:** `startSimulation(mode, showBlackholes)` creates `GameState` via `createInitialState(mode)`. Remove `buildSpawnWindow()`, `buildSimSpeedWindow()`, the star-spawn click listener. Keep the rest of the loop intact.
-**Test:** Game starts from each mode. No floating spawn window, no floating sim speed window.
-
----
-
-### Step 5 Sim speed fader + pause button in cockpit
-
-**Files:** `src/ui/CockpitHUD.ts`, `src/main.ts`
-**What:** Add SIM SPEED fader to DRIVE SYS section (callbacks via constructor). Add PAUSE button to FLIGHT CTRL section toggles a `paused` boolean in main.ts that stops accumulator.
-**Test:** Sim speed slider changes speed visibly. PAUSE freezes stars and ship. RESUME continues.
+### Step 5
+**Files**: `src/ui/cockpit/StatusPanel.tsx` + `src/ui/cockpit/StatusPanel.scss`
+**What**: Convert `StatusPanel.ts` → `StatusPanel.tsx`. Three `<canvas>` elements mounted via `useRef`. `drawGauge` logic moved verbatim. Expose `draw(vx,vy,le,leMax,mo,moMax,decay,decayMax)` via `useImperativeHandle`. Export `mountStatusPanel(container): StatusPanelRef` helper that calls `render(<StatusPanel ref={r}/>, container)` and returns the ref. Update `CockpitHUD.ts`: call `mountStatusPanel(lastCol)` and store ref. Delete `StatusPanel.ts`. Move styles from `_status.scss`.
+**Test**: 3 arc gauges visible in bottom bar; speed and fuel values update during flight.
 
 ---
 
-### Step 6 RelayStation entity + Galaxy spawning
-
-**Files:** `src/entities/RelayStation.ts`, `src/systems/Galaxy.ts`
-**What:** Create `RelayStation`: orbit update (`orbitAngle += orbitSpeed * dt`), `projectPosition(steps, dt)` for encounter math. Draw using `drawRelayStation(ctx, size, tidalLevel)` from `src/sprites/relay.ts` cached to an offscreen canvas. Galaxy spawns relay(s) from `SystemConfig.relayCount / relayOrbitRadius / relayOrbitSpeed` and passes the system's `TidalRating` mapped to a `TidalLevel`.
-**Test:** Relay station visible, orbiting the black hole, using the correct sprite for the current system's tidal level.
-
----
-
-### Step 7 Pe/Ap markers on trajectory
-
-**Files:** `src/entities/Ship.ts`
-**What:** In `predictPath()`, scan path for min/max distance from `blackholes[0]` → store `pe` and `ap` (worldPos + dist). In `drawPath()`, draw ▼ (dim red) at `pe.worldPos` and ▲ (dim yellow) at `ap.worldPos` in world space.
-**Test:** Enable trajectory → ▼ appears at closest BH approach, ▲ at farthest point. Markers move when ship burns.
+### Step 6
+**Files**: `src/ui/cockpit/HeadingPanel.tsx` + `src/ui/cockpit/HeadingPanel.scss`
+**What**: Convert `HeadingPanel.ts` → `HeadingPanel.tsx`. Reads `velSignal` and `headingSignal` via `useSignal`/`useComputed`. Computes PRO/RET/RDL/ANT deltas reactively. Export `mountHeadingPanel(container, galaxy)`. Update `CockpitHUD.ts`. Delete `HeadingPanel.ts`.
+**Test**: PRO/RET/RDL/ANT angular deltas update as the ship moves.
 
 ---
 
-### Step 8 Encounter marker
-
-**Files:** `src/entities/Ship.ts`
-**What:** Ship gains `targetRelay?: RelayStation`. In `predictPath()`, for each step project relay position via `targetRelay.projectPosition(i, dt)`, find minimum approach → store `encounterPoint` (worldPos, dist, timeToReach) when dist < 0.10 wu. In `drawPath()`, draw ◆ (cyan) at encounter worldPos with distance annotation. Galaxy sets `ship.targetRelay` after spawning.
-**Test:** Trajectory shows ◆ where ship path comes closest to the relay orbit.
-
----
-
-### Step 9 Escape trajectory coloring
-
-**Files:** `src/entities/Ship.ts`
-**What:** In `predictPath()`, flag `escapeTrajectory = true` and store `escapeStepIndex` when a path point exceeds `systemBoundaryRadius`. In `drawPath()`, draw path segments green from `escapeStepIndex` onward.
-**Test:** Burn strongly prograde → trajectory line turns green past the escape point.
+### Step 7
+**Files**: `src/ui/cockpit/FlightControlsPanel.tsx` + `src/ui/cockpit/FlightControlsPanel.scss`
+**What**: Convert `FlightControlsPanel.ts` → `FlightControlsPanel.tsx`. Button grid with `useState` for toggle states (autoStab, retrograde, dockMode). Heading lock row. Writes to `galaxy.ship` properties on click. Export `mountFlightControlsPanel(container, galaxy, onPause)`. Update `CockpitHUD.ts`. Delete `FlightControlsPanel.ts`.
+**Test**: AUTO-STAB button toggles its visual active state and `ship.autoStab` boolean.
 
 ---
 
-### Step 10 Orientation ring (visual, always on)
-
-**Files:** `src/entities/Ship.ts`
-**What:** In `draw()`, call `drawOrientationRing(canvas)`: fixed screen-space ring (radius 40px × dpr) around ship. 4 markers at computed world angles: prograde (`atan2(vel.x, -vel.y)`), retrograde (+π), radial-in (toward nearest BH), anti-radial (+π). Small filled circle (4px) + glyph per marker. Prograde/retrograde = `#3dff7a`, radial = `#e9d628`. Only draw when `vel.length() > 0.0001`.
-**Test:** Markers visible around ship. Prograde marker always points in the direction of travel.
-
----
-
-### Step 11 Heading lock
-
-**Files:** `src/entities/Ship.ts`, `src/ui/CockpitHUD.ts`
-**What:** Ship gains `headingLock: HeadingLockMode = 'manual'`. In `updateFlightMode()`, if lock ≠ manual, compute target angle and apply angular correction impulse toward it (drains monergol). Rotation key disengages lock. Add 5-button row (MAN / PRO / RET / RDL / ANT) to FLIGHT CTRL section in cockpit. Buttons gray when tier not met (check `canHeadingLock` from upgrades pass upgrades ref to cockpit or check on ship). Active mode highlighted.
-**Test:** Click PRO → ship rotates automatically to face velocity direction. Pressing ← or → disengages to MAN.
+### Step 8
+**Files**: `src/ui/cockpit/PredictionPanel.tsx` + `src/ui/cockpit/SimParamsPanel.tsx` (+ `.scss` each)
+**What**: `PredictionPanel.tsx`: single PREDICTION SYS toggle button, writes `ship.showPath`. `SimParamsPanel.tsx`: 3 `<input type="range">` faders for THRUSTER, RCS, SIM SPEED, writing `Ship.THRUSTPOWER`, `Ship.RADIALPOWER`, and `setSimSpeed()`. Delete `PredictionPanel.ts`, `SimParamsPanel.ts`, `CockpitUtils.ts`. Update `CockpitHUD.ts`.
+**Test**: THRUSTER fader changes ship thrust; SIM SPEED fader changes time scale.
 
 ---
 
-### Step 12 Docking mode (4-axis RCS)
-
-**Files:** `src/entities/Ship.ts`, `src/ui/CockpitHUD.ts`
-**What:** Ship gains `dockingMode: boolean`, `rcsForward: number`, `rcsSideways: number`. In `updateDockingMode()`: arrows = translation in ship-local frame (20% thrust, drains monergol), Q/E = rotation, angular damping always on. Track `rcsForward`/`rcsSideways` for MFD. Add DOCK MODE button to FLIGHT CTRL.
-**Test:** Toggle DOCK MODE → arrow keys translate ship. Angular damping holds heading.
-
----
-
-### Step 13 Dock detection + parts reward
-
-**Files:** `src/systems/Galaxy.ts`, `src/main.ts`
-**What:** In `Galaxy.update()`, check ship distance to each relay. When `dist < relay.completionRadius` AND relative speed < 0.0002 wu/s: call `onDock(relay)`. Main.ts `onDock` grants `config.partsReward` to `gameState.upgrades.parts`, adds system to `completedSystems`. Wire `ship.targetRelay` to first relay on spawn.
-**Test:** Approach relay very slowly in docking mode → dock triggers (log or visible state change).
+### Step 9
+**Files**: `src/ui/CockpitHUD.tsx` + `src/ui/CockpitHUD.scss`
+**What**: Convert `CockpitHUD.ts` → `CockpitHUD.tsx`. Functional component assembling top-bar + cockpit-panel grid as JSX. All sub-components rendered inline. Expose `update()` and `updateStatusGauges(data)` via `useImperativeHandle`. Update `src/main.ts`: create `#ui-root` div, `render(<CockpitHUD ref={cockpitRef} …/>, uiRoot)`. Add `<div id="ui-root" style="position:fixed;inset:0;pointer-events:none">` to `simulation.html`. Delete `CockpitHUD.ts`. Move styles from `_layout.scss`.
+**Test**: Full cockpit renders; top bar shows elapsed time and system ID.
 
 ---
 
-### Step 14 Tidal decay timer
-
-**Files:** `src/main.ts`, `src/ui/CockpitHUD.ts`, `src/style.css`
-**What:** `getDecaySeconds()` returns null if shielding sufficient, else seconds from gap table (gap 1 = 300s, gap 2 = 90s, gap 3 = 30s, gap 4 = 15s). Decrement by `rawDelta` in animate(). On zero in RELAY: respawn ship at system entry. Add red countdown bar to SHIP STATUS section (hidden when null, pulses with CSS animation when < 30s).
-**Test:** SOL-0 (no tidal) → bar hidden. Manually test with a high-tidal config → bar visible and depleting. At zero, ship respawns.
-
----
-
-### Step 15 Inter-system transit
-
-**Files:** `src/systems/Galaxy.ts`, `src/main.ts`
-**What:** Galaxy gains `transitMode: boolean`, `enterTransitMode()` (sets flag, disables gravity), `transitionToSystem(config)` (re-spawns BHs/stars/relays, fades gravity in over 2s, resets flag). Main.ts: when ship exits boundary → `enterTransitMode()`. When ship reaches 1.5× boundary in transit → `loadSystem(nextConfig)`. `loadSystem()` resets decay timer, updates `currentSystemId`.
-**Test:** Fly past system boundary → gravity stops, stars sparse. Ship coasts. After crossing void → new system's BH appears, gravity resumes.
+### Step 10
+**Files**: `src/ui/mfd/views/HomeView.tsx` + `TelemetryView.tsx` (+ `.scss` each)
+**What**: `HomeView.tsx`: 5 menu items rendered as JSX, `setView` callback prop. `TelemetryView.tsx`: data rows consuming `fpsSignal`/`starCountSignal`; canvas chart via `useRef`. Both accept `data: MFDData` prop and expose `getLabels(): string[]` + `onOSB(idx: number): void` via `useImperativeHandle`. Delete old `.ts` counterparts.
+**Test**: MFD HOME view renders 5 menu items; telemetry values visible.
 
 ---
 
-### Step 16 (Prep) MFD Modularization (Refactoring)
-
-**Files:** `src/ui/MFD.ts`, `src/ui/mfd/`
-**What:** Subdivided monolithic MFD.ts into feature-based view components (Home, Vel, Att, Tel, Fuel, Radar) using a modular TypeScript architecture. Each view is now a standalone component implementing the `MFDView` interface.
-**Status:** DONE
-
----
-
-### Step 17 (Prep) Ship Modularization (Refactoring)
-
-**Files:** `src/entities/Ship.ts`, `src/entities/ship/`
-**What:** Subdivided monolithic Ship.ts (600+ lines) into specialized components: `ShipControls` (input), `ShipNavigator` (physics/orbit prediction), and `ShipRenderer` (Canvas2D drawing).
-**Status:** DONE
+### Step 11
+**Files**: `src/ui/mfd/views/VelocityView.tsx` + `AttitudeView.tsx` (+ `.scss` each)
+**What**: Same pattern as Step 10. Data rows consuming `velSignal`, `headingSignal`. Delete old `.ts` counterparts.
+**Test**: Switching MFD to VELOCITY view shows live velocity data rows.
 
 ---
 
-### Step 18 (Prep) Cockpit HUD Modularization (Refactoring)
-
-**Files:** `src/ui/CockpitHUD.ts`, `src/ui/cockpit/`
-**What:** Subdivided monolithic CockpitHUD.ts into modular UI panels: `SimParamsPanel`, `PredictionPanel`, `FlightControlsPanel`, `HeadingPanel`, and `StatusPanel`.
-**Status:** DONE
-
----
-
-### Step 19 (Prep) Galaxy System Modularization (Refactoring)
-
-**Files:** `src/systems/Galaxy.ts`, `src/systems/galaxy/`
-**What:** Subdivided monolithic Galaxy.ts into specialized components: `GalaxyPhysics` (simulation logic), `StarRenderer` (WebGL), and `EntityManager` (entity lifecycle).
-**Status:** DONE
+### Step 12
+**Files**: `src/ui/mfd/views/FuelView.tsx` + `RadarView.tsx` + `GuideView.tsx` + `ApproachView.tsx` (+ `.scss` each)
+**What**: Same pattern. FuelView: fuel bar rows from `leSignal`/`moSignal`. RadarView: canvas `useRef`. GuideView/ApproachView: text + data rows. Delete old `.ts` counterparts. Delete `src/ui/mfd/MFDUtils.ts` (helpers replaced by JSX or inlined).
+**Test**: All 8 MFD views cycle without errors via OSBs.
 
 ---
 
-### Step 16 MFD Guide view Approach tab
-
-**Files:** `src/ui/MFD.ts`
-**What:** Add "guide" view accessible via OSB. APPROACH tab: 5-step checklist. Step done-state computed from MFDData each update: (1) `shipPe > 0.03`, (2) `|shipAp − relayOrbitRadius| / relayOrbitRadius < 0.15`, (3) `encounterDist < 0.08`, (4) `relayRelSpeed < 0.005`, (5) `dockingMode || relayRange < 0.05`. Active step highlighted, done steps dim/strikethrough. Status line shows current value for active step.
-**Test:** View shows correct step highlighted. Establish orbit → step 1 ticks off. Etc.
-
----
-
-### Step 17 MFD Guide view Escape tab
-
-**Files:** `src/ui/MFD.ts`
-**What:** Add ESCAPE tab to guide view: 4-step checklist: (1) heading within 10° of prograde, (2) `escapeTrajectory` true, (3) escape + not thrusting, (4) coast to boundary. Tab auto-switches: near relay (encounterDist < 0.15) = APPROACH, otherwise = ESCAPE. Manual tab toggle via OSB.
-**Test:** Far from relay → escape tab active. Point prograde → step 1 ticks. Burn until green → step 2 ticks.
+### Step 13
+**Files**: `src/ui/MFD.tsx` + `src/ui/MFD.scss`
+**What**: Convert `MFD.ts` → `MFD.tsx`. `useState<MFDViewName>` for active view. Renders 6 OSB buttons and the active view component. Expose `update(data: MFDData)` via `useImperativeHandle`. Export `mountMFD(container, galaxy)`. Update `CockpitHUD.tsx`. Delete `MFD.ts`, `MFDView.ts`. Move styles from `_mfd.scss`.
+**Test**: MFD renders; OSB 1 cycles views; telemetry values update during flight.
 
 ---
 
-### Step 18 MFD Approach view
-
-**Files:** `src/ui/MFD.ts`, `src/main.ts`, `src/entities/Ship.ts`
-**What:** Add "approach" view: shows REL SPEED, CLOSING RATE, RANGE, RCS bars (FWD/AFT and L/R using ASCII bar `[══●══════]`), DOCK MODE status. Main.ts passes `relayRelSpeed`, `relayRange`, `rcsForward`, `rcsSideways`, `dockingMode` to `cockpit.update()`. Ship already tracks `rcsForward`/`rcsSideways`.
-**Test:** In docking mode near relay → see live relative speed, range, and RCS bars moving with input.
-
----
-
-### Step 19 Galaxy Map overlay
-
-**Files:** `src/ui/GalaxyMap.ts` (new), `src/ui/CockpitHUD.ts`, `src/style.css`
-**What:** Canvas overlay (fixed, full-screen, z-index 500). Draw 10 system nodes at fixed normalized positions, connection lines (dim if locked), tidal color coding. Hover tooltip: name, BH count, tidal rating, parts reward. Click unlocked non-current system → set `transitTargetId` and close. MAP button in cockpit opens it. Uses `GameState` to know unlocked/completed/current.
-**Test:** Click MAP → overlay. See all nodes. Hover shows tooltip. Click accessible neighbor → closes, sets target.
+### Step 14
+**Files**: `src/ui/DebugPanel.tsx` + `src/ui/DebugPanel.scss`
+**What**: Convert `DebugPanel.ts` → `DebugPanel.tsx`. Collapsible panel with warp select + action buttons (refill, max upgrades, add parts) calling passed callbacks. Delete `DebugPanel.ts`.
+**Test**: Debug warp button changes system; refill button restores fuel.
 
 ---
 
-### Step 20 Tech Tree overlay
-
-**Files:** `src/ui/TechTree.ts` (new), `src/ui/CockpitHUD.ts`, `src/style.css`
-**What:** DOM overlay. All 25 nodes from GAMEPLAY.md tree in a grid (cross-nodes span both columns). Node states: locked (dim, no click), available (clickable), done (green check). Click available node → deduct parts, apply upgrade to `UpgradeState`, re-render. TECH button in cockpit opens it. Parts counter in header.
-**Test:** Click TECH → overlay shows nodes. With 0 parts nothing is buyable. With parts: buy AUTO-STAB → node turns green, cockpit AUTO-STAB button activates.
-
----
-
-### Step 21 Tech upgrades apply to live ship
-
-**Files:** `src/ui/TechTree.ts`, `src/entities/Ship.ts`
-**What:** On each unlock, apply to live ship via an `onUpgrade()` callback from main.ts: `autoStab`, heading lock tier (ungray buttons), `maxLiquidErgol`, `maxMonergol`, thrust/RCS factors. Trajectory always runs full 5000 steps regardless of upgrades. Ship reads its own caps from the same `UpgradeState` reference (passed at construction or via setter). Heading lock buttons in cockpit auto-gray/ungray based on `headingLockTier`.
-**Test:** Buy PROGRADE LOCK → PRO/RET buttons activate immediately. Buy L-ERGOL I → fuel cap increases (visible in gauge).
+### Step 15
+**Files**: `src/ui/GalaxyMap.tsx` + `src/ui/GalaxyMap.scss`
+**What**: Convert `GalaxyMap.ts` → `GalaxyMap.tsx`. Full-screen canvas overlay, visibility via `isVisible` prop. Canvas drawing logic moved verbatim, called in `useEffect` draw loop + pointer event handlers. `onTransit` callback prop. Delete `GalaxyMap.ts`. Move styles from `_map.scss`.
+**Test**: M key opens map; hovering a system shows tooltip; clicking adjacent system triggers transit.
 
 ---
 
-### Step 22 Visual Evolution: Sprite variations
-
-**Files:** `src/entities/Ship.ts`
-**What:** In `Ship.draw()`, use `drawProbeDynamic(ctx, t, size, upgrades)` from `src/sprites/probe.ts`. Implement an `onUpgradeChanged` handler (or re-render on demand) to update an offscreen canvas caching the probe sprite, passing the mapped tech tree state (hull, thrust, ergol, rcs, avionics) into the `ProbeUpgrades` interface.
-**Test:** Buying upgrades visibly changes the ship's sprite. Refunding them reverts appearance.
+### Step 16
+**Files**: `src/ui/TechTree.tsx` + `src/ui/TechTree.scss`
+**What**: Convert `TechTree.ts` → `TechTree.tsx`. Full-screen overlay with node grid, SVG bezier lines, ship preview canvas. `gameState` + `onUpgrade` props. Node unlock state computed from props. Delete `TechTree.ts`.
+**Test**: T key opens tree; available nodes are clickable; upgrades persist after save/reload.
 
 ---
 
-## Verification checklist (run at the end)
-
-1. Orbit stable: coast 60 s without input, Pe/Ap don't drift.
-2. Pe ▼ / Ap ▲ / encounter ◆ / escape green all visible on trajectory.
-3. Prograde marker tracks velocity, retrograde is opposite, radial-in points at BH.
-4. PRO heading lock auto-rotates ship to prograde. Rotation key disengages.
-5. DOCK MODE: arrows translate, angular damping holds heading.
-6. Dock completes: parts granted, system marked complete.
-7. Decay bar: hidden in SOL-0, visible + depleting in high-tidal config.
-8. Transit: fly out → coast → new system fades in.
-9. Guide MFD approach steps tick off in order during a real rendezvous.
-10. MAP shows systems, click sets transit target. TECH shows nodes, purchase applies live.
+### Step 17
+**Files**: `src/main.ts`, `src/scss/main.scss`
+**What**: Replace all `new XxxPanel(…)` / `new CockpitHUD(…)` calls with `render(<GameUI ref={uiRef} …/>, uiRoot)`. `GameUI` (new component in `src/ui/GameUI.tsx`) assembles everything. Game loop writes to signals and calls imperative draw refs. Remove `src/scss/features/` imports from `main.scss`. Delete `src/scss/features/` directory.
+**Test**: Full simulation loads; plays; docks; tech tree upgrades apply; save/load round-trips correctly. `/docs.html` still renders.

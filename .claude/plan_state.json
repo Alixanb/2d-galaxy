@@ -1,138 +1,22 @@
 {
   "version": 1,
   "steps": [
-    { "n": 0, "title": "Preact", "status": "done", "files": ["any"] },
-    {
-      "n": 1,
-      "title": "Fix orbit integration bug",
-      "status": "done",
-      "files": ["src/entities/Ship.ts"]
-    },
-    {
-      "n": 2,
-      "title": "Data layer: GameState + 10 systems",
-      "status": "done",
-      "files": ["src/core/GameState.ts", "src/data/systems.ts"]
-    },
-    {
-      "n": 3,
-      "title": "Landing page: 3 mode buttons",
-      "status": "done",
-      "files": ["src/ui/LandingPage.ts", "index.html"]
-    },
-    {
-      "n": 4,
-      "title": "Wire GameState into main.ts + remove floating windows",
-      "status": "done",
-      "files": ["src/main.ts"]
-    },
-    {
-      "n": 5,
-      "title": "Sim speed fader + pause button in cockpit",
-      "status": "done",
-      "files": ["src/ui/CockpitHUD.ts", "src/main.ts"]
-    },
-    {
-      "n": 6,
-      "title": "RelayStation entity + Galaxy spawning",
-      "status": "done",
-      "files": ["src/entities/RelayStation.ts", "src/systems/Galaxy.ts"]
-    },
-    {
-      "n": 7,
-      "title": "Pe/Ap markers on trajectory",
-      "status": "done",
-      "files": ["src/entities/Ship.ts"]
-    },
-    {
-      "n": 8,
-      "title": "Encounter marker",
-      "status": "done",
-      "files": ["src/entities/Ship.ts"]
-    },
-    {
-      "n": 9,
-      "title": "Escape trajectory coloring",
-      "status": "done",
-      "files": ["src/entities/Ship.ts"]
-    },
-    {
-      "n": 10,
-      "title": "Orientation ring (visual, always on)",
-      "status": "done",
-      "files": ["src/entities/Ship.ts"]
-    },
-    {
-      "n": 11,
-      "title": "Heading lock",
-      "status": "done",
-      "files": ["src/entities/Ship.ts", "src/ui/CockpitHUD.ts"]
-    },
-    {
-      "n": 12,
-      "title": "Docking mode (4-axis RCS)",
-      "status": "done",
-      "files": ["src/entities/Ship.ts", "src/ui/CockpitHUD.ts"]
-    },
-    {
-      "n": 13,
-      "title": "Dock detection + parts reward",
-      "status": "done",
-      "files": ["src/systems/Galaxy.ts", "src/main.ts"]
-    },
-    {
-      "n": 14,
-      "title": "Tidal decay timer",
-      "status": "done",
-      "files": ["src/main.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
-    },
-    {
-      "n": 15,
-      "title": "Inter-system transit",
-      "status": "done",
-      "files": ["src/systems/Galaxy.ts", "src/main.ts"]
-    },
-    {
-      "n": 16,
-      "title": "MFD Guide view Approach tab",
-      "status": "done",
-      "files": ["src/ui/MFD.ts"]
-    },
-    {
-      "n": 17,
-      "title": "MFD Guide view Escape tab",
-      "status": "done",
-      "files": ["src/ui/MFD.ts"]
-    },
-    {
-      "n": 18,
-      "title": "MFD Approach view",
-      "status": "done",
-      "files": ["src/ui/MFD.ts", "src/main.ts", "src/entities/Ship.ts"]
-    },
-    {
-      "n": 19,
-      "title": "Galaxy Map overlay",
-      "status": "done",
-      "files": ["src/ui/GalaxyMap.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
-    },
-    {
-      "n": 20,
-      "title": "Tech Tree overlay",
-      "status": "done",
-      "files": ["src/ui/TechTree.ts", "src/ui/CockpitHUD.ts", "src/style.css"]
-    },
-    {
-      "n": 21,
-      "title": "Tech upgrades apply to live ship",
-      "status": "done",
-      "files": ["src/ui/TechTree.ts", "src/entities/Ship.ts"]
-    },
-    {
-      "n": 22,
-      "title": "Visual Evolution: Sprite variations",
-      "status": "done",
-      "files": ["src/entities/Ship.ts", "src/sprites/probe.ts"]
-    }
+    { "n": 1,  "title": "Setup: signals, Sass includePaths, ARCHITECTURE.md", "status": "done",    "files": ["vite.config.ts", ".claude/ARCHITECTURE.md"] },
+    { "n": 2,  "title": "gameSignals.ts",                                       "status": "done",    "files": ["src/core/gameSignals.ts"] },
+    { "n": 3,  "title": "LandingPage → TSX",                                   "status": "done",    "files": ["src/ui/LandingPage.tsx", "src/home.tsx"] },
+    { "n": 4,  "title": "FloatingWindow → TSX",                                "status": "done",    "files": ["src/systems/FloatingWindow.tsx"] },
+    { "n": 5,  "title": "StatusPanel → TSX",                                   "status": "done",    "files": ["src/ui/cockpit/StatusPanel.tsx"] },
+    { "n": 6,  "title": "HeadingPanel → TSX",                                  "status": "done",    "files": ["src/ui/cockpit/HeadingPanel.tsx"] },
+    { "n": 7,  "title": "FlightControlsPanel → TSX",                           "status": "done",    "files": ["src/ui/cockpit/FlightControlsPanel.tsx"] },
+    { "n": 8,  "title": "PredictionPanel + SimParamsPanel → TSX",              "status": "done",    "files": ["src/ui/cockpit/PredictionPanel.tsx", "src/ui/cockpit/SimParamsPanel.tsx"] },
+    { "n": 9,  "title": "CockpitHUD → TSX",                                    "status": "pending", "files": ["src/ui/CockpitHUD.tsx"] },
+    { "n": 10, "title": "MFD views: HomeView + TelemetryView → TSX",           "status": "pending", "files": ["src/ui/mfd/views/HomeView.tsx", "src/ui/mfd/views/TelemetryView.tsx"] },
+    { "n": 11, "title": "MFD views: VelocityView + AttitudeView → TSX",        "status": "pending", "files": ["src/ui/mfd/views/VelocityView.tsx", "src/ui/mfd/views/AttitudeView.tsx"] },
+    { "n": 12, "title": "MFD views: FuelView + RadarView + GuideView + ApproachView → TSX", "status": "pending", "files": ["src/ui/mfd/views/FuelView.tsx", "src/ui/mfd/views/RadarView.tsx", "src/ui/mfd/views/GuideView.tsx", "src/ui/mfd/views/ApproachView.tsx"] },
+    { "n": 13, "title": "MFD → TSX",                                           "status": "pending", "files": ["src/ui/MFD.tsx"] },
+    { "n": 14, "title": "DebugPanel → TSX",                                    "status": "pending", "files": ["src/ui/DebugPanel.tsx"] },
+    { "n": 15, "title": "GalaxyMap → TSX",                                     "status": "pending", "files": ["src/ui/GalaxyMap.tsx"] },
+    { "n": 16, "title": "TechTree → TSX",                                      "status": "pending", "files": ["src/ui/TechTree.tsx"] },
+    { "n": 17, "title": "main.ts + SCSS cleanup",                              "status": "pending", "files": ["src/main.ts", "src/scss/main.scss"] }
   ]
 }

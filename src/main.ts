@@ -18,7 +18,7 @@ import { mountCockpitHUD, type CockpitHUDRef } from "./ui/CockpitHUD";
 import type { RefObject } from "preact";
 import { mountDebugPanel } from "./ui/DebugPanel";
 import { mountGalaxyMap } from "./ui/GalaxyMap";
-import { TechTree } from "./ui/TechTree";
+import { mountTechTree } from "./ui/TechTree";
 
 const spriteThrusterOffUrl = "/assets/ship.png";
 const spriteThrusterOnUrl = "/assets/ship-thrust.png";
@@ -72,7 +72,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   const galaxyMap = mountGalaxyMap(gameState, (id) => {
     transitTargetId = id;
   });
-  const techTree = new TechTree(gameState, () => {
+  const techTree = mountTechTree(gameState, () => {
     if (galaxy.ship) galaxy.ship.applyUpgrades(gameState.upgrades);
     saveGame(gameState);
   });

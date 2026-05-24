@@ -1,9 +1,8 @@
-import { render } from 'preact';
 import { useState, useRef } from 'preact/hooks';
 import type Galaxy from '../../systems/Galaxy';
 import './PredictionPanel.scss';
 
-function PredictionPanel({ galaxy }: { galaxy: Galaxy }) {
+export function PredictionPanel({ galaxy }: { galaxy: Galaxy }) {
   const [active, setActive] = useState(false);
   const startedAt = useRef<number | null>(null);
   const [eta, setEta] = useState('--:--');
@@ -38,8 +37,4 @@ function PredictionPanel({ galaxy }: { galaxy: Galaxy }) {
       </span>
     </button>
   );
-}
-
-export function mountPredictionPanel(container: HTMLElement, galaxy: Galaxy): void {
-  render(<PredictionPanel galaxy={galaxy} />, container);
 }

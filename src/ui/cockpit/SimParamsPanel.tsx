@@ -1,4 +1,3 @@
-import { render } from 'preact';
 import { useState } from 'preact/hooks';
 import Ship from '../../entities/Ship';
 import './SimParamsPanel.scss';
@@ -35,7 +34,7 @@ function Fader({ label, value, min, max, step, accent, format, onChange }: Fader
 
 interface Props { getSimSpeed: () => number; setSimSpeed: (v: number) => void; }
 
-function SimParamsPanel({ getSimSpeed: _getSimSpeed, setSimSpeed }: Props) {
+export function SimParamsPanel({ getSimSpeed: _getSimSpeed, setSimSpeed }: Props) {
   const thrDefault = Ship.DEFAULT_THRUSTPOWER;
   const rotDefault = Ship.DEFAULT_RADIALPOWER;
   const [thrust, setThrust] = useState(20);
@@ -45,23 +44,15 @@ function SimParamsPanel({ getSimSpeed: _getSimSpeed, setSimSpeed }: Props) {
   return (
     <div class="sim-params">
       <div class="cockpit-section-label">DRIVE SYS</div>
-      <Fader label="THRUSTER (Z/S)" value={thrust} min={0} max={100} step={5} accent="cyan"
+      <Fader label="THRUSTER" value={thrust} min={0} max={100} step={5} accent="cyan"
         format={(v) => `${v}%`}
         onChange={(v) => { Ship.THRUSTPOWER = thrDefault * (v / 20); setThrust(v); }} />
       <Fader label="RCS" value={rcs} min={0} max={100} step={5} accent="cyan"
         format={(v) => `${v}%`}
         onChange={(v) => { Ship.RADIALPOWER = rotDefault * (v / 20); setRcs(v); }} />
-      <Fader label="SIM SPEED" value={simSpd} min={1} max={100} step={1} accent="yellow"
+      <Fader label="SIM SPD" value={simSpd} min={1} max={100} step={1} accent="yellow"
         format={(v) => `${(v / 10).toFixed(1)}×`}
         onChange={(v) => { setSimSpeed(v / 10); setSimSpd(v); }} />
     </div>
   );
-}
-
-export function mountSimParamsPanel(
-  container: HTMLElement,
-  getSimSpeed: () => number,
-  setSimSpeed: (v: number) => void
-): void {
-  render(<SimParamsPanel getSimSpeed={getSimSpeed} setSimSpeed={setSimSpeed} />, container);
 }

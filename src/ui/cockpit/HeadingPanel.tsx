@@ -1,4 +1,3 @@
-import { render } from 'preact';
 import { velSignal, headingSignal } from '../../core/gameSignals';
 import type Galaxy from '../../systems/Galaxy';
 import './HeadingPanel.scss';
@@ -10,7 +9,7 @@ const DEFS = [
   { label: 'ANT', color: '#e9d628' },
 ] as const;
 
-function HeadingPanel({ galaxy }: { galaxy: Galaxy }) {
+export function HeadingPanel({ galaxy }: { galaxy: Galaxy }) {
   const vel = velSignal.value;
   const angle = headingSignal.value;
   const ship = galaxy.ship;
@@ -48,8 +47,4 @@ function HeadingPanel({ galaxy }: { galaxy: Galaxy }) {
       </div>
     </div>
   );
-}
-
-export function mountHeadingPanel(container: HTMLElement, galaxy: Galaxy): void {
-  render(<HeadingPanel galaxy={galaxy} />, container);
 }

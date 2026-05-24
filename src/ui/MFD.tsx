@@ -1,4 +1,3 @@
-import { render, createRef } from 'preact';
 import { forwardRef, useImperativeHandle } from 'preact/compat';
 import { useRef, useEffect, useState } from 'preact/hooks';
 import Galaxy from '../systems/Galaxy';
@@ -28,9 +27,9 @@ const VIEW_KEYS: MFDViewKey[] = ['home', 'vel', 'att', 'tel', 'fuel', 'radar', '
 
 type LblInfo = { text: string; active?: boolean; mod?: boolean; unused?: boolean };
 
-interface MFDRef { update(data: MFDData): void; }
+export interface MFDRef { update(data: MFDData): void; }
 
-const MFDComponent = forwardRef<MFDRef, { galaxy: Galaxy }>(({ galaxy }, ref) => {
+export const MFD = forwardRef<MFDRef, { galaxy: Galaxy }>(({ galaxy }, ref) => {
   const [activeView, setActiveView] = useState<MFDViewKey>('home');
   const [, forceUpdate] = useState(0);
   const views = useRef<Record<MFDViewKey, MFDView> | null>(null);
@@ -114,9 +113,3 @@ const MFDComponent = forwardRef<MFDRef, { galaxy: Galaxy }>(({ galaxy }, ref) =>
     </div>
   );
 });
-
-export function mountMFD(container: HTMLElement, galaxy: Galaxy): { update(data: MFDData): void } {
-  const r = createRef<MFDRef>();
-  render(<MFDComponent ref={r} galaxy={galaxy} />, container);
-  return { update: (data) => r.current?.update(data) };
-}

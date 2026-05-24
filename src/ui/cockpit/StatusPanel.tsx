@@ -1,7 +1,5 @@
-import { render, createRef } from 'preact';
 import { useRef, useImperativeHandle, useEffect } from 'preact/hooks';
 import { forwardRef } from 'preact/compat';
-import type { RefObject } from 'preact';
 import './StatusPanel.scss';
 
 export interface StatusPanelRef {
@@ -19,7 +17,6 @@ function drawGauge(canvas: HTMLCanvasElement, pct: number, color: string, label:
   const cy = h / 2 + 5 * dpr;
   const r = w * 0.35;
   const trackW = 4 * dpr;
-
   const START = (5 * Math.PI) / 4;
   const SWEEP = (3 * Math.PI) / 2;
 
@@ -76,7 +73,7 @@ function drawGauge(canvas: HTMLCanvasElement, pct: number, color: string, label:
   ctx.fillText(label, cx, cy + r * 0.6);
 }
 
-const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
+export const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
   const leRef = useRef<HTMLCanvasElement>(null);
   const moRef = useRef<HTMLCanvasElement>(null);
   const decayWrapRef = useRef<HTMLDivElement>(null);
@@ -125,9 +122,3 @@ const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
     </div>
   );
 });
-
-export function mountStatusPanel(container: HTMLElement): RefObject<StatusPanelRef> {
-  const r = createRef<StatusPanelRef>();
-  render(<StatusPanel ref={r} />, container);
-  return r;
-}

@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-right: 1px solid var(--border);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -13,7 +12,7 @@
   flex-direction: row;
   height: 32px;
   flex-shrink: 0;
-  background: #0c180c;
+  background: color-mix(in srgb, var(--bg) 70%, #0c180c);
   padding: 4px 4px;
   gap: 3px;
 }
@@ -106,7 +105,7 @@
 
 .mfd-screen {
   flex: 1;
-  background: #030a04;
+  background: color-mix(in srgb, var(--bg) 60%, #030a04);
   overflow: hidden;
   display: flex;
   flex-direction: column;

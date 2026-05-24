@@ -63,7 +63,7 @@ export class Canvas2d extends Canvas<CanvasRenderingContext2D> {
     this.context = context;
 
     window.addEventListener("resize", this.sizing.bind(this));
-    this.sizing();
+    requestAnimationFrame(() => this.sizing());
   }
 
   // Override base place() to account for camera offset
@@ -148,7 +148,7 @@ export class CanvasWebGL extends Canvas<WebGLRenderingContext> {
     this.context.blendFunc(this.context.SRC_ALPHA, this.context.ONE);
 
     window.addEventListener("resize", this.sizing.bind(this));
-    this.sizing();
+    requestAnimationFrame(() => this.sizing());
   }
 
   newShader(source: string, type: ShaderType) {

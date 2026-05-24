@@ -10,6 +10,8 @@ export const decayMaxSignal = signal<number | null>(null);
 
 export const headingSignal = signal<number>(0);
 export const velSignal = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+export const posSignal = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+export const bhAltSignal = signal<number>(0);
 
 export const systemIdSignal = signal<string>("SOL-0");
 export const elapsedSignal = signal<number>(0);

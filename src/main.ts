@@ -16,6 +16,13 @@ import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
 import { mountCockpitHUD, type CockpitHUDRef } from "./ui/CockpitHUD";
 import type { RefObject } from "preact";
+import {
+  velSignal, headingSignal, posSignal, bhAltSignal,
+  speedSignal, leSignal, leMaxSignal, moSignal, moMaxSignal,
+  decaySecondsSignal, decayMaxSignal,
+  systemIdSignal, elapsedSignal, progressSignal,
+  fpsSignal, starCountSignal, totalStarsSignal,
+} from "./core/gameSignals";
 import { mountDebugPanel } from "./ui/DebugPanel";
 import { mountGalaxyMap } from "./ui/GalaxyMap";
 import { mountTechTree } from "./ui/TechTree";
@@ -169,6 +176,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   let lastTime = 0;
   const UPDATE_INTERVAL_MS = 200;
   let lastUpdate = Date.now();
+  const startEpoch = Date.now();
   let lastSave = Date.now();
 
   const FIXED_STEP = 1 / 60;
@@ -259,19 +267,37 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
     if (now - lastUpdate >= UPDATE_INTERVAL_MS) {
       const activeStars = galaxy.stars.filter((s) => !s.shouldDestroy).length;
       const ship = galaxy.ship;
-      const cam = canvas2d.camera;
-      const distFromCam = ship
-        ? Math.hypot(ship.pos.x - cam.x, ship.pos.y - cam.y)
-        : 0;
-
       const bh0 = blackholes[0];
+      const secs = Math.floor((now - startEpoch) / 1000);
+
+      fpsSignal.value = Math.round(1 / rawDelta);
+      starCountSignal.value = activeStars;
+      totalStarsSignal.value = galaxy.totalStarsSpawned;
+      systemIdSignal.value = gameState.currentSystemId;
+      elapsedSignal.value = secs;
+      progressSignal.value = gameState.completedSystems.length / SYSTEMS.length;
+
+      if (ship) {
+        velSignal.value = { x: ship.vel.x, y: ship.vel.y };
+        headingSignal.value = ship.angle;
+        speedSignal.value = Math.hypot(ship.vel.x, ship.vel.y) * 2000;
+        posSignal.value = { x: (ship.pos.x * 1000) | 0, y: (ship.pos.y * 1000) | 0 };
+        bhAltSignal.value = bh0 ? Math.hypot(ship.pos.x - bh0.pos.x, ship.pos.y - bh0.pos.y) * 1000 : 0;
+        leSignal.value = ship.liquidErgol;
+        leMaxSignal.value = ship.maxLiquidErgol;
+        moSignal.value = ship.monergol;
+        moMaxSignal.value = ship.maxMonergol;
+      }
+      decaySecondsSignal.value = decayTimer;
+      decayMaxSignal.value = decayMax;
+
       cockpitRef.current?.update({
-        fps: Math.round(1 / rawDelta),
+        fps: fpsSignal.value,
         starCount: activeStars,
         totalStars: galaxy.totalStarsSpawned,
         vx: ship?.vel?.x ?? 0,
         vy: ship?.vel?.y ?? 0,
-        dist: distFromCam,
+        dist: ship ? Math.hypot(ship.pos.x - canvas2d.camera.x, ship.pos.y - canvas2d.camera.y) : 0,
         angularVel: ship?.angluarVel ?? 0,
         liquidErgol: ship?.liquidErgol ?? 0,
         maxLiquidErgol: ship?.maxLiquidErgol ?? 500,
@@ -281,16 +307,16 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         completedCount: gameState.completedSystems.length,
         systemId: gameState.currentSystemId,
         totalSystems: SYSTEMS.length,
-        posX: ship ? (ship.pos.x * 1000) | 0 : 0,
-        posY: ship ? (ship.pos.y * 1000) | 0 : 0,
-        bhAlt: ship && bh0 ? Math.hypot(ship.pos.x - bh0.pos.x, ship.pos.y - bh0.pos.y) * 1000 : 0,
+        posX: posSignal.value.x,
+        posY: posSignal.value.y,
+        bhAlt: bhAltSignal.value,
         heading: ship ? (ship.angle * 180 / Math.PI) : 0,
       });
 
       lastUpdate = now;
     }
 
-    // Redraw status gauges every frame for smooth pulse animation and high speed refresh
+    // Redraw status gauges every frame for smooth pulse animation
     const ship2 = galaxy.ship;
     if (ship2) {
       cockpitRef.current?.updateStatusGauges(

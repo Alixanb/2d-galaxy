@@ -120,6 +120,8 @@ export class FlightControlsPanel {
       el.classList.toggle('hlk-active', ship.headingLock === mode);
     }
 
+    this.autoStabBtn.disabled = !ship.autoStabUnlocked;
+    this.retroBtn.disabled = !ship.retroBurnUnlocked;
     this.updateRetroBtn(ship);
     this.autoStabBtn.classList.toggle("autostab-active", ship.autoStab);
   }

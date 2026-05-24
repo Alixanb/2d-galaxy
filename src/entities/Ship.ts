@@ -40,12 +40,14 @@ export default class Ship {
   spritesWidthRatio: SpriteStatusKey<number> = { idle: 0, thrusting: 0 };
   showPath: boolean;
   autoStab: boolean = false;
+  autoStabUnlocked: boolean = false;
   retrogradeActive: boolean = false;
   retrogradePhase: "align" | "burn" | null = null;
+  retroBurnUnlocked: boolean = false;
   targetRelay?: RelayStation;
   systemBoundaryRadius: number = 1.0;
   headingLock: HeadingLockMode = 'manual';
-  headingLockTier: 0 | 1 | 2 | 3 = 2;
+  headingLockTier: 0 | 1 | 2 | 3 = 0;
   dockingMode: boolean = false;
   rcsForward: number = 0;
   rcsSideways: number = 0;
@@ -300,7 +302,9 @@ export default class Ship {
   applyUpgrades(u: UpgradeState): void {
     this.maxLiquidErgol = getMaxLE(u);
     this.maxMonergol = getMaxMono(u);
+    this.autoStabUnlocked = u.autoStab;
     this.autoStab = u.autoStab;
+    this.retroBurnUnlocked = u.retroBurn;
     this.headingLockTier = u.headingLockTier;
     Ship.THRUSTPOWER = Ship.DEFAULT_THRUSTPOWER * getThrustFactor(u) * 5;
     Ship.RADIALPOWER = Ship.DEFAULT_RADIALPOWER * (getRCSFactor(u) / 0.4);

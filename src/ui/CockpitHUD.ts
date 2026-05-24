@@ -3,8 +3,9 @@ import MFD, { type MFDData } from "./MFD";
 import { SimParamsPanel } from "./cockpit/SimParamsPanel";
 import { PredictionPanel } from "./cockpit/PredictionPanel";
 import { FlightControlsPanel } from "./cockpit/FlightControlsPanel";
-import { HeadingPanel } from "./cockpit/HeadingPanel";
+import { mountHeadingPanel } from "./cockpit/HeadingPanel";
 import { mountStatusPanel, type StatusPanelRef } from "./cockpit/StatusPanel";
+import { velSignal, headingSignal } from "../core/gameSignals";
 import type { RefObject } from "preact";
 
 export default class CockpitHUD {
@@ -13,10 +14,10 @@ export default class CockpitHUD {
   private simParams: SimParamsPanel;
   private prediction: PredictionPanel;
   private flightCtrl: FlightControlsPanel;
-  private heading: HeadingPanel;
   private statusRef: RefObject<StatusPanelRef>;
   private topBarMeta: HTMLElement;
   private startTime = Date.now();
+  private galaxy: Galaxy;
 
   constructor(
     galaxy: Galaxy,
@@ -40,12 +41,12 @@ export default class CockpitHUD {
     const panel = document.createElement("div");
     panel.className = "cockpit-panel";
 
+    this.galaxy = galaxy;
     this.mfd1 = new MFD(galaxy);
     this.mfd2 = new MFD(galaxy);
     this.simParams = new SimParamsPanel(getSimSpeed, setSimSpeed);
     this.prediction = new PredictionPanel(galaxy);
     this.flightCtrl = new FlightControlsPanel(galaxy, onPause);
-    this.heading = new HeadingPanel(galaxy);
     panel.appendChild(this.mfd1.getRoot());
     panel.appendChild(this.mfd2.getRoot());
     panel.appendChild(this.simParams.getRoot());
@@ -54,7 +55,9 @@ export default class CockpitHUD {
 
     const lastCol = document.createElement("div");
     lastCol.style.cssText = "display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)";
-    lastCol.appendChild(this.heading.getRoot());
+    const headingWrap = document.createElement("div");
+    lastCol.appendChild(headingWrap);
+    mountHeadingPanel(headingWrap, galaxy);
     const statusWrap = document.createElement("div");
     lastCol.appendChild(statusWrap);
     this.statusRef = mountStatusPanel(statusWrap);
@@ -111,7 +114,11 @@ export default class CockpitHUD {
     this.mfd1.update(data);
     this.mfd2.update(data);
     this.flightCtrl.update();
-    this.heading.update();
+    const ship = this.galaxy.ship;
+    if (ship) {
+      velSignal.value = { x: ship.vel.x, y: ship.vel.y };
+      headingSignal.value = ship.angle;
+    }
   }
 
   setPaused(paused: boolean): void {

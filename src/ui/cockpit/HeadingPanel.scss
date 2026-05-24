@@ -1,0 +1,45 @@
+.heading-section {
+  padding: 14px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.heading-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.heading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: "Inter", sans-serif;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+
+  &.heading-aligned {
+    opacity: 1;
+
+    .heading-delta {
+      color: #3dff7a;
+    }
+  }
+}
+
+.heading-label {
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  flex: 1;
+}
+
+.heading-delta {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  min-width: 56px;
+  text-align: right;
+}

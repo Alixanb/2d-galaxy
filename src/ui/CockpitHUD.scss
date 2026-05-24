@@ -25,12 +25,6 @@
   font-size: 8px;
 }
 
-#canvas-2d,
-#canvas-web-gl {
-  top: 36px;
-  height: calc(100% - 220px - 36px);
-}
-
 .cockpit-panel {
   position: fixed;
   bottom: 0;

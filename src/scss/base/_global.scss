@@ -26,8 +26,8 @@ body::after {
 #canvas-web-gl {
   display: block;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: calc(100% - 220px);
+  left: var(--left-col);
+  right: var(--right-col);
+  top: var(--topbar-h);
+  bottom: var(--pred-h);
 }

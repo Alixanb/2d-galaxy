@@ -1,7 +1,7 @@
 import { render, createRef } from 'preact';
 import { forwardRef, useImperativeHandle } from 'preact/compat';
 import { useRef, useEffect } from 'preact/hooks';
-import MFD, { type MFDData } from './MFD';
+import { mountMFD, type MFDData } from './MFD';
 import { mountSimParamsPanel } from './cockpit/SimParamsPanel';
 import { mountPredictionPanel } from './cockpit/PredictionPanel';
 import { mountFlightControlsPanel, type FlightControlsPanelRef } from './cockpit/FlightControlsPanel';
@@ -38,14 +38,14 @@ const CockpitHUD = forwardRef<CockpitHUDRef, Props>(
     const flightEl = useRef<HTMLDivElement>(null);
     const headEl = useRef<HTMLDivElement>(null);
     const statEl = useRef<HTMLDivElement>(null);
-    const mfd1 = useRef<MFD | null>(null);
-    const mfd2 = useRef<MFD | null>(null);
+    const mfd1 = useRef<{ update(d: MFDData): void } | null>(null);
+    const mfd2 = useRef<{ update(d: MFDData): void } | null>(null);
     const flightRef = useRef<RefObject<FlightControlsPanelRef> | null>(null);
     const statusRef = useRef<RefObject<StatusPanelRef> | null>(null);
 
     useEffect(() => {
-      if (mfd1El.current) { const m = new MFD(galaxy); mfd1El.current.appendChild(m.getRoot()); mfd1.current = m; }
-      if (mfd2El.current) { const m = new MFD(galaxy); mfd2El.current.appendChild(m.getRoot()); mfd2.current = m; }
+      if (mfd1El.current) mfd1.current = mountMFD(mfd1El.current, galaxy);
+      if (mfd2El.current) mfd2.current = mountMFD(mfd2El.current, galaxy);
       if (simEl.current) mountSimParamsPanel(simEl.current, getSimSpeed, setSimSpeed);
       if (predEl.current) mountPredictionPanel(predEl.current, galaxy);
       if (flightEl.current) flightRef.current = mountFlightControlsPanel(flightEl.current, galaxy, onPause);

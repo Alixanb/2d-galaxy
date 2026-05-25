@@ -1,14 +1,9 @@
-import { render, createRef } from 'preact';
-import { forwardRef, useImperativeHandle } from 'preact/compat';
-import { useRef, useEffect, useState } from 'preact/hooks';
-import { fpsSignal, starCountSignal, totalStarsSignal } from '../../../core/gameSignals';
-import type { MFDData } from '../../MFD';
-import type { MFDView } from '../MFDView';
+import { useRef, useEffect } from 'preact/hooks';
+import { useSignal, effect } from '@preact/signals';
+import { fpsSignal, starCountSignal, totalStarsSignal, mfdLabelsSignal, mfdOsbPressSignal } from '../../../core/gameSignals';
 import './TelemetryView.scss';
 
 const MAX_PTS = 120;
-
-interface TelViewRef { getLabels(): string[]; onOSB(idx: number): void; }
 
 function drawChart(ctx: CanvasRenderingContext2D, data: number[], w: number, h: number): void {
   const chartMax = Math.max(...data, 1);
@@ -31,16 +26,15 @@ function drawChart(ctx: CanvasRenderingContext2D, data: number[], w: number, h: 
   ctx.stroke();
 }
 
-const TelemetryViewComponent = forwardRef<TelViewRef>((_, ref) => {
+export function TelemetryView() {
   const fps = fpsSignal.value;
   const starCount = starCountSignal.value;
   const total = totalStarsSignal.value;
-  const showFPS = useRef(true);
-  const showChart = useRef(true);
+  const showFPS = useSignal(true);
+  const showChart = useSignal(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartData = useRef<number[]>([]);
   const prevCount = useRef(-1);
-  const [, setTick] = useState(0);
 
   if (starCount !== prevCount.current) {
     prevCount.current = starCount;
@@ -48,8 +42,21 @@ const TelemetryViewComponent = forwardRef<TelViewRef>((_, ref) => {
   }
 
   useEffect(() => {
+    mfdLabelsSignal.value = ['HOME', showFPS.value ? 'FPS*' : 'FPS', showChart.value ? 'CHART*' : 'CHART', 'TEL', 'FUEL', 'RADAR'];
+  }, [showFPS.value, showChart.value]);
+
+  useEffect(() => {
+    return effect(() => {
+      const { btn, tick } = mfdOsbPressSignal.value;
+      if (tick === 0) return;
+      if (btn === 2) showFPS.value = !showFPS.value;
+      if (btn === 3) showChart.value = !showChart.value;
+    });
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !showChart.current) return;
+    if (!canvas || !showChart.value) return;
     const wrap = canvas.parentElement;
     if (!wrap || wrap.clientWidth === 0) return;
     const dpr = devicePixelRatio;
@@ -60,43 +67,15 @@ const TelemetryViewComponent = forwardRef<TelViewRef>((_, ref) => {
     if (ctx) drawChart(ctx, chartData.current, canvas.width, canvas.height);
   });
 
-  useImperativeHandle(ref, () => ({
-    getLabels: () => ['HOME', showFPS.current ? 'FPS*' : 'FPS', showChart.current ? 'CHART*' : 'CHART', 'TEL', 'FUEL', 'RADAR'],
-    onOSB(idx) {
-      if (idx === 2) { showFPS.current = !showFPS.current; setTick(n => n + 1); }
-      if (idx === 3) { showChart.current = !showChart.current; setTick(n => n + 1); }
-    },
-  }));
-
   return (
     <div class="mfd-view mfd-view-tel" style="display:flex">
       <div class="mfd-header">TELEMETRY</div>
       <div class="mfd-sep" />
       <div class="mfd-row"><span class="mfd-label">ALIVE</span><span class="mfd-val">{starCount}</span></div>
       <div class="mfd-row"><span class="mfd-label">TOTAL</span><span class="mfd-val">{total}</span></div>
-      {showFPS.current && <div class="mfd-row"><span class="mfd-label">FPS</span><span class="mfd-val">{fps}</span></div>}
+      {showFPS.value && <div class="mfd-row"><span class="mfd-label">FPS</span><span class="mfd-val">{fps}</span></div>}
       <div class="mfd-sep" />
-      {showChart.current && <div class="mfd-chart-wrap"><canvas ref={canvasRef} /></div>}
+      {showChart.value && <div class="mfd-chart-wrap"><canvas ref={canvasRef} /></div>}
     </div>
   );
-});
-
-export class TelemetryView implements MFDView {
-  private r = createRef<TelViewRef>();
-
-  mount(container: HTMLElement): void {
-    render(<TelemetryViewComponent ref={this.r} />, container);
-  }
-
-  update(data: MFDData): void {
-    fpsSignal.value = data.fps;
-    starCountSignal.value = data.starCount;
-    totalStarsSignal.value = data.totalStars;
-  }
-
-  getLabels(): string[] {
-    return this.r.current?.getLabels() ?? ['HOME', 'FPS*', 'CHART*', 'TEL', 'FUEL', 'RADAR'];
-  }
-
-  onOSB(idx: number): void { this.r.current?.onOSB(idx); }
 }

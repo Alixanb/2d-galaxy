@@ -1,10 +1,6 @@
-import { useRef, useImperativeHandle, useEffect } from 'preact/hooks';
-import { forwardRef } from 'preact/compat';
+import { useRef, useEffect } from 'preact/hooks';
+import { leSignal, leMaxSignal, moSignal, moMaxSignal, decaySecondsSignal, decayMaxSignal } from '../../core/gameSignals';
 import './StatusPanel.scss';
-
-export interface StatusPanelRef {
-  draw(vx: number, vy: number, le: number, leMax: number, mo: number, moMax: number, decay: number | null, decayMax: number | null): void;
-}
 
 function drawGauge(canvas: HTMLCanvasElement, pct: number, color: string, label: string, value: string, critical: boolean): void {
   const ctx = canvas.getContext('2d');
@@ -73,7 +69,7 @@ function drawGauge(canvas: HTMLCanvasElement, pct: number, color: string, label:
   ctx.fillText(label, cx, cy + r * 0.6);
 }
 
-export const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
+export function StatusPanel() {
   const leRef = useRef<HTMLCanvasElement>(null);
   const moRef = useRef<HTMLCanvasElement>(null);
   const decayWrapRef = useRef<HTMLDivElement>(null);
@@ -85,26 +81,41 @@ export const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
     for (const c of [leRef.current, moRef.current]) {
       if (c) { c.width = 100 * dpr; c.height = 100 * dpr; }
     }
-  }, []);
 
-  useImperativeHandle(ref, () => ({
-    draw(_vx, _vy, le, leMax, mo, moMax, decay, decayMax) {
-      if (!leRef.current || !moRef.current) return;
-      const lePct = leMax > 0 ? Math.max(0, le / leMax) : 0;
-      const moPct = moMax > 0 ? Math.max(0, mo / moMax) : 0;
-      drawGauge(leRef.current, lePct, 'rgba(80, 182, 201, 0.9)', 'L-ERGOL', Math.ceil(le).toString(), lePct < 0.2);
-      drawGauge(moRef.current, moPct, 'rgba(176, 111, 216, 0.9)', 'MONO', Math.ceil(mo).toString(), moPct < 0.2);
-      if (!decayWrapRef.current || !decayFillRef.current || !decayTimeRef.current) return;
-      if (decay === null || decayMax === null) {
-        decayWrapRef.current.style.display = 'none';
-      } else {
-        decayWrapRef.current.style.display = 'flex';
-        decayFillRef.current.style.width = `${Math.max(0, decay / decayMax) * 100}%`;
-        decayTimeRef.current.textContent = `${Math.ceil(decay)}s`;
-        decayFillRef.current.classList.toggle('decay-urgent', decay < 30);
+    let frame: number;
+    const animate = () => {
+      if (leRef.current && moRef.current) {
+        const le = leSignal.peek();
+        const leMax = leMaxSignal.peek();
+        const mo = moSignal.peek();
+        const moMax = moMaxSignal.peek();
+        
+        const lePct = leMax > 0 ? Math.max(0, le / leMax) : 0;
+        const moPct = moMax > 0 ? Math.max(0, mo / moMax) : 0;
+        
+        drawGauge(leRef.current, lePct, 'rgba(80, 182, 201, 0.9)', 'L-ERGOL', Math.ceil(le).toString(), lePct < 0.2);
+        drawGauge(moRef.current, moPct, 'rgba(176, 111, 216, 0.9)', 'MONO', Math.ceil(mo).toString(), moPct < 0.2);
       }
-    },
-  }));
+
+      if (decayWrapRef.current && decayFillRef.current && decayTimeRef.current) {
+        const decay = decaySecondsSignal.peek();
+        const decayMax = decayMaxSignal.peek();
+        
+        if (decay === null || decayMax === null) {
+          decayWrapRef.current.style.display = 'none';
+        } else {
+          decayWrapRef.current.style.display = 'flex';
+          decayFillRef.current.style.width = `${Math.max(0, decay / decayMax) * 100}%`;
+          decayTimeRef.current.textContent = `${Math.ceil(decay)}s`;
+          decayFillRef.current.classList.toggle('decay-urgent', decay < 30);
+        }
+      }
+
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <div class="status-section">
@@ -121,4 +132,4 @@ export const StatusPanel = forwardRef<StatusPanelRef>((_, ref) => {
       </div>
     </div>
   );
-});
+}

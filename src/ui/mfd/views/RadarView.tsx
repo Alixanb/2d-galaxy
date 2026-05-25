@@ -1,18 +1,12 @@
-import { render, createRef } from 'preact';
-import { signal } from '@preact/signals';
-import { forwardRef, useImperativeHandle } from 'preact/compat';
-import { useRef, useEffect, useState } from 'preact/hooks';
+import { useRef, useEffect } from 'preact/hooks';
+import { useSignal, effect } from '@preact/signals';
+import { velSignal, mfdLabelsSignal, mfdOsbPressSignal } from '../../../core/gameSignals';
 import type Galaxy from '../../../systems/Galaxy';
-import type { MFDData } from '../../MFD';
-import type { MFDView } from '../MFDView';
 import './RadarView.scss';
 
 const VEL_THRESHOLD = 0.00008;
-const dataSig = signal<MFDData | null>(null);
 
-interface RadarRef { getLabels(): string[]; onOSB(idx: number): void; }
-
-function drawRadar(ctx: CanvasRenderingContext2D, w: number, h: number, g: Galaxy, data: MFDData, grid: boolean, vec: boolean): void {
+function drawRadar(ctx: CanvasRenderingContext2D, w: number, h: number, g: Galaxy, vx: number, vy: number, grid: boolean, vec: boolean): void {
   const dpr = devicePixelRatio, cx = w / 2, cy = h / 2;
   ctx.clearRect(0, 0, w, h); ctx.fillStyle = '#030a04'; ctx.fillRect(0, 0, w, h);
   const range = g.size * 1.3, scale = Math.min(cx, cy) * 0.88 / range;
@@ -37,9 +31,9 @@ function drawRadar(ctx: CanvasRenderingContext2D, w: number, h: number, g: Galax
   if (ship) {
     const [sx, sy] = toS(ship.pos.x, ship.pos.y);
     if (vec) {
-      const speed = Math.hypot(data.vx, data.vy);
+      const speed = Math.hypot(vx, vy);
       if (speed > VEL_THRESHOLD) {
-        const va = Math.atan2(data.vy, data.vx), len = Math.min(cx * 0.35, speed * scale * 60000) * dpr;
+        const va = Math.atan2(vy, vx), len = Math.min(cx * 0.35, speed * scale * 60000) * dpr;
         ctx.strokeStyle = 'rgba(61,255,122,0.55)'; ctx.lineWidth = 1.5 * dpr;
         ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + Math.cos(va) * len, sy + Math.sin(va) * len); ctx.stroke();
       }
@@ -53,16 +47,28 @@ function drawRadar(ctx: CanvasRenderingContext2D, w: number, h: number, g: Galax
   }
 }
 
-const RadarViewComponent = forwardRef<RadarRef, { galaxy: Galaxy }>(({ galaxy }, ref) => {
-  const data = dataSig.value;
-  const showGrid = useRef(true);
-  const showVector = useRef(true);
-  const [, setTick] = useState(0);
+export function RadarView({ galaxy }: { galaxy: Galaxy }) {
+  const { x: vx, y: vy } = velSignal.value;
+  const showGrid = useSignal(true);
+  const showVector = useSignal(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    mfdLabelsSignal.value = ['HOME', showGrid.value ? 'GRID*' : 'GRID', showVector.value ? 'VECT*' : 'VECT', 'TEL', 'FUEL', 'RADAR'];
+  }, [showGrid.value, showVector.value]);
+
+  useEffect(() => {
+    return effect(() => {
+      const { btn, tick } = mfdOsbPressSignal.value;
+      if (tick === 0) return;
+      if (btn === 2) showGrid.value = !showGrid.value;
+      if (btn === 3) showVector.value = !showVector.value;
+    });
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !data) return;
+    if (!canvas) return;
     const wrap = canvas.parentElement;
     if (!wrap || wrap.clientWidth === 0) return;
     const dpr = devicePixelRatio;
@@ -72,30 +78,12 @@ const RadarViewComponent = forwardRef<RadarRef, { galaxy: Galaxy }>(({ galaxy },
       canvas.style.width = `${wrap.clientWidth}px`; canvas.style.height = `${wrap.clientHeight}px`;
     }
     const ctx = canvas.getContext('2d');
-    if (ctx) drawRadar(ctx, canvas.width, canvas.height, galaxy, data, showGrid.current, showVector.current);
+    if (ctx) drawRadar(ctx, canvas.width, canvas.height, galaxy, vx, vy, showGrid.value, showVector.value);
   });
-
-  useImperativeHandle(ref, () => ({
-    getLabels: () => ['HOME', showGrid.current ? 'GRID*' : 'GRID', showVector.current ? 'VECT*' : 'VECT', 'TEL', 'FUEL', 'RADAR'],
-    onOSB(idx) {
-      if (idx === 2) { showGrid.current = !showGrid.current; setTick(n => n + 1); }
-      if (idx === 3) { showVector.current = !showVector.current; setTick(n => n + 1); }
-    },
-  }));
 
   return (
     <div class="mfd-view mfd-view-radar" style="display:flex">
       <canvas ref={canvasRef} class="mfd-radar-canvas" />
     </div>
   );
-});
-
-export class RadarView implements MFDView {
-  private r = createRef<RadarRef>();
-  private galaxy: Galaxy;
-  constructor(galaxy: Galaxy) { this.galaxy = galaxy; }
-  mount(container: HTMLElement): void { render(<RadarViewComponent ref={this.r} galaxy={this.galaxy} />, container); }
-  update(data: MFDData): void { dataSig.value = data; }
-  getLabels(): string[] { return this.r.current?.getLabels() ?? ['HOME', 'GRID*', 'VECT*', 'TEL', 'FUEL', 'RADAR']; }
-  onOSB(idx: number): void { this.r.current?.onOSB(idx); }
 }

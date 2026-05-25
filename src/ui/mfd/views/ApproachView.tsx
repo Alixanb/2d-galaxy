@@ -1,13 +1,8 @@
-import { render, createRef } from 'preact';
-import { signal } from '@preact/signals';
-import { forwardRef, useImperativeHandle } from 'preact/compat';
+import { useEffect } from 'preact/hooks';
+import { velSignal, mfdLabelsSignal } from '../../../core/gameSignals';
 import type Galaxy from '../../../systems/Galaxy';
 import type RelayStation from '../../../entities/RelayStation';
-import type { MFDData } from '../../MFD';
-import type { MFDView } from '../MFDView';
 import './ApproachView.scss';
-
-const tickSig = signal(0);
 
 const bar = (v: number): string => {
   const w = 9, p = Math.round(Math.max(-1, Math.min(1, v)) * w / 2 + w / 2);
@@ -21,15 +16,13 @@ const relV = (r: RelayStation) => ({
 
 type Row = { label: string; val: string };
 
-interface ApproachRef { getLabels(): string[]; onOSB(idx: number): void; }
+export function ApproachView({ galaxy }: { galaxy: Galaxy }) {
+  // Read velSignal just to trigger reactivity every 200ms
+  velSignal.value;
 
-const ApproachViewComponent = forwardRef<ApproachRef, { galaxy: Galaxy }>(({ galaxy }, ref) => {
-  tickSig.value;
-
-  useImperativeHandle(ref, () => ({
-    getLabels: () => ['HOME', 'GUIDE', '—', 'TEL', 'FUEL', 'RADAR'],
-    onOSB(_idx: number) {},
-  }));
+  useEffect(() => {
+    mfdLabelsSignal.value = ['HOME', 'GUIDE', '—', 'TEL', 'FUEL', 'RADAR'];
+  }, []);
 
   const ship = galaxy.ship;
   const r = galaxy.relayStations[0];
@@ -66,14 +59,4 @@ const ApproachViewComponent = forwardRef<ApproachRef, { galaxy: Galaxy }>(({ gal
       ))}
     </div>
   );
-});
-
-export class ApproachView implements MFDView {
-  private r = createRef<ApproachRef>();
-  private galaxy: Galaxy;
-  constructor(g: Galaxy) { this.galaxy = g; }
-  mount(container: HTMLElement): void { render(<ApproachViewComponent ref={this.r} galaxy={this.galaxy} />, container); }
-  update(_d: MFDData): void { tickSig.value++; }
-  getLabels(): string[] { return this.r.current?.getLabels() ?? ['HOME', 'GUIDE', '—', 'TEL', 'FUEL', 'RADAR']; }
-  onOSB(idx: number): void { this.r.current?.onOSB(idx); }
 }

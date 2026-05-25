@@ -1,29 +1,28 @@
-import { render, createRef } from 'preact';
-import { signal } from '@preact/signals';
-import { forwardRef, useImperativeHandle } from 'preact/compat';
-import { useRef, useState } from 'preact/hooks';
-import { velSignal } from '../../../core/gameSignals';
-const SCALE = 2000, VEL_THRESHOLD = 0.00008;
-import type { MFDData } from '../../MFD';
-import type { MFDView } from '../MFDView';
+import { useEffect } from 'preact/hooks';
+import { useSignal, effect } from '@preact/signals';
+import { velSignal, angularVelSignal, mfdLabelsSignal, mfdOsbPressSignal } from '../../../core/gameSignals';
 import './VelocityView.scss';
 
-const angVelSig = signal(0);
+const SCALE = 2000, VEL_THRESHOLD = 0.00008;
 
-interface VelViewRef { getLabels(): string[]; onOSB(idx: number): void; }
-
-const VelocityViewComponent = forwardRef<VelViewRef>((_, ref) => {
+export function VelocityView() {
   const { x: vx, y: vy } = velSignal.value;
-  const angVel = angVelSig.value;
-  const showAngVel = useRef(false);
-  const [, setTick] = useState(0);
+  const angVel = angularVelSignal.value;
+  const showAngVel = useSignal(false);
   const speed = Math.hypot(vx, vy);
   const fmt = (v: number) => (Math.abs(v) * SCALE).toFixed(2);
 
-  useImperativeHandle(ref, () => ({
-    getLabels: () => ['HOME', showAngVel.current ? 'ANG VEL*' : 'ANG VEL', '—', 'TEL', 'FUEL', 'RADAR'],
-    onOSB(idx) { if (idx === 2) { showAngVel.current = !showAngVel.current; setTick(n => n + 1); } },
-  }));
+  useEffect(() => {
+    mfdLabelsSignal.value = ['HOME', showAngVel.value ? 'ANG VEL*' : 'ANG VEL', '—', 'TEL', 'FUEL', 'RADAR'];
+  }, [showAngVel.value]);
+
+  useEffect(() => {
+    return effect(() => {
+      const { btn, tick } = mfdOsbPressSignal.value;
+      if (tick === 0) return;
+      if (btn === 2) showAngVel.value = !showAngVel.value;
+    });
+  }, []);
 
   return (
     <div class="mfd-view mfd-view-vel" style="display:flex">
@@ -49,7 +48,7 @@ const VelocityViewComponent = forwardRef<VelViewRef>((_, ref) => {
         <span class="mfd-unit">m/s</span>
         <span class="mfd-val mfd-val-spd">{(speed * SCALE).toFixed(1)}</span>
       </div>
-      {showAngVel.current && (
+      {showAngVel.value && (
         <div class="mfd-row">
           <span class="mfd-label">ω RAD</span>
           <span class="mfd-val">{(angVel * 1000).toFixed(3)}</span>
@@ -57,12 +56,4 @@ const VelocityViewComponent = forwardRef<VelViewRef>((_, ref) => {
       )}
     </div>
   );
-});
-
-export class VelocityView implements MFDView {
-  private r = createRef<VelViewRef>();
-  mount(container: HTMLElement): void { render(<VelocityViewComponent ref={this.r} />, container); }
-  update(data: MFDData): void { angVelSig.value = data.angularVel; }
-  getLabels(): string[] { return this.r.current?.getLabels() ?? ['HOME', 'ANG VEL', '—', 'TEL', 'FUEL', 'RADAR']; }
-  onOSB(idx: number): void { this.r.current?.onOSB(idx); }
 }

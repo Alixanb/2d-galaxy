@@ -1,37 +1,53 @@
-import { render, createRef } from 'preact';
-import { signal } from '@preact/signals';
-import { forwardRef, useImperativeHandle } from 'preact/compat';
-import { useRef, useState } from 'preact/hooks';
-import { leSignal, moSignal, leMaxSignal, moMaxSignal } from '../../../core/gameSignals';
-import type { MFDData } from '../../MFD';
-import type { MFDView } from '../MFDView';
+import { useRef, useEffect } from 'preact/hooks';
+import { useSignal, effect } from '@preact/signals';
+import { leSignal, moSignal, leMaxSignal, moMaxSignal, mfdLabelsSignal, mfdOsbPressSignal } from '../../../core/gameSignals';
 import './FuelView.scss';
 
-const leRateSig = signal(0);
-const moRateSig = signal(0);
-const leEtaSig = signal('∞');
-const moEtaSig = signal('∞');
-
-interface FuelRef { getLabels(): string[]; onOSB(idx: number): void; }
-
-const FuelViewComponent = forwardRef<FuelRef>((_, ref) => {
+export function FuelView() {
   const le = leSignal.value, leMax = leMaxSignal.value;
   const mo = moSignal.value, moMax = moMaxSignal.value;
-  const leRate = leRateSig.value, moRate = moRateSig.value;
-  const leEta = leEtaSig.value, moEta = moEtaSig.value;
-  const showRate = useRef(true);
-  const showEst = useRef(true);
-  const [, setTick] = useState(0);
+  const showRate = useSignal(true);
+  const showEst = useSignal(true);
+
+  const s = useRef({
+    lastLE: le, lastMO: mo, lastTime: performance.now(),
+    leSmoothed: 0, moSmoothed: 0,
+  });
+
+  const now = performance.now();
+  const dt = (now - s.current.lastTime) / 1000;
+  if (dt > 0.05 && (le !== s.current.lastLE || mo !== s.current.lastMO)) {
+    s.current.leSmoothed = s.current.leSmoothed * 0.88 + Math.max(0, (s.current.lastLE - le) / dt) * 0.12;
+    s.current.moSmoothed = s.current.moSmoothed * 0.88 + Math.max(0, (s.current.lastMO - mo) / dt) * 0.12;
+    s.current.lastLE = le;
+    s.current.lastMO = mo;
+    s.current.lastTime = now;
+  }
+
+  const eta = (fuel: number, rate: number) => {
+    if (rate < 0.05) return '∞';
+    const secs = fuel / rate;
+    if (secs > 3600) return `${Math.floor(secs / 3600)}h${Math.floor((secs % 3600) / 60)}m`;
+    return secs > 60 ? `${Math.floor(secs / 60)}m${Math.floor(secs % 60)}s` : `${Math.floor(secs)}s`;
+  };
+
   const lePct = leMax > 0 ? le / leMax : 0;
   const moPct = moMax > 0 ? mo / moMax : 0;
+  const leEta = eta(le, s.current.leSmoothed);
+  const moEta = eta(mo, s.current.moSmoothed);
 
-  useImperativeHandle(ref, () => ({
-    getLabels: () => ['HOME', showRate.current ? 'RATE*' : 'RATE', showEst.current ? 'EST*' : 'EST', 'TEL', 'FUEL', 'RADAR'],
-    onOSB(idx) {
-      if (idx === 2) { showRate.current = !showRate.current; setTick(n => n + 1); }
-      if (idx === 3) { showEst.current = !showEst.current; setTick(n => n + 1); }
-    },
-  }));
+  useEffect(() => {
+    mfdLabelsSignal.value = ['HOME', showRate.value ? 'RATE*' : 'RATE', showEst.value ? 'EST*' : 'EST', 'TEL', 'FUEL', 'RADAR'];
+  }, [showRate.value, showEst.value]);
+
+  useEffect(() => {
+    return effect(() => {
+      const { btn, tick } = mfdOsbPressSignal.value;
+      if (tick === 0) return;
+      if (btn === 2) showRate.value = !showRate.value;
+      if (btn === 3) showEst.value = !showEst.value;
+    });
+  }, []);
 
   return (
     <div class="mfd-view mfd-view-fuel">
@@ -45,53 +61,16 @@ const FuelViewComponent = forwardRef<FuelRef>((_, ref) => {
         <div class="mfd-row"><span class="mfd-label">MONERGOL</span><span class="mfd-val mfd-fuel-amount">{Math.ceil(mo)}/{moMax}</span></div>
         <div class="mfd-fuel-bar-wrap"><div class={`mfd-fuel-bar-fill mfd-fuel-mo${moPct < 0.2 ? ' mfd-fuel-critical' : ''}`} style={{ width: `${moPct * 100}%` }} /></div>
       </div>
-      {showRate.current && (<>
+      {showRate.value && (<>
         <div class="mfd-sep" />
-        <div class="mfd-row"><span class="mfd-label">LE/S</span><span class="mfd-val">{leRate.toFixed(1)}</span><span class="mfd-unit">u/s</span></div>
-        <div class="mfd-row"><span class="mfd-label">MO/S</span><span class="mfd-val">{moRate.toFixed(1)}</span><span class="mfd-unit">u/s</span></div>
+        <div class="mfd-row"><span class="mfd-label">LE/S</span><span class="mfd-val">{s.current.leSmoothed.toFixed(1)}</span><span class="mfd-unit">u/s</span></div>
+        <div class="mfd-row"><span class="mfd-label">MO/S</span><span class="mfd-val">{s.current.moSmoothed.toFixed(1)}</span><span class="mfd-unit">u/s</span></div>
       </>)}
-      {showEst.current && (<>
+      {showEst.value && (<>
         <div class="mfd-sep" />
         <div class="mfd-row"><span class="mfd-label">LE ETA</span><span class="mfd-val">{leEta}</span></div>
         <div class="mfd-row"><span class="mfd-label">MO ETA</span><span class="mfd-val">{moEta}</span></div>
       </>)}
     </div>
   );
-});
-
-export class FuelView implements MFDView {
-  private r = createRef<FuelRef>();
-  private leSmoothed = 0;
-  private moSmoothed = 0;
-  private lastLE = -1;
-  private lastMO = -1;
-  private lastTime = 0;
-
-  mount(container: HTMLElement): void { render(<FuelViewComponent ref={this.r} />, container); }
-
-  update(data: MFDData): void {
-    const now = performance.now();
-    if (this.lastLE >= 0) {
-      const dt = (now - this.lastTime) / 1000;
-      if (dt > 0.05) {
-        this.leSmoothed = this.leSmoothed * 0.88 + Math.max(0, (this.lastLE - data.liquidErgol) / dt) * 0.12;
-        this.moSmoothed = this.moSmoothed * 0.88 + Math.max(0, (this.lastMO - data.monergol) / dt) * 0.12;
-      }
-    }
-    this.lastLE = data.liquidErgol; this.lastMO = data.monergol; this.lastTime = now;
-    leSignal.value = data.liquidErgol; leMaxSignal.value = data.maxLiquidErgol;
-    moSignal.value = data.monergol; moMaxSignal.value = data.maxMonergol;
-    leRateSig.value = this.leSmoothed; moRateSig.value = this.moSmoothed;
-    const eta = (fuel: number, rate: number) => {
-      if (rate < 0.05) return '∞';
-      const s = fuel / rate;
-      if (s > 3600) return `${Math.floor(s / 3600)}h${Math.floor((s % 3600) / 60)}m`;
-      return s > 60 ? `${Math.floor(s / 60)}m${Math.floor(s % 60)}s` : `${Math.floor(s)}s`;
-    };
-    leEtaSig.value = eta(data.liquidErgol, this.leSmoothed);
-    moEtaSig.value = eta(data.monergol, this.moSmoothed);
-  }
-
-  getLabels(): string[] { return this.r.current?.getLabels() ?? ['HOME', 'RATE*', 'EST*', 'TEL', 'FUEL', 'RADAR']; }
-  onOSB(idx: number): void { this.r.current?.onOSB(idx); }
 }

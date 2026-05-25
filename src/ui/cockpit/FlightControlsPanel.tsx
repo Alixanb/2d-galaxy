@@ -1,14 +1,8 @@
-import { useState } from 'preact/hooks';
-import { useImperativeHandle } from 'preact/hooks';
-import { forwardRef } from 'preact/compat';
+import { useState, useEffect } from 'preact/hooks';
 import type { HeadingLockMode } from '../../core/GameState';
 import type Galaxy from '../../systems/Galaxy';
+import { isPausedSignal } from '../../core/gameSignals';
 import './FlightControlsPanel.scss';
-
-export interface FlightControlsPanelRef {
-  update(): void;
-  setPaused(paused: boolean): void;
-}
 
 const HLK_DEFS: { label: string; mode: HeadingLockMode; minTier: number }[] = [
   { label: 'MAN', mode: 'manual',      minTier: 0 },
@@ -20,30 +14,38 @@ const HLK_DEFS: { label: string; mode: HeadingLockMode; minTier: number }[] = [
 
 interface Props { galaxy: Galaxy; onPause: (paused: boolean) => void; }
 
-export const FlightControlsPanel = forwardRef<FlightControlsPanelRef, Props>(({ galaxy, onPause }, ref) => {
+export function FlightControlsPanel({ galaxy, onPause }: Props) {
   const [autoStab, setAutoStab] = useState(false);
   const [autoStabEnabled, setAutoStabEnabled] = useState(false);
   const [retroPhase, setRetroPhase] = useState<'align' | 'burn' | null>(null);
   const [retroEnabled, setRetroEnabled] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [dockMode, setDockMode] = useState(false);
   const [headingLock, setHeadingLock] = useState<HeadingLockMode>('manual');
   const [headingLockTier, setHeadingLockTier] = useState<0 | 1 | 2 | 3>(0);
+  const isPaused = isPausedSignal.value;
 
-  useImperativeHandle(ref, () => ({
-    update() {
-      const ship = galaxy.ship;
-      if (!ship) return;
-      setAutoStab(ship.autoStab);
-      setAutoStabEnabled(ship.autoStabUnlocked);
-      setRetroPhase(ship.retrogradePhase);
-      setRetroEnabled(ship.retroBurnUnlocked);
-      setDockMode(ship.dockingMode);
-      setHeadingLock(ship.headingLock);
-      setHeadingLockTier(ship.headingLockTier);
-    },
-    setPaused(paused) { setIsPaused(paused); },
-  }));
+  useEffect(() => {
+    let frame: number;
+    let lastTime = 0;
+    const loop = (time: number) => {
+      if (time - lastTime >= 200) {
+        const ship = galaxy.ship;
+        if (ship) {
+          setAutoStab(ship.autoStab);
+          setAutoStabEnabled(ship.autoStabUnlocked);
+          setRetroPhase(ship.retrogradePhase);
+          setRetroEnabled(ship.retroBurnUnlocked);
+          setDockMode(ship.dockingMode);
+          setHeadingLock(ship.headingLock);
+          setHeadingLockTier(ship.headingLockTier);
+        }
+        lastTime = time;
+      }
+      frame = requestAnimationFrame(loop);
+    };
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, [galaxy]);
 
   function handleAutoStab() {
     const ship = galaxy.ship;
@@ -66,7 +68,7 @@ export const FlightControlsPanel = forwardRef<FlightControlsPanelRef, Props>(({ 
 
   function handlePause() {
     const next = !isPaused;
-    setIsPaused(next);
+    isPausedSignal.value = next;
     onPause(next);
   }
 
@@ -105,4 +107,4 @@ export const FlightControlsPanel = forwardRef<FlightControlsPanelRef, Props>(({ 
       </div>
     </div>
   );
-});
+}

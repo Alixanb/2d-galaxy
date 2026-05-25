@@ -1,18 +1,10 @@
-import { render, createRef } from 'preact';
-import { signal } from '@preact/signals';
-import { forwardRef, useImperativeHandle } from 'preact/compat';
-import { useRef, useEffect, useState } from 'preact/hooks';
-import { velSignal, headingSignal } from '../../../core/gameSignals';
+import { useRef, useEffect } from 'preact/hooks';
+import { useSignal, effect } from '@preact/signals';
+import { velSignal, headingSignal, distanceSignal, mfdLabelsSignal, mfdOsbPressSignal } from '../../../core/gameSignals';
 const VEL_THRESHOLD = 0.00008;
 import type Ship from '../../../entities/Ship';
 import type Galaxy from '../../../systems/Galaxy';
-import type { MFDData } from '../../MFD';
-import type { MFDView } from '../MFDView';
 import './AttitudeView.scss';
-
-const distSig = signal(0);
-
-interface AttViewRef { getLabels(): string[]; onOSB(idx: number): void; }
 
 function drawAtt(
   ctx: CanvasRenderingContext2D, w: number, h: number,
@@ -54,15 +46,27 @@ function drawAtt(
   ctx.fillText(`${dist.toFixed(2)} AU`, cx, h-3*dpr); ctx.restore();
 }
 
-const AttitudeViewComponent = forwardRef<AttViewRef, { galaxy: Galaxy }>(({ galaxy }, ref) => {
+export function AttitudeView({ galaxy }: { galaxy: Galaxy }) {
   const { x: vx, y: vy } = velSignal.value;
   const angle = headingSignal.value;
-  const dist = distSig.value;
-  const showOrient = useRef(true);
-  const showVector = useRef(true);
-  const [, setTick] = useState(0);
+  const dist = distanceSignal.value;
+  const showOrient = useSignal(true);
+  const showVector = useSignal(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const spriteCache = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    mfdLabelsSignal.value = ['HOME', showOrient.value ? 'ORIENT*' : 'ORIENT', showVector.value ? 'VECTOR*' : 'VECTOR', 'TEL', 'FUEL', 'RADAR'];
+  }, [showOrient.value, showVector.value]);
+
+  useEffect(() => {
+    return effect(() => {
+      const { btn, tick } = mfdOsbPressSignal.value;
+      if (tick === 0) return;
+      if (btn === 2) showOrient.value = !showOrient.value;
+      if (btn === 3) showVector.value = !showVector.value;
+    });
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -76,30 +80,12 @@ const AttitudeViewComponent = forwardRef<AttViewRef, { galaxy: Galaxy }>(({ gala
       canvas.style.width = `${wrap.clientWidth}px`; canvas.style.height = `${wrap.clientHeight}px`;
     }
     const ctx = canvas.getContext('2d');
-    if (ctx) drawAtt(ctx, canvas.width, canvas.height, vx, vy, angle, dist, galaxy.ship, spriteCache, showOrient.current, showVector.current);
+    if (ctx) drawAtt(ctx, canvas.width, canvas.height, vx, vy, angle, dist, galaxy.ship, spriteCache, showOrient.value, showVector.value);
   });
-
-  useImperativeHandle(ref, () => ({
-    getLabels: () => ['HOME', showOrient.current ? 'ORIENT*' : 'ORIENT', showVector.current ? 'VECTOR*' : 'VECTOR', 'TEL', 'FUEL', 'RADAR'],
-    onOSB(idx) {
-      if (idx === 2) { showOrient.current = !showOrient.current; setTick(n => n+1); }
-      if (idx === 3) { showVector.current = !showVector.current; setTick(n => n+1); }
-    },
-  }));
 
   return (
     <div class="mfd-view mfd-view-att" style="display:flex">
       <canvas ref={canvasRef} class="mfd-att-canvas" />
     </div>
   );
-});
-
-export class AttitudeView implements MFDView {
-  private r = createRef<AttViewRef>();
-  private galaxy: Galaxy;
-  constructor(galaxy: Galaxy) { this.galaxy = galaxy; }
-  mount(container: HTMLElement): void { render(<AttitudeViewComponent ref={this.r} galaxy={this.galaxy} />, container); }
-  update(data: MFDData): void { distSig.value = data.dist; }
-  getLabels(): string[] { return this.r.current?.getLabels() ?? ['HOME', 'ORIENT*', 'VECTOR*', 'TEL', 'FUEL', 'RADAR']; }
-  onOSB(idx: number): void { this.r.current?.onOSB(idx); }
 }

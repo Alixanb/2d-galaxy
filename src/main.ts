@@ -14,14 +14,15 @@ import Ship from "./entities/Ship";
 import Star from "./entities/Star";
 import { Canvas2d, CanvasWebGL } from "./systems/Canvas";
 import Galaxy from "./systems/Galaxy";
-import { mountCockpitHUD, type CockpitHUDRef } from "./ui/CockpitHUD";
-import type { RefObject } from "preact";
+import { mountCockpitHUD } from "./ui/CockpitHUD";
 import {
   velSignal, headingSignal, posSignal, bhAltSignal,
   speedSignal, leSignal, leMaxSignal, moSignal, moMaxSignal,
   decaySecondsSignal, decayMaxSignal,
   systemIdSignal, elapsedSignal, progressSignal,
   fpsSignal, starCountSignal, totalStarsSignal,
+  angularVelSignal, isThrustingSignal, distanceSignal,
+  completedCountSignal, totalSystemsSignal, isPausedSignal,
 } from "./core/gameSignals";
 import { mountDebugPanel } from "./ui/DebugPanel";
 import { mountGalaxyMap } from "./ui/GalaxyMap";
@@ -85,7 +86,7 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   });
 
   const uiRoot = document.getElementById('ui-root')!;
-  const cockpitRef: RefObject<CockpitHUDRef> = mountCockpitHUD(
+  mountCockpitHUD(
     uiRoot,
     galaxy,
     () => SIMULATION_SPEED,
@@ -186,12 +187,12 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       paused = true;
-      cockpitRef.current?.setPaused(true);
+      isPausedSignal.value = true;
     } else {
       // Reset lastTime to current performance.now() to avoid huge delta
       lastTime = performance.now();
       paused = false;
-      cockpitRef.current?.setPaused(false);
+      isPausedSignal.value = false;
     }
   });
 
@@ -276,6 +277,8 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
       systemIdSignal.value = gameState.currentSystemId;
       elapsedSignal.value = secs;
       progressSignal.value = gameState.completedSystems.length / SYSTEMS.length;
+      completedCountSignal.value = gameState.completedSystems.length;
+      totalSystemsSignal.value = SYSTEMS.length;
 
       if (ship) {
         velSignal.value = { x: ship.vel.x, y: ship.vel.y };
@@ -287,48 +290,18 @@ function startSimulation(mode: GameMode, showBlackholes: boolean) {
         leMaxSignal.value = ship.maxLiquidErgol;
         moSignal.value = ship.monergol;
         moMaxSignal.value = ship.maxMonergol;
+        angularVelSignal.value = ship.angluarVel;
+        isThrustingSignal.value = ship.status === "thrusting";
+        distanceSignal.value = Math.hypot(ship.pos.x - canvas2d.camera.x, ship.pos.y - canvas2d.camera.y);
+      } else {
+        angularVelSignal.value = 0;
+        isThrustingSignal.value = false;
+        distanceSignal.value = 0;
       }
       decaySecondsSignal.value = decayTimer;
       decayMaxSignal.value = decayMax;
 
-      cockpitRef.current?.update({
-        fps: fpsSignal.value,
-        starCount: activeStars,
-        totalStars: galaxy.totalStarsSpawned,
-        vx: ship?.vel?.x ?? 0,
-        vy: ship?.vel?.y ?? 0,
-        dist: ship ? Math.hypot(ship.pos.x - canvas2d.camera.x, ship.pos.y - canvas2d.camera.y) : 0,
-        angularVel: ship?.angluarVel ?? 0,
-        liquidErgol: ship?.liquidErgol ?? 0,
-        maxLiquidErgol: ship?.maxLiquidErgol ?? 500,
-        monergol: ship?.monergol ?? 0,
-        maxMonergol: ship?.maxMonergol ?? 100,
-        isThrusting: ship?.status === "thrusting",
-        completedCount: gameState.completedSystems.length,
-        systemId: gameState.currentSystemId,
-        totalSystems: SYSTEMS.length,
-        posX: posSignal.value.x,
-        posY: posSignal.value.y,
-        bhAlt: bhAltSignal.value,
-        heading: ship ? (ship.angle * 180 / Math.PI) : 0,
-      });
-
       lastUpdate = now;
-    }
-
-    // Redraw status gauges every frame for smooth pulse animation
-    const ship2 = galaxy.ship;
-    if (ship2) {
-      cockpitRef.current?.updateStatusGauges(
-        ship2.vel.x,
-        ship2.vel.y,
-        ship2.liquidErgol,
-        ship2.maxLiquidErgol,
-        ship2.monergol,
-        ship2.maxMonergol,
-        decayTimer,
-        decayMax,
-      );
     }
 
     while (accumulator >= FIXED_STEP) {

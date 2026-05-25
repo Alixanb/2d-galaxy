@@ -1,11 +1,8 @@
-import { render, createRef } from 'preact';
-import { signal } from '@preact/signals';
-import { forwardRef, useImperativeHandle } from 'preact/compat';
-import { useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
+import { useSignal, effect } from '@preact/signals';
+import { velSignal, distanceSignal, mfdLabelsSignal, mfdOsbPressSignal } from '../../../core/gameSignals';
 import type Galaxy from '../../../systems/Galaxy';
 import type RelayStation from '../../../entities/RelayStation';
-import type { MFDData } from '../../MFD';
-import type { MFDView } from '../MFDView';
 import './GuideView.scss';
 
 type Step = { label: string; check: (g: Galaxy) => boolean; value: (g: Galaxy) => string };
@@ -28,26 +25,33 @@ const ESCAPE_STEPS: Step[] = [
   { label: 'COAST BOUNDARY', check: g => { const s=g.ship; return !!s&&(s.escapeTrajectory??false)&&s.status!=='thrusting'&&Math.hypot(s.pos.x,s.pos.y)>g.size*0.75; }, value: g => { const s=g.ship; if(!s) return '—'; return `dist ${(Math.hypot(s.pos.x,s.pos.y)/g.size*100).toFixed(0)}% of boundary`; } },
 ];
 
-const tickSig = signal(0);
-const tabSig = signal<'approach' | 'escape'>('escape');
-const manualTabSig = signal(false);
+export function GuideView({ galaxy }: { galaxy: Galaxy }) {
+  velSignal.value;
+  distanceSignal.value;
 
-interface GuideRef { getLabels(): string[]; onOSB(idx: number): void; }
+  const tab = useSignal<'approach' | 'escape'>('escape');
+  const manualTab = useSignal(false);
 
-const GuideViewComponent = forwardRef<GuideRef, { galaxy: Galaxy }>(({ galaxy }, ref) => {
-  tickSig.value;
-  const tab = tabSig.value;
-  const steps = tab === 'approach' ? APPROACH_STEPS : ESCAPE_STEPS;
-  const [, setTick] = useState(0);
+  // Auto-switch tab if not manually overridden
+  if (!manualTab.value) {
+    const newTab = (galaxy.ship?.encounterPoint?.dist ?? Infinity) < 0.15 ? 'approach' : 'escape';
+    if (tab.value !== newTab) tab.value = newTab;
+  }
 
-  useImperativeHandle(ref, () => ({
-    getLabels: () => ['HOME', tab === 'approach' ? 'APPR*' : 'APPR', tab === 'escape' ? 'ESC*' : 'ESC', 'TEL', 'FUEL', 'RADAR'],
-    onOSB(idx) {
-      if (idx === 2) { tabSig.value = 'approach'; manualTabSig.value = true; setTick(n => n + 1); }
-      if (idx === 3) { tabSig.value = 'escape'; manualTabSig.value = true; setTick(n => n + 1); }
-    },
-  }));
+  useEffect(() => {
+    mfdLabelsSignal.value = ['HOME', tab.value === 'approach' ? 'APPR*' : 'APPR', tab.value === 'escape' ? 'ESC*' : 'ESC', 'TEL', 'FUEL', 'RADAR'];
+  }, [tab.value]);
 
+  useEffect(() => {
+    return effect(() => {
+      const { btn, tick } = mfdOsbPressSignal.value;
+      if (tick === 0) return;
+      if (btn === 2) { tab.value = 'approach'; manualTab.value = true; }
+      if (btn === 3) { tab.value = 'escape'; manualTab.value = true; }
+    });
+  }, []);
+
+  const steps = tab.value === 'approach' ? APPROACH_STEPS : ESCAPE_STEPS;
   let active = -1;
   const rows = steps.map((s, i) => {
     const done = s.check(galaxy);
@@ -58,7 +62,7 @@ const GuideViewComponent = forwardRef<GuideRef, { galaxy: Galaxy }>(({ galaxy },
 
   return (
     <div class="mfd-view mfd-view-guide" style="padding:8px 10px;gap:4px;">
-      <div class="mfd-header" style="padding:0 0 4px">{tab === 'approach' ? 'APPROACH' : 'ESCAPE'}</div>
+      <div class="mfd-header" style="padding:0 0 4px">{tab.value === 'approach' ? 'APPROACH' : 'ESCAPE'}</div>
       {rows.map(({ done, label, idx }) => (
         <div key={idx} style={{ fontFamily: "'Courier New',monospace", fontSize: '9px', letterSpacing: '.06em', padding: '3px 0', whiteSpace: 'nowrap', color: done ? 'rgba(61,255,122,0.35)' : idx === active ? '#3dff7a' : 'rgba(61,255,122,0.25)', textDecoration: done ? 'line-through' : 'none' }}>
           {done ? '✓' : idx === active ? '►' : '\xa0'} {label}
@@ -67,18 +71,4 @@ const GuideViewComponent = forwardRef<GuideRef, { galaxy: Galaxy }>(({ galaxy },
       <div style="font-family:'Courier New',monospace;font-size:8px;color:#50b6c9;margin-top:6px;letter-spacing:.04em;white-space:nowrap;overflow:hidden;">{statusText}</div>
     </div>
   );
-});
-
-export class GuideView implements MFDView {
-  private r = createRef<GuideRef>();
-  private galaxy: Galaxy;
-  constructor(galaxy: Galaxy) { this.galaxy = galaxy; }
-  get tab(): 'approach' | 'escape' { return tabSig.value; }
-  mount(container: HTMLElement): void { render(<GuideViewComponent ref={this.r} galaxy={this.galaxy} />, container); }
-  update(_d: MFDData): void {
-    if (!manualTabSig.value) tabSig.value = (this.galaxy.ship?.encounterPoint?.dist ?? Infinity) < 0.15 ? 'approach' : 'escape';
-    tickSig.value++;
-  }
-  getLabels(): string[] { return this.r.current?.getLabels() ?? ['HOME', 'APPR', 'ESC*', 'TEL', 'FUEL', 'RADAR']; }
-  onOSB(idx: number): void { this.r.current?.onOSB(idx); }
 }
